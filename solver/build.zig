@@ -4,20 +4,32 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe_mod = b.createModule(.{
+    const solver = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
 
-    const exe = b.addExecutable(.{
-        .name = "solver",
-        .root_module = exe_mod,
+    const generator = b.createModule(.{
+        .root_source_file = b.path("src/generate/generate.zig"),
+        .target = target,
+        .optimize = optimize,
     });
 
-    b.installArtifact(exe);
+    const solver_exe = b.addExecutable(.{
+        .name = "solver",
+        .root_module = solver,
+    });
 
-    const run_cmd = b.addRunArtifact(exe);
+    const generator_exe = b.addExecutable(.{
+        .name = "generator",
+        .root_module = generator,
+    });
+
+    b.installArtifact(solver_exe);
+    b.installArtifact(generator_exe);
+
+    const run_cmd = b.addRunArtifact(solver_exe);
 
     run_cmd.step.dependOn(b.getInstallStep());
 
@@ -29,7 +41,7 @@ pub fn build(b: *std.Build) void {
     run_step.dependOn(&run_cmd.step);
 
     const exe_unit_tests = b.addTest(.{
-        .root_module = exe_mod,
+        .root_module = solver,
     });
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
