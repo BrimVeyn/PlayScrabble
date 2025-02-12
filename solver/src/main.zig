@@ -1,22 +1,23 @@
-const std = @import("std");
-const dict = @embedFile("generate/Data.txt");
-const print = std.debug.print;
-const AutoArrayHashMap = std.AutoArrayHashMap;
-const AutoHashMap = std.AutoHashMap;
-const ArrayList = std.ArrayList;
-const Allocator = std.mem.Allocator;
+const std               = @import("std");
+const dict              = @embedFile("generate/Data.txt");
+const print             = std.debug.print;
+const AutoArrayHashMap  = std.AutoArrayHashMap;
+const AutoHashMap       = std.AutoHashMap;
+const ArrayList         = std.ArrayList;
+const Allocator         = std.mem.Allocator;
 
-const gridFile = @import("Grid.zig");
-const Grid = gridFile.Grid;
+const gridFile          = @import("Grid.zig");
+const Grid              = gridFile.Grid;
+const GRID_SIZE         = 15;
 
-const generator = @import("generate/generate.zig");
-const OrderedMap = generator.OrderedMap;
-const asciiOrderedMapPath = generator.asciiOrderedMapPath;
-const Map = generator.Map;
+const generator             = @import("generate/generate.zig");
+const OrderedMap            = generator.OrderedMap;
+const asciiOrderedMapPath   = generator.asciiOrderedMapPath;
+const Map                   = generator.Map;
 
-const PermSet = std.StringArrayHashMap(bool);
-const String = ArrayList(u8);
-const StringVec = ArrayList([]const u8);
+const PermSet     = std.StringArrayHashMap(bool);
+const String      = ArrayList(u8);
+const StringVec   = ArrayList([]const u8);
 
 pub fn permutations(alloc: Allocator, perms: *PermSet, pattern: *String, buffer: *String, patternI: usize, minLen: usize, maxLen: usize) !void {
     if (buffer.items.len != 0) {
@@ -64,37 +65,93 @@ fn getWordList(alloc: Allocator, perms: *PermSet, orderedMap: Map) !StringVec {
 const Match = struct {
     word: [15]u8,
 };
-const MatchVec = ArrayList(Match);
 
-fn evaluateGrid(alloc: Allocator, grid: *Grid, orderedMap: Map) !MatchVec {
-    const result = MatchVec.init(alloc);
-    _ = grid;
-    _ = orderedMap;
+const MatchVec  = ArrayList(Match);
+const Point     = @Vector(2, u4);
+const Range     = @Vector(2, u4);
+
+const Placement = struct {
+    c: [15]u8 = .{0} ** 15,
+    pos: [15]u4 = .{0} ** 15,
+};
+
+const Constraints = struct {
+    ranges: ArrayList(Range),
+    places: ArrayList(Placement),
+
+    pub fn init(alloc: Allocator) Constraints {
+        return .{
+            .ranges = ArrayList(Range).init(alloc),
+            .places = ArrayList(Placement).init(alloc),
+        };
+    }
+};
+
+const Context = struct {
+    grid: Grid,
+    rack: String,
+    orderedMap: Map,
+    alloc: Allocator,
+
+    pub fn init(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
+        var grid = Grid.init();
+        try grid.loadGridState(gridState);
+        var rack = String.init(alloc);
+        try rack.appendSlice(rackValue);
+        std.mem.sort(u8, rack.items[0..], {}, lessThan);
+        return .{
+            .grid = grid,
+            .rack = rack,
+            .orderedMap = try populateMap(alloc),
+            .alloc = alloc,
+        };
+    }
+};
+
+
+fn getConstraints(ctx: *Context) !Constraints {
+    const cellConst = Constraints.init(ctx.alloc);
+
+    return cellConst;
+}
+
+fn evaluateGrid(ctx: *Context) !MatchVec {
+    const result = MatchVec.init(ctx.alloc);
+
+    for (0..GRID_SIZE) |y| {
+        for (0..GRID_SIZE) |x| {
+            const cell = Point{@intCast(x), @intCast(y)};
+            _ = cell;
+
+            const cellConst: Constraints = try getConstraints(ctx);
+            _ = cellConst;
+        }
+    }
 
     return result;
 }
 
-fn solveGrid(alloc: Allocator, grid: *Grid, rack: *String, orderedMap: Map) !void {
+fn solveGrid(ctx: *Context) !void {
     const startTime = std.time.microTimestamp();
 
-    var buffer = String.init(alloc);
+    var buffer = String.init(ctx.alloc);
     defer buffer.deinit();
 
-    var perms = PermSet.init(alloc);
+    var perms = PermSet.init(ctx.alloc);
     defer {
-        for (perms.keys()) |key| alloc.free(key);
+        for (perms.keys()) |key| ctx.alloc.free(key);
         perms.deinit();
     }
 
-    try permutations(alloc, &perms, rack, &buffer, 0, 2, rack.items.len);
+    try permutations(ctx.alloc, &perms, &ctx.rack, &buffer, 0, 2, ctx.rack.items.len);
     // for (perms.keys(), 0..) |word, i| {
     //     print("vect[{d}] = {s}\n", .{i, word});
     // }
     // print("Count: {d}\n", .{perms.keys().len});
-    const wordVec = try getWordList(alloc, &perms, orderedMap);
+    const wordVec = try getWordList(ctx.alloc, &perms, ctx.orderedMap);
     defer wordVec.deinit();
 
-    const resultFirstHalf = try evaluateGrid(alloc, grid, orderedMap);
+    const resultFirstHalf = try evaluateGrid(ctx);
     _ = resultFirstHalf;
     // for (wordVec.items, 0..) |word, i| {
     //     print("vect[{d}] = {s}\n", .{i, word});
@@ -117,20 +174,8 @@ pub fn main() !void {
     const ArenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    //Representation of the game state
-    var grid = Grid.init();
-    try grid.loadGridState("grid00.txt");
-
-    //Representation of the players'rack
-    var rack = String.init(ArenaAlloc);
-    try rack.appendSlice("EVENTUELLEMENTE");
-    std.mem.sort(u8, rack.items[0..], {}, lessThan);
-
-    //Dictionnairies with sorted ascii keys to array of possible words
-    var map: Map = try populateMap(ArenaAlloc);
-    defer map.deinit(ArenaAlloc);
-
-    try solveGrid(ArenaAlloc, &grid, &rack, map);
+    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "EVENTUELLEMENTE");
+    try solveGrid(&ctx);
 }
 
 test "simple test" {}
