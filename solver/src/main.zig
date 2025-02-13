@@ -88,20 +88,19 @@ const Constraints = struct {
 
     pub fn format(self: *const Constraints, comptime fmt: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         _ = fmt;
+        _ = try writer.write("---Constraint---\n");
         for (0..self.ranges.items.len) |i| {
-            _ = try writer.write("---------- Constraint -------\n");
             const range = self.ranges.items[i];
             const place = self.places.items[i];
             try writer.print("R: {d}-{d}\n", .{range[0], range[1]});
-            try writer.print("S: {s}\n", .{place.c});
-            _ = try writer.write("P: ");
             for (0..place.pos.len) |j| {
-                if (place.pos[j] == 0) break;
-                try writer.print("{d}", .{place.pos[j]});
+                if (place.pos[j] == 0) 
+                    break;
+                try writer.print("P[{d}]: {c} {d}\n", .{j, place.c[j], place.pos[j] - 1});
             }
-            _ = try writer.write("\n");
-            _ = try writer.write("------------- END -----------\n");
+            _ = try writer.write("~~~~~~~~~~~~~~~~\n");
         }
+        _ = try writer.write("----------------\n");
     }
 };
 
@@ -126,7 +125,7 @@ const Context = struct {
     }
 
     pub fn loadGrid(self: *Context, gridState: []const u8) !void {
-        print("~~~~~~~~~LOADING: {s}~~~~~~~~~~~\n", .{gridState});
+        // print("~~~~~~~~~LOADING: {s}~~~~~~~~~~~\n", .{gridState});
         try self.grid.loadGridState(gridState);
     }
 };
@@ -215,8 +214,8 @@ fn rGetConstraints(ctx: *Context, cellConst: *Constraints, cell: Point, cBuff: *
                 cursor[0] += 1;
             }
         }
-        print("[-1]Placed: {d}\n", .{placed});
-        print("[-1]Cursor: {d}\n", .{cursor});
+        // print("[-1]Placed: {d}\n", .{placed});
+        // print("[-1]Cursor: {d}\n", .{cursor});
 
         if (cursor[0] < 15 and !isAlpha(ctx.grid, cursor) and loopIterator == 0) {
             var rangeS: ?u4 = null;
@@ -230,14 +229,23 @@ fn rGetConstraints(ctx: *Context, cellConst: *Constraints, cell: Point, cBuff: *
                 placed += 1;
             }
             //Backtrack if we hit a letter till we have a space to our right
-            print("[0]Placed: {d}\n", .{placed});
+            print("[0]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
             print("[0]Cursor: {d}\n", .{cursor});
-            while (isAlpha(ctx.grid, cursor) or isAlphaRight(ctx.grid, cursor)) {
-                placed -= 1;
+            print("[0]Char: {c}\n", .{getChar(ctx.grid, cursor)});
+            while (cursor[0] > 0 and placed > 0 and (isAlpha(ctx.grid, cursor) or isAlphaRight(ctx.grid, cursor))) {
                 cursor[0] -= 1;
+                if (isAlpha(ctx.grid, cursor))
+                    placed -= 1;
+            }
+            if (placed == 0 and isAlpha(ctx.grid, cursor)) {
+                hasPushed = true;
+                continue;
             }
             print("[1]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
             print("[1]Cursor: {d}\n", .{cursor});
+            print("[1]Char: {c}\n", .{getChar(ctx.grid, cursor)});
+            // if (cursor[0] < wordStart) 
+            //     break;
             var rangeEnd = cursor[0] - wordStart;
             rangeEnd += if (placed == ctx.rack.items.len) 0 else 1;
 
@@ -246,12 +254,18 @@ fn rGetConstraints(ctx: *Context, cellConst: *Constraints, cell: Point, cBuff: *
                 try cellConst.ranges.append(.{rangeS.?, rangeEnd});
                 try cellConst.places.append(.{.c = cBuff.*, .pos = posBuff.*});
             }
+            //If we didn't find any perpAlpha and we're at the end of our frame 
+            //and we didn't find any letter along the way, we know for sure no word is possible here
+            if (rangeS == null and cursor[0] == 14 and constIt == 0)
+                break;
+            if (rangeS != null and cursor[0] == 14)
+                break;
             hasPushed = true;
             continue;
         }
 
-        print("[2]Placed: {d}\n", .{placed});
-        print("[2]Cursor: {d}\n", .{cursor});
+        // print("[2]Placed: {d}\n", .{placed});
+        // print("[2]Cursor: {d}\n", .{cursor});
         if (cursor[0] < 15 and !isAlpha(ctx.grid, cursor) and loopIterator != 0 and placed < ctx.rack.items.len) {
             while (cursor[0] < 15 and !isAlpha(ctx.grid, cursor) and placed < ctx.rack.items.len) {
                 cursor[0] += 1;
@@ -263,17 +277,25 @@ fn rGetConstraints(ctx: *Context, cellConst: *Constraints, cell: Point, cBuff: *
                 constIt += 1;
                 cursor[0] += 1;
             }
-            const rangeS = (cursor[0] - wordStart);
+            var rangeS = (cursor[0] - wordStart);
             var rangeEnd = (cursor[0] - wordStart);
+
+            //Fix for words beginning with an already placed letter that has holes right after it
+            const posBuffLen = std.mem.indexOfSentinel(u4, 0, posBuff);
+            if (posBuffLen > 0 and rangeS < 15) {
+                rangeS = posBuff[posBuffLen - 1];
+                rangeS = if (rangeS < 2) 2 else rangeS;
+            }
+
             while (cursor[0] < 15 and !isAlphaRight(ctx.grid, cursor) and placed < ctx.rack.items.len) {
                 rangeEnd += 1;
                 placed += 1;
                 cursor[0] += 1;
             }
-            print("[3]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
-            print("[3]Cursor: {d}\n", .{cursor});
-            if (cursor[0] <= 15 and placed <= ctx.rack.items.len) {
-                print("Pushing\n", .{});
+            // print("[3]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
+            // print("[3]Cursor: {d}\n", .{cursor});
+            if (cursor[0] <= 15 and placed <= ctx.rack.items.len and rangeEnd >= 2) {
+                // print("[2]Pushed\n", .{});
                 try cellConst.ranges.append(.{rangeS, rangeEnd});
                 try cellConst.places.append(.{.c = cBuff.*, .pos = posBuff.*});
                 if (placed < ctx.rack.items.len)
@@ -281,7 +303,7 @@ fn rGetConstraints(ctx: *Context, cellConst: *Constraints, cell: Point, cBuff: *
             }
         }
     }
-    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", .{});
+    // print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", .{});
 
 } 
 
@@ -304,11 +326,12 @@ fn evaluateGrid(ctx: *Context) !MatchVec {
 
     for (0..GRID_SIZE) |y| {
         for (0..GRID_SIZE) |x| {
-            if (y == 12 and x == 12) {
+            if (y == 8 and x == 0) {
                 const cell = Point{@intCast(x), @intCast(y)};
                 const cellConst = getConstraints(ctx, cell) catch continue;
                 if (cellConst.places.items.len == 0)
-                continue;
+                    continue;
+                print("Y:{d},X:{d}\n", .{y, x});
                 print("{}", .{cellConst});
             }
         }
@@ -347,8 +370,9 @@ fn solveGrid(ctx: *Context) !void {
     const endTime = std.time.microTimestamp();
     const elapsedMicro: i64 = endTime - startTime;
     const elapsedMili: f64 = @as(f64, @floatFromInt(elapsedMicro)) / @as(f64, 1000);
+    _ = elapsedMili;
 
-    print("Elapsed: {d}µs | {d}ms\n", .{elapsedMicro, elapsedMili});
+    // print("Elapsed: {d}µs | {d}ms\n", .{elapsedMicro, elapsedMili});
 }
 
 pub fn main() !void {
@@ -361,13 +385,13 @@ pub fn main() !void {
     defer arena.deinit();
 
     var ctx = try Context.init(ArenaAlloc, "grid00.txt", "SALOPES");
-    try solveGrid(&ctx);
-    try ctx.loadGrid("grid01.txt");
-    try solveGrid(&ctx);
-    try ctx.loadGrid("grid02.txt");
-    try solveGrid(&ctx);
-    try ctx.loadGrid("grid03.txt");
-    try solveGrid(&ctx);
+    // try solveGrid(&ctx);
+    // try ctx.loadGrid("grid01.txt");
+    // try solveGrid(&ctx);
+    // try ctx.loadGrid("grid02.txt");
+    // try solveGrid(&ctx);
+    // try ctx.loadGrid("grid03.txt");
+    // try solveGrid(&ctx);
     try ctx.loadGrid("grid04.txt");
     try solveGrid(&ctx);
 }
