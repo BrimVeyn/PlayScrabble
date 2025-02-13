@@ -124,14 +124,63 @@ const Context = struct {
             .alloc = alloc,
         };
     }
+
+    pub fn loadGrid(self: *Context, gridState: []const u8) !void {
+        print("~~~~~~~~~LOADING: {s}~~~~~~~~~~~\n", .{gridState});
+        try self.grid.loadGridState(gridState);
+    }
 };
 
 fn isAlpha(grid: Grid, cell: Point) bool {
     return (grid.grid[cell[1]][cell[0]] >= 'A' and grid.grid[cell[1]][cell[0]] <= 'Z');
 }
 
+fn isAlphaLeft(grid: Grid, cell:Point) bool {
+    if (cell[0] > 0) {
+        const left = Point{cell[0] - 1, cell[1]};
+        if (isAlpha(grid, left)) return true;
+    }
+    return false;
+}
+
+fn isAlphaRight(grid: Grid, cell:Point) bool {
+    if (cell[0] < (GRID_SIZE - 1)) {
+        const right = Point{cell[0] + 1, cell[1]};
+        if (isAlpha(grid, right)) return true;
+    }
+    return false;
+}
+
 fn isEmpty(grid: Grid, cell: Point) bool {
     return !isAlpha(grid, cell);
+}
+
+fn isAlphaPerp(grid: Grid, cell: Point) bool {
+    if (cell[1] > 0) {
+        const up = Point{cell[0], cell[1] - 1};
+        if (isAlpha(grid, up)) return true;
+    }
+    if (cell[1] < (GRID_SIZE - 1)) {
+        const down = Point{cell[0], cell[1] + 1};
+        if (isAlpha(grid, down)) return true;
+    }
+    return false;
+}
+
+fn isAlphaPar(grid: Grid, cell: Point) bool {
+    if (cell[0] > 0) {
+        const left = Point{cell[0] - 1, cell[1]};
+        if (isAlpha(grid, left)) return true;
+    }
+    if (cell[0] < (GRID_SIZE - 1)) {
+        const right = Point{cell[0] + 1, cell[1]};
+        if (isAlpha(grid, right)) return true;
+    }
+    return false;
+}
+
+fn getChar(grid: Grid, cell: Point) u8 { 
+    return grid.grid[@intCast(cell[1])][@intCast(cell[0])];
 }
 
 const GridError = error {
@@ -139,38 +188,105 @@ const GridError = error {
 };
 
 fn rGetConstraints(ctx: *Context, cellConst: *Constraints, cell: Point, cBuff: *[15:0]u8, posBuff: *[15:0]u4) !void {
-
-    //Virtual cursor for the function
-    var cursor = Point{cell[0], cell[1]};
     //Iterator on buffers
     var constIt: usize = 0;
     //Number of letters from the rack needed to form the constraint
-    var placed:usize = 0;
-    //Used to compute the word start, if the cell is filled already
-    var wordStart: u4 = cell[0];
+    var placed:u4 = 0;
+    //Virtual cursor for the function
+    var cursor: Point = cell;
+    
+    const wordStart: u4 = cell[0];
 
-    while (true) {
-        while (isAlpha(ctx.grid, cursor) and cursor[0] < 15) {
-            cBuff[constIt] = ctx.grid.grid[@intCast(cursor[1])][@intCast(cursor[0])];
-            //We avoid zero since we're using a null terminated int array
-            posBuff[constIt] = (cursor[0] - cell[0]) + 1;
-            wordStart += 1;
-            cursor[0] += 1;
-            constIt += 1;
+    //Our loop breaker
+    var hasPushed = true;
+
+    var loopIterator: usize = 0;
+
+    while (hasPushed) {
+        defer loopIterator += 1;
+        //Reset it to false everytime
+        hasPushed = false;
+
+        if (cursor[0] < 15 and isAlpha(ctx.grid, cursor) and loopIterator == 0) {
+            while (cursor[0] < 15 and isAlpha(ctx.grid, cursor) and placed < ctx.rack.items.len) {
+                cBuff[constIt] = getChar(ctx.grid, cursor);
+                posBuff[constIt] = (cursor[0] - wordStart) + 1;
+                constIt += 1;
+                cursor[0] += 1;
+            }
         }
-        while (isEmpty(ctx.grid, cursor) and placed < ctx.rack.items.len and cursor[0] < 15) {
-            placed += 1;
+        print("[-1]Placed: {d}\n", .{placed});
+        print("[-1]Cursor: {d}\n", .{cursor});
+
+        if (cursor[0] < 15 and !isAlpha(ctx.grid, cursor) and loopIterator == 0) {
+            var rangeS: ?u4 = null;
+            while (cursor[0] < 14 and !isAlpha(ctx.grid, cursor) and placed < ctx.rack.items.len) {
+                //If we have a letter above or bellow, we set the rangeStart to that distance
+                if (isAlphaPerp(ctx.grid, cursor)) {
+                    if (rangeS == null)
+                        rangeS = cursor[0] - wordStart + 1;
+                }
+                cursor[0] += 1;
+                placed += 1;
+            }
+            //Backtrack if we hit a letter till we have a space to our right
+            print("[0]Placed: {d}\n", .{placed});
+            print("[0]Cursor: {d}\n", .{cursor});
+            while (isAlpha(ctx.grid, cursor) or isAlphaRight(ctx.grid, cursor)) {
+                placed -= 1;
+                cursor[0] -= 1;
+            }
+            print("[1]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
+            print("[1]Cursor: {d}\n", .{cursor});
+            var rangeEnd = cursor[0] - wordStart;
+            rangeEnd += if (placed == ctx.rack.items.len) 0 else 1;
+
+            rangeS = if (rangeS != null and rangeS.? < 2) 2 else rangeS;
+            if (rangeS != null and rangeEnd >= 2 and rangeEnd >= rangeS.?) {
+                try cellConst.ranges.append(.{rangeS.?, rangeEnd});
+                try cellConst.places.append(.{.c = cBuff.*, .pos = posBuff.*});
+            }
+            hasPushed = true;
+            continue;
         }
 
-        try cellConst.ranges.append(.{wordStart, cursor[0]});
-        try cellConst.places.append(.{.c = cBuff.*, .pos = posBuff.*});
-        break;
+        print("[2]Placed: {d}\n", .{placed});
+        print("[2]Cursor: {d}\n", .{cursor});
+        if (cursor[0] < 15 and !isAlpha(ctx.grid, cursor) and loopIterator != 0 and placed < ctx.rack.items.len) {
+            while (cursor[0] < 15 and !isAlpha(ctx.grid, cursor) and placed < ctx.rack.items.len) {
+                cursor[0] += 1;
+                placed += 1;
+            }
+            while (cursor[0] < 15 and isAlpha(ctx.grid, cursor)) {
+                cBuff[constIt] = getChar(ctx.grid, cursor);
+                posBuff[constIt] = (cursor[0] - wordStart) + 1;
+                constIt += 1;
+                cursor[0] += 1;
+            }
+            const rangeS = (cursor[0] - wordStart);
+            var rangeEnd = (cursor[0] - wordStart);
+            while (cursor[0] < 15 and !isAlphaRight(ctx.grid, cursor) and placed < ctx.rack.items.len) {
+                rangeEnd += 1;
+                placed += 1;
+                cursor[0] += 1;
+            }
+            print("[3]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
+            print("[3]Cursor: {d}\n", .{cursor});
+            if (cursor[0] <= 15 and placed <= ctx.rack.items.len) {
+                print("Pushing\n", .{});
+                try cellConst.ranges.append(.{rangeS, rangeEnd});
+                try cellConst.places.append(.{.c = cBuff.*, .pos = posBuff.*});
+                if (placed < ctx.rack.items.len)
+                    hasPushed = true;
+            }
+        }
     }
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", .{});
 
 } 
 
 fn getConstraints(ctx: *Context, cell: Point) !Constraints {
-    if (cell[0] > 0 and isAlpha(ctx.grid, cell))
+    if (cell[0] > 0 and isAlphaLeft(ctx.grid, cell))
         return GridError.NoWordCanBeginHere;
 
     var cellConst = Constraints.init(ctx.alloc);
@@ -188,11 +304,13 @@ fn evaluateGrid(ctx: *Context) !MatchVec {
 
     for (0..GRID_SIZE) |y| {
         for (0..GRID_SIZE) |x| {
-            const cell = Point{@intCast(x), @intCast(y)};
-            const cellConst = getConstraints(ctx, cell) catch continue;
-            if (cellConst.places.items.len == 0)
+            if (y == 12 and x == 12) {
+                const cell = Point{@intCast(x), @intCast(y)};
+                const cellConst = getConstraints(ctx, cell) catch continue;
+                if (cellConst.places.items.len == 0)
                 continue;
-            print("{}", .{cellConst});
+                print("{}", .{cellConst});
+            }
         }
     }
 
@@ -242,7 +360,15 @@ pub fn main() !void {
     const ArenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "SALUT");
+    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "SALOPES");
+    try solveGrid(&ctx);
+    try ctx.loadGrid("grid01.txt");
+    try solveGrid(&ctx);
+    try ctx.loadGrid("grid02.txt");
+    try solveGrid(&ctx);
+    try ctx.loadGrid("grid03.txt");
+    try solveGrid(&ctx);
+    try ctx.loadGrid("grid04.txt");
     try solveGrid(&ctx);
 }
 

@@ -55,6 +55,7 @@ pub const Map = struct {
         try jws.endObject();
     }
 
+
     pub fn format(self: *const Map, comptime fmt: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         if (fmt.len != 0) {
             std.fmt.invalidFmtError(fmt, self);
@@ -120,3 +121,12 @@ pub fn main() !void {
     try outFileWriter.print("{}\n", .{map});
 
 }
+
+
+// pub const Foo = struct {
+//     bar : isize,
+//
+//     pub fn asBytes(foo : *Foo) []u8 {
+//         return std.mem.asBytes(foo);
+//     }
+// };
