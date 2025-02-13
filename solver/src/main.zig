@@ -71,8 +71,8 @@ const Point     = @Vector(2, u4);
 const Range     = @Vector(2, u4);
 
 const Placement = struct {
-    c: [15]u8 = .{0} ** 15,
-    pos: [15]u4 = .{0} ** 15,
+    c:   [15:0]u8   = .{0} ** 15,
+    pos: [15:0]u4   = .{0} ** 15,
 };
 
 const Constraints = struct {
@@ -84,6 +84,24 @@ const Constraints = struct {
             .ranges = ArrayList(Range).init(alloc),
             .places = ArrayList(Placement).init(alloc),
         };
+    }
+
+    pub fn format(self: *const Constraints, comptime fmt: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        _ = fmt;
+        for (0..self.ranges.items.len) |i| {
+            _ = try writer.write("---------- Constraint -------\n");
+            const range = self.ranges.items[i];
+            const place = self.places.items[i];
+            try writer.print("R: {d}-{d}\n", .{range[0], range[1]});
+            try writer.print("S: {s}\n", .{place.c});
+            _ = try writer.write("P: ");
+            for (0..place.pos.len) |j| {
+                if (place.pos[j] == 0) break;
+                try writer.print("{d}", .{place.pos[j]});
+            }
+            _ = try writer.write("\n");
+            _ = try writer.write("------------- END -----------\n");
+        }
     }
 };
 
@@ -108,9 +126,59 @@ const Context = struct {
     }
 };
 
+fn isAlpha(grid: Grid, cell: Point) bool {
+    return (grid.grid[cell[1]][cell[0]] >= 'A' and grid.grid[cell[1]][cell[0]] <= 'Z');
+}
 
-fn getConstraints(ctx: *Context) !Constraints {
-    const cellConst = Constraints.init(ctx.alloc);
+fn isEmpty(grid: Grid, cell: Point) bool {
+    return !isAlpha(grid, cell);
+}
+
+const GridError = error {
+    NoWordCanBeginHere,
+};
+
+fn rGetConstraints(ctx: *Context, cellConst: *Constraints, cell: Point, cBuff: *[15:0]u8, posBuff: *[15:0]u4) !void {
+
+    //Virtual cursor for the function
+    var cursor = Point{cell[0], cell[1]};
+    //Iterator on buffers
+    var constIt: usize = 0;
+    //Number of letters from the rack needed to form the constraint
+    var placed:usize = 0;
+    //Used to compute the word start, if the cell is filled already
+    var wordStart: u4 = cell[0];
+
+    while (true) {
+        while (isAlpha(ctx.grid, cursor) and cursor[0] < 15) {
+            cBuff[constIt] = ctx.grid.grid[@intCast(cursor[1])][@intCast(cursor[0])];
+            //We avoid zero since we're using a null terminated int array
+            posBuff[constIt] = (cursor[0] - cell[0]) + 1;
+            wordStart += 1;
+            cursor[0] += 1;
+            constIt += 1;
+        }
+        while (isEmpty(ctx.grid, cursor) and placed < ctx.rack.items.len and cursor[0] < 15) {
+            placed += 1;
+        }
+
+        try cellConst.ranges.append(.{wordStart, cursor[0]});
+        try cellConst.places.append(.{.c = cBuff.*, .pos = posBuff.*});
+        break;
+    }
+
+} 
+
+fn getConstraints(ctx: *Context, cell: Point) !Constraints {
+    if (cell[0] > 0 and isAlpha(ctx.grid, cell))
+        return GridError.NoWordCanBeginHere;
+
+    var cellConst = Constraints.init(ctx.alloc);
+
+    var c:[15:0]u8 = .{0} ** 15;
+    var pos:[15:0]u4 = .{0} ** 15;
+
+    try rGetConstraints(ctx, &cellConst, cell, &c, &pos);
 
     return cellConst;
 }
@@ -121,10 +189,10 @@ fn evaluateGrid(ctx: *Context) !MatchVec {
     for (0..GRID_SIZE) |y| {
         for (0..GRID_SIZE) |x| {
             const cell = Point{@intCast(x), @intCast(y)};
-            _ = cell;
-
-            const cellConst: Constraints = try getConstraints(ctx);
-            _ = cellConst;
+            const cellConst = getConstraints(ctx, cell) catch continue;
+            if (cellConst.places.items.len == 0)
+                continue;
+            print("{}", .{cellConst});
         }
     }
 
@@ -174,7 +242,7 @@ pub fn main() !void {
     const ArenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "EVENTUELLEMENTE");
+    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "SALUT");
     try solveGrid(&ctx);
 }
 
