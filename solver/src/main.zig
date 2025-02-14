@@ -21,7 +21,11 @@ const StringVec   = ArrayList([]const u8);
 
 pub fn permutations(alloc: Allocator, perms: *PermSet, pattern: *String, buffer: *String, patternI: usize, minLen: usize, maxLen: usize) !void {
     if (buffer.items.len != 0) {
-        if (buffer.items.len >= minLen and buffer.items.len <= maxLen and !perms.contains(buffer.items)) {
+        // if (buffer.items.len >= minLen and buffer.items.len <= maxLen and
+        //     !perms.contains(buffer.items) and ctx.orderedMap.data.contains(buffer.items)) 
+        if (buffer.items.len >= minLen and buffer.items.len <= maxLen and
+            !perms.contains(buffer.items)) 
+        {
             try perms.put(try alloc.dupe(u8, buffer.items), true);
         }
     }
@@ -33,6 +37,56 @@ pub fn permutations(alloc: Allocator, perms: *PermSet, pattern: *String, buffer:
 
     _ = buffer.pop();
     try permutations(alloc, perms, pattern, buffer, patternI + 1, minLen, maxLen);
+}
+
+fn orderU8(context: u8, item: u8) std.math.Order {
+    return (std.math.order(context, item));
+}
+
+fn insertSorted(string: *String, ch: u8) !void {
+    const idx = std.sort.lowerBound(u8, string.items[0..], ch, orderU8);
+    try string.insert(idx, ch);
+}
+
+fn popSorted(string: *String, ch: u8) !void {
+    const idx = std.sort.binarySearch(u8, string.items[0..], ch, orderU8) orelse return error.NoWordCanBeginHere;
+    _ = string.orderedRemove(idx);
+}
+
+pub fn permutationsSortTest(alloc: Allocator, perms: *PermSet, pattern: *String, buffer: *String, patternI: usize, minLen: usize, maxLen: usize) !void {
+    if (buffer.items.len != 0) {
+        if (buffer.items.len >= minLen and buffer.items.len <= maxLen and !perms.contains(buffer.items)) {
+            try perms.put(try alloc.dupe(u8, buffer.items), true);
+        }
+    }
+    if (patternI >= pattern.items.len)
+        return;
+
+    try insertSorted(buffer, pattern.items[patternI]);
+    // try buffer.append(pattern.items[patternI]);
+    try permutationsSortTest(alloc, perms, pattern, buffer, patternI + 1, minLen, maxLen);
+
+    try popSorted(buffer, pattern.items[patternI]);
+    // _ = buffer.pop();
+    try permutationsSortTest(alloc, perms, pattern, buffer, patternI + 1, minLen, maxLen);
+}
+
+pub fn permutationsSort(alloc: Allocator, perms: *PermSet, pattern: *String, buffer: *String, patternI: usize, minLen: usize, maxLen: usize) !void {
+    if (buffer.items.len != 0) {
+        if (buffer.items.len >= minLen and buffer.items.len <= maxLen and !perms.contains(buffer.items)) {
+            try perms.put(try alloc.dupe(u8, buffer.items), true);
+        }
+    }
+    if (patternI >= pattern.items.len)
+        return;
+
+    try insertSorted(buffer, pattern.items[patternI]);
+    // try buffer.append(pattern.items[patternI]);
+    try permutationsSort(alloc, perms, pattern, buffer, patternI + 1, minLen, maxLen);
+
+    try popSorted(buffer, pattern.items[patternI]);
+    // _ = buffer.pop();
+    try permutationsSort(alloc, perms, pattern, buffer, patternI + 1, minLen, maxLen);
 }
 
 pub fn populateMap(alloc: Allocator) !Map {
@@ -107,6 +161,7 @@ const Constraints = struct {
 const Context = struct {
     grid: Grid,
     rack: String,
+    basePerm: PermSet,
     orderedMap: Map,
     alloc: Allocator,
 
@@ -116,11 +171,20 @@ const Context = struct {
         var rack = String.init(alloc);
         try rack.appendSlice(rackValue);
         std.mem.sort(u8, rack.items[0..], {}, lessThan);
+        var buffer = String.init(alloc);
+        defer buffer.deinit();
+
+        var perms = PermSet.init(alloc);
+        try permutations(alloc, &perms, &rack, &buffer, 0, 2, rack.items.len);
+        for (perms.keys(), 0..) |word, i| {
+            print("vect[{d}] = {s}\n", .{i, word});
+        }
         return .{
             .grid = grid,
             .rack = rack,
             .orderedMap = try populateMap(alloc),
             .alloc = alloc,
+            .basePerm = perms,
         };
     }
 
@@ -179,7 +243,9 @@ fn isAlphaPar(grid: Grid, cell: Point) bool {
 }
 
 fn getChar(grid: Grid, cell: Point) u8 { 
-    return grid.grid[@intCast(cell[1])][@intCast(cell[0])];
+    if (cell[0] >= 0 and cell[0] < 15) {
+        return grid.grid[@intCast(cell[1])][@intCast(cell[0])];
+    } else return '~';
 }
 
 const GridError = error {
@@ -219,7 +285,7 @@ fn rGetConstraints(ctx: *Context, cellConst: *Constraints, cell: Point, cBuff: *
 
         if (cursor[0] < 15 and !isAlpha(ctx.grid, cursor) and loopIterator == 0) {
             var rangeS: ?u4 = null;
-            while (cursor[0] < 14 and !isAlpha(ctx.grid, cursor) and placed < ctx.rack.items.len) {
+            while (cursor[0] < 15 and !isAlpha(ctx.grid, cursor) and placed < ctx.rack.items.len) {
                 //If we have a letter above or bellow, we set the rangeStart to that distance
                 if (isAlphaPerp(ctx.grid, cursor)) {
                     if (rangeS == null)
@@ -228,32 +294,56 @@ fn rGetConstraints(ctx: *Context, cellConst: *Constraints, cell: Point, cBuff: *
                 cursor[0] += 1;
                 placed += 1;
             }
+            //If we already had letters in posBuff and we sat rangeS > lastLetterFound + 1, then we reset it to <-
+            if (constIt != 0 and (rangeS == null or rangeS.? > posBuff[constIt - 1] + 1)) {
+                rangeS = posBuff[constIt - 1] + 1;
+            }
             //Backtrack if we hit a letter till we have a space to our right
-            print("[0]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
-            print("[0]Cursor: {d}\n", .{cursor});
-            print("[0]Char: {c}\n", .{getChar(ctx.grid, cursor)});
-            while (cursor[0] > 0 and placed > 0 and (isAlpha(ctx.grid, cursor) or isAlphaRight(ctx.grid, cursor))) {
+            // print("[1]RS: {any}\n", .{rangeS});
+            // print("[2]PUSHED\n", .{});
+            // print("[2]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
+            // print("[2]Cursor: {d}\n", .{cursor});
+            // print("[2]Char: {c}\n", .{getChar(ctx.grid, cursor)});
+            while (cursor[0] > 0 and cursor[0] < 15 and placed > 0 and (isAlpha(ctx.grid, cursor) or isAlphaRight(ctx.grid, cursor))) {
                 cursor[0] -= 1;
-                if (isAlpha(ctx.grid, cursor))
-                    placed -= 1;
+                placed -= 1;
             }
             if (placed == 0 and isAlpha(ctx.grid, cursor)) {
                 hasPushed = true;
                 continue;
             }
-            print("[1]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
-            print("[1]Cursor: {d}\n", .{cursor});
-            print("[1]Char: {c}\n", .{getChar(ctx.grid, cursor)});
+            // print("[1]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
+            // print("[1]Cursor: {d}\n", .{cursor});
+            // print("[1]Char: {c}\n", .{getChar(ctx.grid, cursor)});
             // if (cursor[0] < wordStart) 
             //     break;
             var rangeEnd = cursor[0] - wordStart;
-            rangeEnd += if (placed == ctx.rack.items.len) 0 else 1;
+            if (rangeS != null and rangeEnd < rangeS.? and isAlphaRight(ctx.grid, cursor)) {
+                hasPushed = true;
+                continue;
+            }
+            rangeEnd += if (placed == ctx.rack.items.len or cursor[0] == 15) 0 else 1;
+            // print("[1]RS: {any}\n", .{rangeS});
+            // print("[1]RE: {d}\n", .{rangeEnd});
 
+            //Fix range at min 2 as a word can't be a single letter
             rangeS = if (rangeS != null and rangeS.? < 2) 2 else rangeS;
+
+            if (cursor[0] < 15 and !isAlphaRight(ctx.grid, cursor) and placed < ctx.rack.items.len) {
+                cursor[0] += 1;
+                placed += 1;
+            }
+
             if (rangeS != null and rangeEnd >= 2 and rangeEnd >= rangeS.?) {
+                // print("[1]PUSHED\n", .{});
+                // print("[1]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
+                // print("[1]Cursor: {d}\n", .{cursor});
+                // print("[1]Char: {c}\n", .{getChar(ctx.grid, cursor)});
                 try cellConst.ranges.append(.{rangeS.?, rangeEnd});
                 try cellConst.places.append(.{.c = cBuff.*, .pos = posBuff.*});
             }
+            if (rangeS == null and cursor[0] == 15 and constIt != 0)
+                cursor[0] -= 1;
             //If we didn't find any perpAlpha and we're at the end of our frame 
             //and we didn't find any letter along the way, we know for sure no word is possible here
             if (rangeS == null and cursor[0] == 14 and constIt == 0)
@@ -280,20 +370,39 @@ fn rGetConstraints(ctx: *Context, cellConst: *Constraints, cell: Point, cBuff: *
             var rangeS = (cursor[0] - wordStart);
             var rangeEnd = (cursor[0] - wordStart);
 
+            // placed += if (cursor[0] < 15 and !isAlpha(ctx.grid, cursor)) 1 else 0;
             //Fix for words beginning with an already placed letter that has holes right after it
             const posBuffLen = std.mem.indexOfSentinel(u4, 0, posBuff);
             if (posBuffLen > 0 and rangeS < 15) {
+                // print("[1]RS: {d}\n", .{rangeS});
                 rangeS = posBuff[posBuffLen - 1];
+                if (isAlpha(ctx.grid, .{posBuff[posBuffLen - 1], cursor[1]})) {
+                    rangeS += 1;
+                }
+                // print("[2]RS: {d}\n", .{rangeS});
                 rangeS = if (rangeS < 2) 2 else rangeS;
+                rangeS = if (rangeS > rangeEnd) rangeEnd else rangeS;
             }
 
+            // print("[2]RS: {d}\n", .{rangeS});
+            // print("[2]RE: {d}\n", .{rangeEnd});
+            // print("[2]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
+            // print("[2]Cursor: {d}\n", .{cursor});
+            // print("[2]Dist: {d}\n", .{cursor[0] - wordStart});
+            // print("----------------------\n", .{});
             while (cursor[0] < 15 and !isAlphaRight(ctx.grid, cursor) and placed < ctx.rack.items.len) {
                 rangeEnd += 1;
                 placed += 1;
                 cursor[0] += 1;
             }
+            // print("[3]RS: {d}\n", .{rangeS});
+            // print("[3]RE: {d}\n", .{rangeEnd});
             // print("[3]Placed: {d} / {d}\n", .{placed, ctx.rack.items.len});
             // print("[3]Cursor: {d}\n", .{cursor});
+            // print("[3]Dist: {d}\n", .{cursor[0] - wordStart});
+            // if (cursor[0] < 15 and isAlphaRight(ctx.grid, cursor) and placed == ctx.rack.items.len) {
+            //     rangeEnd -= 1;
+            // }
             if (cursor[0] <= 15 and placed <= ctx.rack.items.len and rangeEnd >= 2) {
                 // print("[2]Pushed\n", .{});
                 try cellConst.ranges.append(.{rangeS, rangeEnd});
@@ -321,18 +430,59 @@ fn getConstraints(ctx: *Context, cell: Point) !Constraints {
     return cellConst;
 }
 
-fn evaluateGrid(ctx: *Context) !MatchVec {
+fn tryWords(ctx: *Context, cell: *Point, wordVect: *StringVec) !MatchVec {
+    _ = ctx; _ =wordVect; _ = cell;
+    return error.NoWordCanBeginHere;
+}
+
+
+
+fn getCellWords(ctx: *Context, cellConst: *Constraints, cell: *Point, wordVec: *StringVec) !MatchVec {
+    for (0..cellConst.ranges.items.len) |it| {
+        if (cellConst.places.items[it].c[0] == 0) {
+            _ = tryWords(ctx, cell, wordVec) catch continue;
+            continue;
+        }
+
+        var cellPerms = PermSet.init(ctx.alloc);
+        var mandatory = String.init(ctx.alloc);
+        for (cellConst.places.items[it].c) |ch| {
+            if (ch == 0) break;
+            try mandatory.append(ch);
+        }
+        std.mem.sort(u8, mandatory.items[0..], {}, lessThan);
+
+        // print("MANDATORY: {s}\n", .{mandatory.items});
+        // print("RACK: {s}\n", .{ctx.rack.items});
+        // insertSorted(&mandatory, ctx.rack.items[2]);
+        // try permutationsSort(ctx.alloc, &cellPerms, &ctx.rack, &mandatory, 0, cellConst.ranges.items[it][0], cellConst.ranges.items[it][1]);
+        try permutationsSortTest(ctx.alloc, &cellPerms, &ctx.rack, &mandatory, 0, cellConst.ranges.items[it][0], cellConst.ranges.items[it][1]);
+        // for (cellPerms.keys(), 0..) |key, i| {
+        //     print("cellPerm[{d}] = {s}\n", .{i, key});
+        // }
+        const cellWords = try getWordList(ctx.alloc, &cellPerms, ctx.orderedMap);
+        // _ = cellWords;
+        for (cellWords.items, 0..) |word, i| {
+            print("vect[{d}] = {s}\n", .{i, word});
+        }
+    }
+    return error.NoWordCanBeginHere;
+}
+
+fn evaluateGrid(ctx: *Context, wordVec: *StringVec) !MatchVec {
     const result = MatchVec.init(ctx.alloc);
 
     for (0..GRID_SIZE) |y| {
         for (0..GRID_SIZE) |x| {
-            if (y == 8 and x == 0) {
-                const cell = Point{@intCast(x), @intCast(y)};
-                const cellConst = getConstraints(ctx, cell) catch continue;
+            // if ((y == 0 and x == 2) or (y == 12 and x == 0)) {
+            if (y == 12 and x == 5) {
+                var cell = Point{@intCast(x), @intCast(y)};
+                var cellConst = getConstraints(ctx, cell) catch continue;
                 if (cellConst.places.items.len == 0)
                     continue;
-                print("Y:{d},X:{d}\n", .{y, x});
-                print("{}", .{cellConst});
+                // print("Y:{d},X:{d}\n", .{y, x});
+                // print("{}", .{cellConst});
+                _ = getCellWords(ctx, &cellConst, &cell, wordVec) catch continue;
             }
         }
     }
@@ -343,36 +493,19 @@ fn evaluateGrid(ctx: *Context) !MatchVec {
 fn solveGrid(ctx: *Context) !void {
     const startTime = std.time.microTimestamp();
 
-    var buffer = String.init(ctx.alloc);
-    defer buffer.deinit();
-
-    var perms = PermSet.init(ctx.alloc);
-    defer {
-        for (perms.keys()) |key| ctx.alloc.free(key);
-        perms.deinit();
-    }
-
-    try permutations(ctx.alloc, &perms, &ctx.rack, &buffer, 0, 2, ctx.rack.items.len);
-    // for (perms.keys(), 0..) |word, i| {
-    //     print("vect[{d}] = {s}\n", .{i, word});
-    // }
-    // print("Count: {d}\n", .{perms.keys().len});
-    const wordVec = try getWordList(ctx.alloc, &perms, ctx.orderedMap);
-    defer wordVec.deinit();
-
-    const resultFirstHalf = try evaluateGrid(ctx);
-    _ = resultFirstHalf;
+    var wordVec = try getWordList(ctx.alloc, &ctx.basePerm, ctx.orderedMap);
     // for (wordVec.items, 0..) |word, i| {
     //     print("vect[{d}] = {s}\n", .{i, word});
     // }
-    // print("Count: {d}\n", .{perms.keys().len});
+
+    const resultFirstHalf = try evaluateGrid(ctx, &wordVec);
+    _ = resultFirstHalf;
 
     const endTime = std.time.microTimestamp();
     const elapsedMicro: i64 = endTime - startTime;
     const elapsedMili: f64 = @as(f64, @floatFromInt(elapsedMicro)) / @as(f64, 1000);
-    _ = elapsedMili;
 
-    // print("Elapsed: {d}µs | {d}ms\n", .{elapsedMicro, elapsedMili});
+    print("Elapsed: {d}µs | {d}ms\n", .{elapsedMicro, elapsedMili});
 }
 
 pub fn main() !void {
@@ -385,6 +518,9 @@ pub fn main() !void {
     defer arena.deinit();
 
     var ctx = try Context.init(ArenaAlloc, "grid00.txt", "SALOPES");
+    // for (ctx.basePerm.keys()) |key| {
+    //     print("KEY: {s}\n", .{key});
+    // }
     // try solveGrid(&ctx);
     // try ctx.loadGrid("grid01.txt");
     // try solveGrid(&ctx);
@@ -392,7 +528,11 @@ pub fn main() !void {
     // try solveGrid(&ctx);
     // try ctx.loadGrid("grid03.txt");
     // try solveGrid(&ctx);
-    try ctx.loadGrid("grid04.txt");
+    // try ctx.loadGrid("grid04.txt");
+    // try solveGrid(&ctx);
+    // try ctx.loadGrid("grid05.txt");
+    // try solveGrid(&ctx);
+    try ctx.loadGrid("grid06.txt");
     try solveGrid(&ctx);
 }
 
