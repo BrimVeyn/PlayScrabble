@@ -168,17 +168,19 @@ const Context = struct {
     pub fn init(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
         var grid = Grid.init();
         try grid.loadGridState(gridState);
+
         var rack = String.init(alloc);
         try rack.appendSlice(rackValue);
         std.mem.sort(u8, rack.items[0..], {}, lessThan);
+
         var buffer = String.init(alloc);
         defer buffer.deinit();
 
         var perms = PermSet.init(alloc);
         try permutations(alloc, &perms, &rack, &buffer, 0, 2, rack.items.len);
-        for (perms.keys(), 0..) |word, i| {
-            print("vect[{d}] = {s}\n", .{i, word});
-        }
+        // for (perms.keys(), 0..) |word, i| {
+        //     print("vect[{d}] = {s}\n", .{i, word});
+        // }
         return .{
             .grid = grid,
             .rack = rack,
@@ -461,10 +463,10 @@ fn getCellWords(ctx: *Context, cellConst: *Constraints, cell: *Point, wordVec: *
         //     print("cellPerm[{d}] = {s}\n", .{i, key});
         // }
         const cellWords = try getWordList(ctx.alloc, &cellPerms, ctx.orderedMap);
-        // _ = cellWords;
-        for (cellWords.items, 0..) |word, i| {
-            print("vect[{d}] = {s}\n", .{i, word});
-        }
+        _ = cellWords;
+        // for (cellWords.items, 0..) |word, i| {
+        //     print("vect[{d}] = {s}\n", .{i, word});
+        // }
     }
     return error.NoWordCanBeginHere;
 }
@@ -475,7 +477,7 @@ fn evaluateGrid(ctx: *Context, wordVec: *StringVec) !MatchVec {
     for (0..GRID_SIZE) |y| {
         for (0..GRID_SIZE) |x| {
             // if ((y == 0 and x == 2) or (y == 12 and x == 0)) {
-            if (y == 12 and x == 5) {
+            // if (y == 12 and x == 5) {
                 var cell = Point{@intCast(x), @intCast(y)};
                 var cellConst = getConstraints(ctx, cell) catch continue;
                 if (cellConst.places.items.len == 0)
@@ -483,7 +485,7 @@ fn evaluateGrid(ctx: *Context, wordVec: *StringVec) !MatchVec {
                 // print("Y:{d},X:{d}\n", .{y, x});
                 // print("{}", .{cellConst});
                 _ = getCellWords(ctx, &cellConst, &cell, wordVec) catch continue;
-            }
+            // }
         }
     }
 
