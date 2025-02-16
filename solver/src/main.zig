@@ -15,9 +15,10 @@ const OrderedMap            = generator.OrderedMap;
 const asciiOrderedMapPath   = generator.asciiOrderedMapPath;
 const Map                   = generator.Map;
 
-const PermSet     = std.StringArrayHashMap(bool);
-const String      = ArrayList(u8);
-const StringVec   = ArrayList([]const u8);
+const PermSet              = std.StringArrayHashMap(bool);
+const String               = ArrayList(u8);
+const StringUnmanaged      = std.ArrayListUnmanaged(u8);
+const StringVec            = ArrayList([]const u8);
 
 pub fn permutations(alloc: Allocator, perms: *PermSet, pattern: *String, buffer: *String, patternI: usize, minLen: usize, maxLen: usize) !void {
     if (buffer.items.len != 0) {
@@ -46,6 +47,11 @@ fn orderU8(context: u8, item: u8) std.math.Order {
 fn insertSorted(string: *String, ch: u8) !void {
     const idx = std.sort.lowerBound(u8, string.items[0..], ch, orderU8);
     try string.insert(idx, ch);
+}
+
+fn insertSortedAssumeCapacity(string: *StringUnmanaged, ch: u8) void {
+    const idx = std.sort.lowerBound(u8, string.items[0..], ch, orderU8);
+    string.insertAssumeCapacity(idx, ch);
 }
 
 fn popSorted(string: *String, ch: u8) !void {
@@ -109,6 +115,7 @@ fn getWordList(alloc: Allocator, perms: *PermSet, orderedMap: Map) !StringVec {
 
     for (perms.keys()) |permutation| {
         const permWords = orderedMap.data.get(permutation) orelse continue;
+        // try vec.appendSlice(permWords.keys()); //<-- slower
         for (permWords.keys()) |word| {
             try vec.append(word);
         }
@@ -178,7 +185,7 @@ const Context = struct {
         defer buffer.deinit();
 
         var perms = PermSet.init(alloc);
-        try permutations(alloc, &perms, &rack, &buffer, 0, 2, rack.items.len);
+        try permutations(alloc, &perms, &rack, &buffer, 0, 1, rack.items.len);
         // for (perms.keys(), 0..) |word, i| {
         //     print("vect[{d}] = {s}\n", .{i, word});
         // }
@@ -448,7 +455,6 @@ fn tryWords(ctx: *Context, cell: *Point, wordVect: *StringVec) !MatchVec {
 }
 
 
-
 fn getCellWords(ctx: *Context, cellConst: *Constraints, cell: *Point, wordVec: *StringVec) !MatchVec {
     for (0..cellConst.ranges.items.len) |it| {
         if (cellConst.places.items[it].c[0] == 0) {
@@ -458,19 +464,45 @@ fn getCellWords(ctx: *Context, cellConst: *Constraints, cell: *Point, wordVec: *
 
         var cellPerms = PermSet.init(ctx.alloc);
         var mandatory = String.init(ctx.alloc);
-        for (cellConst.places.items[it].c) |ch| {
+        inline for (cellConst.places.items[it].c) |ch| {
             if (ch == 0) break;
             try mandatory.append(ch);
         }
-        std.mem.sort(u8, mandatory.items[0..], {}, lessThan);
+
+        for (ctx.basePerm.keys()) |permutation| {
+            if (mandatory.items.len + permutation.len < cellConst.ranges.items[it][0] or 
+                mandatory.items.len + permutation.len > cellConst.ranges.items[it][1])
+            {
+                continue;
+            }
+            var newPermutation = try StringUnmanaged.initCapacity(ctx.alloc, mandatory.items.len + permutation.len);
+            newPermutation.appendSliceAssumeCapacity(permutation);
+            // for (permutation) |ch| newPermutation.appendAssumeCapacity(ch);
+            for (mandatory.items) |ch| {
+                insertSortedAssumeCapacity(&newPermutation, ch);
+            }
+            try cellPerms.put(try newPermutation.toOwnedSlice(ctx.alloc), true);
+        }
+
+        // for (newPerms.keys(), 0..) |key, i| {
+        //     print("newPerms[{d}] = {s}\n", .{i, key});
+        // }
 
         // print("MANDATORY: {s}\n", .{mandatory.items});
         // print("RACK: {s}\n", .{ctx.rack.items});
         // insertSorted(&mandatory, ctx.rack.items[2]);
         // try permutationsSort(ctx.alloc, &cellPerms, &ctx.rack, &mandatory, 0, cellConst.ranges.items[it][0], cellConst.ranges.items[it][1]);
-        try permutationsSortTest(ctx.alloc, &cellPerms, &ctx.rack, &mandatory, 0, cellConst.ranges.items[it][0], cellConst.ranges.items[it][1]);
+        // try permutationsSortTest(ctx.alloc, &cellPerms, &ctx.rack, &mandatory, 0, cellConst.ranges.items[it][0], cellConst.ranges.items[it][1]);
         // for (cellPerms.keys(), 0..) |key, i| {
         //     print("cellPerm[{d}] = {s}\n", .{i, key});
+        //     if (!newPerms.contains(key)) {
+        //         print("DIFF: {s}\n", .{key});
+        //     }
+        // }
+        // for (newPerms.keys()) |key| {
+        //     if (!cellPerms.contains(key)) {
+        //         print("DIFF: {s}\n", .{key});
+        //     }
         // }
         const cellWords = try getWordList(ctx.alloc, &cellPerms, ctx.orderedMap);
         _ = cellWords;
@@ -534,18 +566,20 @@ pub fn main() !void {
     //     print("KEY: {s}\n", .{key});
     // }
     // try solveGrid(&ctx);
-    try ctx.loadGrid("grid01.txt");
-    try solveGrid(&ctx);
-    try ctx.loadGrid("grid02.txt");
-    try solveGrid(&ctx);
-    try ctx.loadGrid("grid03.txt");
-    try solveGrid(&ctx);
-    try ctx.loadGrid("grid04.txt");
-    try solveGrid(&ctx);
-    try ctx.loadGrid("grid05.txt");
-    try solveGrid(&ctx);
-    try ctx.loadGrid("grid06.txt");
-    try solveGrid(&ctx);
+    // try ctx.loadGrid("grid01.txt");
+    // try solveGrid(&ctx);
+    // try ctx.loadGrid("grid02.txt");
+    // try solveGrid(&ctx);
+    // try ctx.loadGrid("grid03.txt");
+    // try solveGrid(&ctx);
+    // try ctx.loadGrid("grid04.txt");
+    // try solveGrid(&ctx);
+    // try ctx.loadGrid("grid05.txt");
+    // try solveGrid(&ctx); 
+    for (0..10) |_| {
+        try ctx.loadGrid("grid06.txt");
+        try solveGrid(&ctx);
+    }
 }
 
 test "simple test" {}
