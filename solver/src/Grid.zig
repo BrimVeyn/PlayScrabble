@@ -23,10 +23,10 @@ const Modifiers = enum(u8) {
 };
 
 const gridModifiers = [15][15]Modifiers {
-    [_]Modifiers{.TWORD, .NONE, .NONE, .TWORD, .NONE, .NONE, .NONE, .TWORD, .NONE, .NONE, .NONE, .DLETTER, .NONE, .NONE, .TWORD},
+    [_]Modifiers{.TWORD, .NONE, .NONE, .DLETTER, .NONE, .NONE, .NONE, .TWORD, .NONE, .NONE, .NONE, .DLETTER, .NONE, .NONE, .TWORD},
     [_]Modifiers{.NONE, .DWORD, .NONE, .NONE, .NONE, .TLETTER, .NONE, .NONE, .NONE, .TLETTER, .NONE, .NONE, .NONE, .DWORD, .NONE},
     [_]Modifiers{.NONE, .NONE, .DWORD, .NONE, .NONE, .NONE, .TWORD, .NONE, .DLETTER, .NONE, .NONE, .NONE, .DWORD, .NONE, .NONE},
-    [_]Modifiers{.TWORD, .NONE, .NONE, .DWORD, .NONE, .NONE, .NONE, .DLETTER, .NONE, .NONE, .NONE, .DWORD, .NONE, .NONE, .DLETTER},
+    [_]Modifiers{.DLETTER, .NONE, .NONE, .DWORD, .NONE, .NONE, .NONE, .DLETTER, .NONE, .NONE, .NONE, .DWORD, .NONE, .NONE, .DLETTER},
     [_]Modifiers{.NONE, .NONE, .NONE, .NONE, .DWORD, .NONE, .NONE, .NONE, .NONE, .NONE, .DWORD, .NONE, .NONE, .NONE, .NONE},
     [_]Modifiers{.NONE, .TLETTER, .NONE, .NONE, .NONE, .TLETTER, .NONE, .NONE, .NONE, .TLETTER, .NONE, .NONE, .NONE, .TLETTER, .NONE},
     [_]Modifiers{.NONE, .NONE, .TWORD, .NONE, .NONE, .NONE, .DLETTER, .NONE, .DLETTER, .NONE, .NONE, .NONE, .DLETTER, .NONE, .NONE},
@@ -34,10 +34,10 @@ const gridModifiers = [15][15]Modifiers {
     [_]Modifiers{.NONE, .NONE, .TWORD, .NONE, .NONE, .NONE, .DLETTER, .NONE, .DLETTER, .NONE, .NONE, .NONE, .DLETTER, .NONE, .NONE},
     [_]Modifiers{.NONE, .TLETTER, .NONE, .NONE, .NONE, .TLETTER, .NONE, .NONE, .NONE, .TLETTER, .NONE, .NONE, .NONE, .TLETTER, .NONE},
     [_]Modifiers{.NONE, .NONE, .NONE, .NONE, .DWORD, .NONE, .NONE, .NONE, .NONE, .NONE, .DWORD, .NONE, .NONE, .NONE, .NONE},
-    [_]Modifiers{.TWORD, .NONE, .NONE, .DWORD, .NONE, .NONE, .NONE, .DLETTER, .NONE, .NONE, .NONE, .DWORD, .NONE, .NONE, .DLETTER},
+    [_]Modifiers{.DLETTER, .NONE, .NONE, .DWORD, .NONE, .NONE, .NONE, .DLETTER, .NONE, .NONE, .NONE, .DWORD, .NONE, .NONE, .DLETTER},
     [_]Modifiers{.NONE, .NONE, .DWORD, .NONE, .NONE, .NONE, .TWORD, .NONE, .DLETTER, .NONE, .NONE, .NONE, .DWORD, .NONE, .NONE},
     [_]Modifiers{.NONE, .DWORD, .NONE, .NONE, .NONE, .TLETTER, .NONE, .NONE, .NONE, .TLETTER, .NONE, .NONE, .NONE, .DWORD, .NONE},
-    [_]Modifiers{.TWORD, .NONE, .NONE, .TWORD, .NONE, .NONE, .NONE, .TWORD, .NONE, .NONE, .NONE, .DLETTER, .NONE, .NONE, .TWORD}
+    [_]Modifiers{.TWORD, .NONE, .NONE, .DLETTER, .NONE, .NONE, .NONE, .TWORD, .NONE, .NONE, .NONE, .DLETTER, .NONE, .NONE, .TWORD}
 };
 
 pub const Grid = struct {
@@ -79,21 +79,21 @@ pub const Grid = struct {
 
     pub fn init() Grid {
         const grid = [15][15]u8 {
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            [_]u8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} 
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'},
+            [_]u8{'.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'} 
         };
         return .{
             .grid = grid,

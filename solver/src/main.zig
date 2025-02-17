@@ -228,6 +228,7 @@ const Context = struct {
     basePerm: PermSet,
     orderedMap: Map,
     dict: ScrabbleDict,
+    matchVec: MatchVec,
 
     pub fn init(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
         var grid = Grid.init();
@@ -256,6 +257,7 @@ const Context = struct {
             .basePerm = perms,
             .orderedMap = try populateMap(alloc),
             .dict = dict,
+            .matchVec = MatchVec.init(alloc),
         };
     }
 
@@ -516,24 +518,24 @@ const LetterScore = @import("Score.zig").LetterScore;
 
 fn computeScorePerp(ctx: *const Context, currPoint: Point, currCh: u8) !u32 {
     var start: u4 = currPoint[1];
-    while ((start - 1) >= 0 and isAlpha(ctx.grid, .{currPoint[0], start - 1})) : (start -= 1) {}
+    while (start > 0 and isAlpha(ctx.grid, .{currPoint[0], start - 1})) : (start -= 1) {}
 
     var end: u4 = currPoint[1];
-    while ((end + 1) <= 14 and isAlpha(ctx.grid, .{currPoint[0], end + 1})) : (end += 1) {}
+    while (end < 14 and isAlpha(ctx.grid, .{currPoint[0], end + 1})) : (end += 1) {}
 
     var score: u32 = 0;
     var buffer: [GRID_SIZE:0]u8 = .{0} ** GRID_SIZE;
     var wordMultiplier: u32 = 1;
 
-    print("IntScore: {d}\n", .{score});
-    for (start..end) |y| {
+    for (start..end + 1) |y| {
         if (y == currPoint[1]) {
             buffer[y - start] = currCh;
             score += LetterScore[currCh - 'A'] * ctx.grid.getLetterModifier(&currPoint).asU32();
             wordMultiplier = ctx.grid.getWordModifier(&currPoint).asU32();
         } else {
-            buffer[y - start] = try getChar(ctx.grid, currPoint);
-            score += LetterScore[try getChar(ctx.grid, currPoint) - 'A'];
+            // print("pos: {d}, ch: {c}\n", .{currPoint, try getChar(ctx.grid, currPoint)});
+            buffer[y - start] = try getChar(ctx.grid, .{currPoint[0], @intCast(y)});
+            score += LetterScore[try getChar(ctx.grid, .{currPoint[0], @intCast(y)}) - 'A'];
         }
     }
     const endOfWord = std.mem.indexOfSentinel(u8, 0, buffer[0..]);
@@ -543,48 +545,72 @@ fn computeScorePerp(ctx: *const Context, currPoint: Point, currCh: u8) !u32 {
     return score * wordMultiplier;
 }
 
-// fn computeScorePar(ctx: *const Context, currMatch: *const Match) {
-//
-// }
+fn computeScorePar(ctx: *const Context, currMatch: *const Match) u32 {
+    var wordScore: u32 = 0;
+    var wordMultiplier: u32 = 1;
+    for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
+        const currPoint = Point{@intCast(x), currMatch.saveCoord};
+        const letterScore = LetterScore[currMatch.word[x - currMatch.range[0]] - 'A'];
+
+        // if (std.mem.eql(u8, currMatch.word[0..std.mem.indexOfSentinel(u8, 0, currMatch.word[0..])], "POELASSE")) {
+        //     print("at: {d}, Wmul: {d}\n", .{currPoint, ctx.grid.getWordModifier(&currPoint).asU32()});
+        //     print("at: {d}, Lmul: {d}\n", .{currPoint, ctx.grid.getLetterModifier(&currPoint).asU32()});
+        //     print("CH: {c}\n", .{ctx.grid.grid[currPoint[1]][currPoint[0]]});
+        // }
+        if (ctx.grid.grid[currPoint[1]][currPoint[0]] == '.') {
+            wordMultiplier *= ctx.grid.getWordModifier(&currPoint).asU32();
+            wordScore += (letterScore * ctx.grid.getLetterModifier(&currPoint).asU32());
+        } else {
+            wordScore += letterScore;
+        }
+    }
+    // if (std.mem.eql(u8, currMatch.word[0..std.mem.indexOfSentinel(u8, 0, currMatch.word[0..])], "POELASSE")) {
+    //     print("Finale WM: {d}\n", .{wordMultiplier});
+    // }
+    return (wordScore * wordMultiplier);
+}
 
 fn tryMatch(ctx: *const Context, currMatch: *Match) !void {
     var tmpScore: u32 = 0;
     for (currMatch.range[0]..currMatch.range[1]) |x| {
         const currPoint = Point{@intCast(x), currMatch.saveCoord};
-        if (ctx.grid.grid[currMatch.saveCoord][x] == 0 and isAlphaPerp(ctx.grid, currPoint)) {
+        if (ctx.grid.grid[currMatch.saveCoord][x] == '.' and isAlphaPerp(ctx.grid, currPoint)) {
             tmpScore = computeScorePerp(ctx, currPoint, currMatch.word[x - currMatch.range[0]]) catch {
                 continue;
             };
             currMatch.score += tmpScore;
         }
     }
-    // print("Final score: {d}\n", .{currMatch.score});
+    // print("W: {s}, S: {d}\n", .{currMatch.word, currMatch.score});
+    currMatch.score += computeScorePar(ctx, currMatch);
+    // print("W: {s}, S: {d}\n", .{currMatch.word, currMatch.score});
 }
 
-fn computeMatchs(ctx: *const Context, cell: *const Point, wordVec: *const StringVec, mandatoryLen: usize) !MatchVec {
-    var cellMatchs = MatchVec.init(ctx.alloc);
-
+fn computeMatchs(ctx: *Context, cell: *const Point, wordVec: *const StringVec, mandatoryLen: usize) !void {
     for (wordVec.items) |word| {
         var currMatch = Match.init(word, cell);
         tryMatch(ctx, &currMatch) catch continue;
 
-        if ((currMatch.word.len - mandatoryLen) == 7) {
+        if ((std.mem.indexOfSentinel(u8, 0, currMatch.word[0..]) - mandatoryLen) == 7) {
             currMatch.score += Scrabble;
         }
-        try cellMatchs.append(currMatch);
+        try ctx.matchVec.append(currMatch);
     }
-    return cellMatchs;
 }
 
-fn getCellWords(ctx: *Context, cellConst: *Constraints, cell: *Point, wordVec: *StringVec) !MatchVec {
+fn lessThanMatch(context: void, a: Match, b: Match) bool {
+    _ = context;
+    return (a.score < b.score);
+}
+
+fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
     var cellPerms = ctx.basePerm;
     var mandatoryIt: usize = 0;
-    _ = wordVec;
 
     for (0..cellConst.ranges.items.len) |it| {
         if (cellConst.places.items[it].c[0] == 0) {
             const cellWords = try getBaseFilteredWordList(ctx, &cellPerms, &cellConst.ranges.items[it]);
-            _ = computeMatchs(ctx, cell, &cellWords, 0) catch continue;
+            computeMatchs(ctx, cell, &cellWords, 0) catch continue;
             continue;
         }
 
@@ -606,7 +632,7 @@ fn getCellWords(ctx: *Context, cellConst: *Constraints, cell: *Point, wordVec: *
             for (mandatoryIt..mandatoryLen) |i| {
                 insertSortedAssumeCapacity(&newPermutation, cellConst.places.items[it].c[i]);
             }
-            try tmpPerms.put(try newPermutation.toOwnedSlice(ctx.alloc), true);
+            try tmpPerms.put(newPermutation.items[0..], true);
         }
 
         // for (tmpPerms.keys(), 0..) |perm, i| {
@@ -617,48 +643,58 @@ fn getCellWords(ctx: *Context, cellConst: *Constraints, cell: *Point, wordVec: *
         // for (cellWords.items, 0..) |word, i| {
         //     print("[{d}]vect[{d}] = {s}\n", .{it, i, word});
         // }
-        const matchVec = try computeMatchs(ctx, cell, &cellWords, mandatoryLen);
-        _ =matchVec;
+        try computeMatchs(ctx, cell, &cellWords, mandatoryLen);
+        // _ =matchVec;
+        // std.mem.sort(Match, matchVec.items[0..], {}, lessThanMatch);
         // for (matchVec.items, 0..) |match, i| {
         //     print("[{d}]: {s} -> {d}\n", .{i, match.word, match.score});
         // }
         cellPerms = tmpPerms;
         mandatoryIt = mandatoryLen - 1;
     }
-    return error.NoWordCanBeginHere;
 }
 
-fn evaluateGrid(ctx: *Context, wordVec: *StringVec) !MatchVec {
-    const result = MatchVec.init(ctx.alloc);
-
+fn evaluateGrid(ctx: *Context) !void {
     for (0..GRID_SIZE) |y| {
         for (0..GRID_SIZE) |x| {
             // if ((y == 0 and x == 2) or (y == 12 and x == 0)) {
-            // if (y == 11 and x == 7) {
+            // if (y == 14 and x == 5) {
                 var cell = Point{@intCast(x), @intCast(y)};
                 var cellConst = getConstraints(ctx, cell) catch continue;
                 if (cellConst.places.items.len == 0)
                     continue;
                 // print("Y:{d},X:{d}\n", .{y, x});
                 // print("{}", .{cellConst});
-                _ = getCellWords(ctx, &cellConst, &cell, wordVec) catch continue;
+                evaluateCell(ctx, &cellConst, &cell) catch continue;
             // }
         }
     }
-
-    return result;
 }
 
 fn solveGrid(ctx: *Context) !i64 {
     const startTime = std.time.microTimestamp();
 
-    var wordVec = try getWordListTest(ctx.alloc, &ctx.basePerm, ctx.orderedMap);
     // for (wordVec.items, 0..) |word, i| {
     //     print("vect[{d}] = {s}\n", .{i, word});
     // }
 
-    const resultFirstHalf = try evaluateGrid(ctx, &wordVec);
-    _ = resultFirstHalf;
+    try evaluateGrid(ctx);
+    std.mem.sort(Match, ctx.matchVec.items[0..], {}, lessThanMatch);
+    // for (ctx.matchVec.items, 0..) |match, i| {
+    //     print("[{d}]: {s} -> {d}\n", .{i, match.word, match.score});
+    // }
+    // for (ctx.matchVec.items, 0..) |match, i| {
+    //     print(
+    //     \\ word[{}] = {
+    //     \\  .range: {},
+    //     \\  .saveCoord: {},
+    //     \\  .dir: {},
+    //     \\  .score: {},
+    //     \\ }
+    //     , .{i, match.range, match.saveCoord, @tagName(match.dir), match.score});
+    // }
+
+
 
     const endTime = std.time.microTimestamp();
     const elapsedMicro: i64 = endTime - startTime;
@@ -695,7 +731,7 @@ pub fn main() !void {
     // try solveGrid(&ctx); 
 
     var argIt = std.process.args();
-    _ = argIt.skip(); //Skips program name
+    _ = argIt.skip(); //Skps program name
     const loopCountStr = argIt.next() orelse "1";
     const loopCountInt = std.fmt.parseInt(usize, loopCountStr, 10) catch {
         print("Argument must be an integer\n", .{});
