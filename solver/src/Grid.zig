@@ -2,13 +2,24 @@ const std           = @import("std");
 const gridRootPath  = "./src/testGrids/";
 const MAX_PATH      = 256;
 const GRID_SIZE     = 15 * 16;
+const Point         = @Vector(2, u4);
 
 const Modifiers = enum(u8) {
     TWORD,
     DWORD,
-    DLETTER,
     TLETTER,
+    DLETTER,
     NONE,
+
+    pub fn asU32(self: Modifiers) u32 {
+        return switch (self) {
+            .TWORD => 3,
+            .DWORD => 2,
+            .TLETTER => 3,
+            .DLETTER => 2,
+            .NONE => 1,
+        };
+    }
 };
 
 const gridModifiers = [15][15]Modifiers {
@@ -50,6 +61,20 @@ pub const Grid = struct {
         while (lineIt.next()) |line| : (y += 1) {
             std.mem.copyForwards(u8, self.grid[y][0..], line);
         }
+    }
+
+    pub fn getLetterModifier(_ : Grid, cell: *const Point) Modifiers {
+        return switch (gridModifiers[cell[1]][cell[0]]) {
+            .DLETTER, .TLETTER => gridModifiers[cell[1]][cell[0]],
+            else => .NONE,
+        };
+    }
+
+    pub fn getWordModifier(_ : Grid, cell: *const Point) Modifiers {
+        return switch (gridModifiers[cell[1]][cell[0]]) {
+            .DWORD, .TWORD => gridModifiers[cell[1]][cell[0]],
+            else => .NONE,
+        };
     }
 
     pub fn init() Grid {

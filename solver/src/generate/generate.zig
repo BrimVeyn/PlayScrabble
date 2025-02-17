@@ -5,7 +5,6 @@ const AutoHashMap       = std.AutoHashMap;
 const ArrayList         = std.ArrayList;
 const Allocator         = std.mem.Allocator;
 
-
 const dict                      = @embedFile("Data.txt");
 pub const asciiOrderedMapPath   = "zig-out/asciiHash.json";
 pub const OrderedMap            = std.StringArrayHashMap(std.StringArrayHashMap(bool));
@@ -121,12 +120,3 @@ pub fn main() !void {
     try outFileWriter.print("{}\n", .{map});
 
 }
-
-
-// pub const Foo = struct {
-//     bar : isize,
-//
-//     pub fn asBytes(foo : *Foo) []u8 {
-//         return std.mem.asBytes(foo);
-//     }
-// };
