@@ -1,7 +1,7 @@
 const std                   = @import("std");
 const Grid                  = @import("Grid.zig").Grid;
 
-const dictContent           = @embedFile("generate/Data.txt");
+const dictContent           = @embedFile("generate/ODS8.txt");
 
 const generator             = @import("generate/generate.zig");
 const OrderedMap            = generator.OrderedMap;
@@ -11,7 +11,7 @@ const Map                   = generator.Map;
 const Allocator             = std.mem.Allocator;
 const ArrayList             = std.ArrayList;
 
-const PermSet               = std.StringArrayHashMap(bool);
+const PermSet               = std.StringArrayHashMap([2]u8);
 const String                = ArrayList(u8);
 const StringUnmanaged       = std.ArrayListUnmanaged(u8);
 const StringVec             = ArrayList([]const u8);
@@ -40,7 +40,7 @@ fn lessThanU8(context: void, a: u8, b: u8) bool {
 
 fn permutations(alloc: Allocator, perms: *PermSet, pattern: *String, buffer: *String, patternI: usize) !void {
     if (buffer.items.len != 0 and !perms.contains(buffer.items))
-        try perms.put(try alloc.dupe(u8, buffer.items), true);
+        try perms.put(try alloc.dupe(u8, buffer.items), .{0, 0});
 
     if (patternI >= pattern.items.len)
         return;
@@ -58,14 +58,15 @@ fn wildcardOne(alloc: Allocator, perms: *PermSet) !void {
 
     for (copy.keys()) |perm| {
         for ('A'..'Z') |ch| {
+            const chu8:u8 = @intCast(ch);
             var newPerm = try String.initCapacity(alloc, perm.len + 1);
             newPerm.appendSliceAssumeCapacity(perm);
-            try insertSorted(&newPerm, @as(u8, @intCast(ch)));
-            try perms.put(newPerm.items[0..], true);
+            try insertSorted(&newPerm, chu8);
+            try perms.put(newPerm.items[0..], .{chu8, 0});
 
             var oneLetter = try alloc.alloc(u8, 1);
-            oneLetter[0] = @as(u8, @intCast(ch));
-            try perms.put(oneLetter, true);
+            oneLetter[0] = chu8;
+            try perms.put(oneLetter, .{chu8, 0});
         }
     }
 }
@@ -76,21 +77,23 @@ fn wildcardTwo(alloc: Allocator, perms: *PermSet) !void {
 
     for (copy.keys()) |perm| {
         for ('A'..'Z') |ch1| {
+            const ch1u8: u8 = @intCast(ch1);
             for ('A'..'Z') |ch2| {
+                const ch2u8: u8 = @intCast(ch2);
                 var newPerm = try String.initCapacity(alloc, perm.len + 2);
                 newPerm.appendSliceAssumeCapacity(perm);
-                try insertSorted(&newPerm, @as(u8, @intCast(ch1)));
-                try insertSorted(&newPerm, @as(u8, @intCast(ch2)));
-                try perms.put(newPerm.items[0..], true);
+                try insertSorted(&newPerm, ch1u8);
+                try insertSorted(&newPerm, ch2u8);
+                try perms.put(newPerm.items[0..], .{ch1u8, ch2u8});
 
                 var twoLetters = try alloc.alloc(u8, 2);
-                twoLetters[0] = @as(u8, @intCast(ch1));
-                twoLetters[0] = @as(u8, @intCast(ch2));
-                try perms.put(twoLetters, true);
+                twoLetters[0] = ch1u8;
+                twoLetters[0] = ch2u8;
+                try perms.put(twoLetters, .{ch1u8, ch2u8});
             }
             var oneLetter = try alloc.alloc(u8, 1);
-            oneLetter[0] = @as(u8, @intCast(ch1));
-            try perms.put(oneLetter, true);
+            oneLetter[0] = ch1u8;
+            try perms.put(oneLetter, .{ch1u8, 0});
         }
     }
 }
@@ -135,6 +138,7 @@ pub const Context = struct {
                 wildcard += 1;
             } else break;
         }
+
         var buffer = String.init(alloc);
         defer buffer.deinit();
 

@@ -5,7 +5,7 @@ const AutoHashMap       = std.AutoHashMap;
 const ArrayList         = std.ArrayList;
 const Allocator         = std.mem.Allocator;
 
-const dict                      = @embedFile("Data.txt");
+const dict                      = @embedFile("ODS8.txt");
 pub const asciiOrderedMapPath   = "zig-out/asciiHash.json";
 pub const OrderedMap            = std.StringArrayHashMap(std.StringArrayHashMap(bool));
 

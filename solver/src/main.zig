@@ -24,10 +24,10 @@ const ctxModule             = @import("Context.zig");
 const Context               = ctxModule.Context;
 const Direction             = ctxModule.Direction;
 
-const PermSet               = std.StringArrayHashMap(bool);
+const PermSet               = std.StringArrayHashMap([2]u8);
 const String                = ArrayList(u8);
 const StringUnmanaged       = std.ArrayListUnmanaged(u8);
-const StringVec             = ArrayList([]const u8);
+const StringVec             = ArrayList(struct {[]const u8, [2]u8});
 
 fn orderU8(context: u8, item: u8) std.math.Order {
     return (std.math.order(context, item));
@@ -53,34 +53,19 @@ fn popSorted(string: *String, ch: u8) !void {
     _ = string.orderedRemove(idx);
 }
 
-pub fn permutationsSort(alloc: Allocator, perms: *PermSet, pattern: *String, buffer: *String, patternI: usize, minLen: usize, maxLen: usize) !void {
-    if (buffer.items.len != 0) {
-        if (buffer.items.len >= minLen and buffer.items.len <= maxLen and !perms.contains(buffer.items)) {
-            try perms.put(try alloc.dupe(u8, buffer.items), true);
-        }
-    }
-    if (patternI >= pattern.items.len)
-        return;
-
-    try insertSorted(buffer, pattern.items[patternI]);
-    try permutationsSort(alloc, perms, pattern, buffer, patternI + 1, minLen, maxLen);
-
-    try popSorted(buffer, pattern.items[patternI]);
-    try permutationsSort(alloc, perms, pattern, buffer, patternI + 1, minLen, maxLen);
-}
-
 fn getFilteredWordList(ctx: *const Context, perms: *const PermSet, cellPlacement: *const Placement, cellRange: *const Range) !StringVec {
     var vec = StringVec.init(ctx.alloc);
 
-    for (perms.keys()) |*permutation| {
-        const permWords = ctx.orderedMap.data.get(permutation.*) orelse continue;
+    var permIt = perms.iterator();
+    while (permIt.next()) |kv| {
+        const permWords = ctx.orderedMap.data.get(kv.key_ptr.*) orelse continue;
         outer: for (permWords.keys()) |word| {
             if (word.len < cellRange[0] or word.len > cellRange[1]) continue;
             for (0..cellPlacement.c.len) |it| {
                 if (cellPlacement.c[it] == 0) break;
                 if (word[cellPlacement.pos[it] - 1] != cellPlacement.c[it]) continue :outer;
             }
-            try vec.append(word);
+            try vec.append(.{ word, kv.value_ptr.* });
         }
     }
     return vec;
@@ -89,11 +74,12 @@ fn getFilteredWordList(ctx: *const Context, perms: *const PermSet, cellPlacement
 fn getBaseFilteredWordList(ctx: *const Context, perms: *const PermSet, range: *const Range) !StringVec {
     var vec = StringVec.init(ctx.alloc);
 
-    for (perms.keys()) |*permutation| {
-        const permWords = ctx.orderedMap.data.get(permutation.*) orelse continue;
-        for (permWords.keys()) |*word| {
-            if (word.*.len < range[0] or word.*.len > range[1]) continue;
-            try vec.append(word.*);
+    var it = perms.iterator();
+    while (it.next()) |kv| {
+        const permWords = ctx.orderedMap.data.get(kv.key_ptr.*) orelse continue;
+        for (permWords.keys()) |word| {
+            if (word.len < range[0] or word.len > range[1]) continue;
+            try vec.append(.{ word, kv.value_ptr.*});
         }
     }
     return vec;
@@ -106,18 +92,23 @@ pub const Match = struct {
     saveCoord: u4,
     score: u32,
     validate: bool = false,
+    wildcards: [2]u8 = .{0, 0},
 
-    pub fn init(currWord: []const u8, cell: *const Point, ctxState: Direction) Match {
+    pub fn init(currWord: []const u8, wildcards: [2]u8, cell: *const Point, ctxState: Direction) Match {
         var word: [GRID_SIZE:0]u8 = .{0} ** GRID_SIZE;
         std.mem.copyForwards(u8, word[0..], currWord);
         return .{
+            .wildcards = wildcards,
             .dir = ctxState,
             .word = word,
             .range = Range{
                 cell[0],
                 cell[0] + (@as(u4, @intCast(currWord.len)) - 1),
             },
-            .saveCoord = cell[1], //FIX: should be based on direction
+            .saveCoord = switch(ctxState) {
+                .Horizontal => cell[0],
+                .Vertical => cell[1],
+            },
             .score = 0,
         };
     }
@@ -312,8 +303,10 @@ fn getConstraints(ctx: *Context, cell: Point) !Constraints {
 }
 
 fn computeMatchs(ctx: *Context, cell: *const Point, wordVec: *const StringVec, mandatoryLen: usize) !void {
-    outer: for (wordVec.items) |word| {
-        var currMatch = Match.init(word, cell, ctx.state);
+    outer: for (wordVec.items) |kv| {
+        const word = kv[0];
+        const wildcards = kv[1];
+        var currMatch = Match.init(word, wildcards, cell, ctx.state);
 
         for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
             const currPoint = Point{@intCast(x), currMatch.saveCoord};
@@ -389,27 +382,26 @@ fn solveGrid(ctx: *Context) !i64 {
     // }
 
     try evaluateGrid(ctx);
-
     //Transpose the grid and update ctx.state to Vertical
     ctx.transposeGrid();
-
     try evaluateGrid(ctx);
+
     std.mem.sort(Match, ctx.matchVec.items[0..], {}, lessThanMatch);
-    // const format = 
-    //     \\[{d}] = [
-    //     \\  .word: {s},
-    //     \\  .range: {d},
-    //     \\  .saveCoord: {d},
-    //     \\  .dir: {s},
-    //     \\  .score: {d},
-    //     \\]
-    //     \\
-    // ;
-    //
-    // for (ctx.matchVec.items, 0..) |match, i| {
-    //     // print("word[{d}] = {\n\t.range: {d}\n\t.saveCoord: {d}\n\t.dir: {s}\n\t.score: {d}\n}", .{i, match.range, match.saveCoord, @tagName(match.dir), match.score});
-    //     print(format, .{i, match.word, match.range, match.saveCoord, @tagName(match.dir), match.score});
-    // }
+    const format = 
+        \\[{d}] = [
+        \\  .word: {s},
+        \\  .range: {d},
+        \\  .saveCoord: {d},
+        \\  .dir: {s},
+        \\  .score: {d},
+        \\  .wildcards: {s},
+        \\]
+        \\
+    ;
+
+    for (ctx.matchVec.items, 0..) |match, i| {
+        std.log.info(format, .{i, match.word, match.range, match.saveCoord, @tagName(match.dir), match.score, match.wildcards});
+    }
     // for (ctx.matchVec.items, 0..) |match, i| {
     //     print("[{d}]: {s} -> {d}\n", .{i, match.word, match.score});
     // }
@@ -440,6 +432,9 @@ fn solveGrid(ctx: *Context) !i64 {
     return elapsedMicro;
 }
 
+//HACK: A grid where every cell is a bitmap of already explored paths of known letters
+//  possible, impossible, unexplored --> could speed things up for wildcards
+
 pub fn main() !void {
     var gpa: std.heap.GeneralPurposeAllocator(.{}) = .init;
     const GpaAlloc = gpa.allocator();
@@ -449,7 +444,7 @@ pub fn main() !void {
     const ArenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "LEPOTER");
+    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "SSALOPE");
     // for (ctx.basePerm.keys()) |key| {
     //     print("KEY: {s}\n", .{key});
     // }
