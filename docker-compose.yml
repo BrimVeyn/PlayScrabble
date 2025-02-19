@@ -25,10 +25,7 @@ services:
     depends_on:
       - postgres
     environment:
-      DATABASE_PORT: 5432
-      POSTGRES_USER: test
-      POSTGRES_PASSWORD: test
-      POSTGRES_DB: db
+      DATABASE_URL: postgresql://test:test@postgres:5432/db
 
     ports:
       - "8080:8080"

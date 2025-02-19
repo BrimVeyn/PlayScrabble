@@ -30,41 +30,21 @@ pub fn main() !u8 {
         .flags = 0,
     }, null);
 
-    const pgPort = std.process.getEnvVarOwned(allocator, "DATABASE_PORT") catch {
-        log.err("DATABASE_PORT not found", .{});
+    const dbUrl = std.process.getEnvVarOwned(allocator, "DATABASE_URL") catch {
+        log.err("Encountered Fatal Error missing 'DATABASE_URL'", .{});
         return 1;
-    };
-    defer allocator.free(pgPort);
+    }; 
+    defer allocator.free(dbUrl);
 
-    const pgDb = std.process.getEnvVarOwned(allocator, "POSTGRES_DB") catch {
-        log.err("POSTGRES_DB not found", .{});
+    const dbUri = std.Uri.parse(dbUrl) catch |err| {
+        log.err("Fatal error: {!}", .{err});
         return 1;
     };
-    defer allocator.free(pgDb);
 
-    const pgUser = std.process.getEnvVarOwned(allocator, "POSTGRES_USER") catch {
-        log.err("POSTGRES_USER not found", .{});
+    var db = pg.Pool.initUri(allocator, dbUri, 1, 10_000) catch |err| {
+        log.err("Fatal error: {!}", .{err});
         return 1;
     };
-    defer allocator.free(pgUser);
-
-    const pgPass = std.process.getEnvVarOwned(allocator, "POSTGRES_PASSWORD") catch {
-        log.err("POSTGRES_PASSWORD not found", .{});
-        return 1;
-    };
-    defer allocator.free(pgPass);
-    
-    var db = try pg.Pool.init(allocator, .{ 
-        .connect = .{
-            .port = try std.fmt.parseInt(u16, pgPort, 10),
-            .host = SERVER_ADDR,
-        },
-        .auth = .{
-            .database = pgDb,
-            .username = pgUser,
-            .password = pgPass,
-        },
-    });
     defer db.deinit();
 
     var app = App {
@@ -82,8 +62,18 @@ pub fn main() !u8 {
         .methods = "*",
     });
 
+    _ = try app.db.exec(
+        \\CREATE TABLE IF NOT EXISTS "users" (
+        \\name TEXT PRIMARY KEY,
+        \\age INT
+        \\);
+    , .{});
+
     var router = server.router(.{.middlewares = &.{cors}});
     router.get("/api/hello", hello, .{});
+    router.get("/api/getUser:name", getUser, .{});
+    router.get("/api/getUsers", getUsers, .{});
+    router.post("/api/addUser", addUser, .{});
 
     log.info("listening http://{s}:{d}/", .{SERVER_ADDR, PORT});
     log.info("process id (pid): {d}", .{std.c.getpid()});
@@ -98,6 +88,41 @@ fn shutdown(_: c_int) callconv(.C) void {
         log.info("Server shutting down...", .{});
         server_instance = null;
         server.stop();
+    }
+}
+
+fn getUser(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
+    _ = res;
+    _ = app;
+}
+
+const User = struct {
+    name: []u8,
+    age: i32,
+};
+
+fn getUsers(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
+    errdefer res.status = 500;
+
+    const queryRes = try app.db.query("SELECT name,age FROM users", .{});
+    defer queryRes.deinit();
+
+    var users = std.ArrayList(User).init(res.arena);
+    while (try queryRes.next()) |row| {
+        const name = row.get([]u8, 0);
+        const age = row.get(i32, 1);
+        try users.append(.{.name = name, .age = age});
+    }
+
+    try res.json(users.items[0..], .{});
+}
+
+fn addUser(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
+    if (try req.json(User)) |body| {
+        _ = app.db.exec("INSERT INTO users (name, age) values ($1, $2)", .{body.name, body.age}) catch |err| {
+            log.err("{!}", .{err});
+            res.status = 409;
+        };
     }
 }
 
