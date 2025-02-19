@@ -62,6 +62,10 @@ fn wildcardOne(alloc: Allocator, perms: *PermSet) !void {
             newPerm.appendSliceAssumeCapacity(perm);
             try insertSorted(&newPerm, @as(u8, @intCast(ch)));
             try perms.put(newPerm.items[0..], true);
+
+            var oneLetter = try alloc.alloc(u8, 1);
+            oneLetter[0] = @as(u8, @intCast(ch));
+            try perms.put(oneLetter, true);
         }
     }
 }
@@ -78,7 +82,15 @@ fn wildcardTwo(alloc: Allocator, perms: *PermSet) !void {
                 try insertSorted(&newPerm, @as(u8, @intCast(ch1)));
                 try insertSorted(&newPerm, @as(u8, @intCast(ch2)));
                 try perms.put(newPerm.items[0..], true);
+
+                var twoLetters = try alloc.alloc(u8, 2);
+                twoLetters[0] = @as(u8, @intCast(ch1));
+                twoLetters[0] = @as(u8, @intCast(ch2));
+                try perms.put(twoLetters, true);
             }
+            var oneLetter = try alloc.alloc(u8, 1);
+            oneLetter[0] = @as(u8, @intCast(ch1));
+            try perms.put(oneLetter, true);
         }
     }
 }
@@ -117,13 +129,11 @@ pub const Context = struct {
 
         //Since ? < [A-Z], if there's a wildcard its at 0 and 1
         var wildcard: u32 = 0;
-        if (rack.items[0] == '?') {
-            _ = rack.orderedRemove(0);
-            wildcard += 1;
-        }
-        if (rack.items[0] == '?') {
-            _ = rack.orderedRemove(0);
-            wildcard += 1;
+        while (true) {
+            if (rack.items[0] == '?') {
+                _ = rack.orderedRemove(0);
+                wildcard += 1;
+            } else break;
         }
         var buffer = String.init(alloc);
         defer buffer.deinit();
@@ -132,9 +142,10 @@ pub const Context = struct {
         try permutations(alloc, &perms, &rack, &buffer, 0);
         
         switch (wildcard) {
+            0 => {},
             1 => try wildcardOne(alloc, &perms),
             2 => try wildcardTwo(alloc, &perms),
-            else => @panic("Found more than two wildcard"),
+            else => return error.TooManyWildcards,
         }
 
         var dict = ScrabbleDict.init(alloc);

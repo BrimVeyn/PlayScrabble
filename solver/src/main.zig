@@ -165,6 +165,7 @@ const GridError = error {
     NoWordCanBeginHere,
     OutOfBounds,
     UnknownWord,
+    TooManyWildcards,
 };
 
 fn rGetConstraints(
@@ -448,7 +449,7 @@ pub fn main() !void {
     const ArenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "??POTER");
+    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "LEPOTER");
     // for (ctx.basePerm.keys()) |key| {
     //     print("KEY: {s}\n", .{key});
     // }
