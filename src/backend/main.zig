@@ -1,8 +1,9 @@
-const std           = @import("std");
-const httpz         = @import("httpz");
-const Allocator     = std.mem.Allocator;
-const print         = std.debug.print;
-const log           = std.log;
+const std = @import("std");
+const httpz = @import("httpz");
+const Data = @import("data");
+const Allocator = std.mem.Allocator;
+const print = std.debug.print;
+const log = std.log;
 
 const PORT = 8809;
 
@@ -24,7 +25,7 @@ pub fn main() !void {
         .flags = 0,
     }, null);
 
-    var server = try httpz.Server(void).init(allocator, .{.port = PORT}, {});
+    var server = try httpz.Server(void).init(allocator, .{ .port = PORT }, {});
     defer server.deinit();
 
     var router = server.router(.{});

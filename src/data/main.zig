@@ -1,0 +1,10 @@
+pub const Data = @embedFile("Data.txt");
+pub const Data50 = @embedFile("Data50.txt");
+pub const grid00 = @embedFile("grid00.txt");
+pub const grid01 = @embedFile("grid01.txt");
+pub const grid02 = @embedFile("grid02.txt");
+pub const grid03 = @embedFile("grid03.txt");
+pub const grid04 = @embedFile("grid04.txt");
+pub const grid05 = @embedFile("grid05.txt");
+pub const grid06 = @embedFile("grid06.txt");
+pub const Data2500 = @embedFile("Data2500.txt");

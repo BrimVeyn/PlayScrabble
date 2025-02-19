@@ -1,13 +1,13 @@
-const std               = @import("std");
-const print             = std.debug.print;
-const AutoArrayHashMap  = std.AutoArrayHashMap;
-const AutoHashMap       = std.AutoHashMap;
-const ArrayList         = std.ArrayList;
-const Allocator         = std.mem.Allocator;
+const std = @import("std");
+const print = std.debug.print;
+const AutoArrayHashMap = std.AutoArrayHashMap;
+const AutoHashMap = std.AutoHashMap;
+const ArrayList = std.ArrayList;
+const Allocator = std.mem.Allocator;
+const Data = @import("data").Data;
 
-const dict                      = @embedFile("Data.txt");
-pub const asciiOrderedMapPath   = "zig-out/asciiHash.json";
-pub const OrderedMap            = std.StringArrayHashMap(std.StringArrayHashMap(bool));
+pub const asciiOrderedMapPath = "zig-out/asciiHash.json";
+pub const OrderedMap = std.StringArrayHashMap(std.StringArrayHashMap(bool));
 
 pub const Map = struct {
     data: OrderedMap,
@@ -54,19 +54,18 @@ pub const Map = struct {
         try jws.endObject();
     }
 
-
     pub fn format(self: *const Map, comptime fmt: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         if (fmt.len != 0) {
             std.fmt.invalidFmtError(fmt, self);
         }
-        return std.json.stringify(self, .{.whitespace = .indent_2}, writer);
+        return std.json.stringify(self, .{ .whitespace = .indent_2 }, writer);
     }
 
     pub fn deinit(self: *Map, alloc: Allocator) void {
         var mapIt = self.data.iterator();
-        while(mapIt.next()) |entry| {
+        while (mapIt.next()) |entry| {
             var setIt = entry.value_ptr.iterator();
-            while(setIt.next()) |setEntry| {
+            while (setIt.next()) |setEntry| {
                 alloc.free(setEntry.key_ptr.*);
             }
             alloc.free(entry.key_ptr.*);
@@ -74,17 +73,18 @@ pub const Map = struct {
         }
         self.data.deinit();
     }
-
 };
 
-pub fn lessThan(_ : void, a: u8, b: u8) bool {
+pub fn lessThan(_: void, a: u8, b: u8) bool {
     return (a < b);
 }
 
 pub fn generateHashMap(alloc: Allocator) !Map {
-    var map = Map { .data =  OrderedMap.init(alloc), };
+    var map = Map{
+        .data = OrderedMap.init(alloc),
+    };
 
-    var it = std.mem.tokenizeScalar(u8, dict, '\n');
+    var it = std.mem.tokenizeScalar(u8, Data, '\n');
     var count: usize = 0;
     while (it.next()) |word| : (count += 1) {
         if (count % 100 == 0) print("Count: {d}\n", .{count});
@@ -118,5 +118,4 @@ pub fn main() !void {
 
     const outFileWriter = outFile.writer();
     try outFileWriter.print("{}\n", .{map});
-
 }
