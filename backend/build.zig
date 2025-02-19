@@ -1,5 +1,9 @@
 const std = @import("std");
 
+pub const std_options = .{
+    .log_level = .info,
+};
+
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
 
@@ -10,19 +14,28 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const pg = b.dependency("pg", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
+// the executable from your call to b.addExecutable(...)
+
     const exe_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
 
-    exe_mod.addImport("httpz", httpz.module("httpz"));
+
 
     const exe = b.addExecutable(.{
-        .name = "room",
+        .name = "backend",
         .root_module = exe_mod,
     });
 
+    exe.root_module.addImport("pg", pg.module("pg"));
+    exe.root_module.addImport("httpz", httpz.module("httpz"));
     exe.linkLibC();
 
     b.installArtifact(exe);

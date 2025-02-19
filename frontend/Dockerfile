@@ -1,32 +1,35 @@
-FROM node:20
-
+#------------------------------------------------------------------
+FROM node:20 AS build
 WORKDIR /app
 
-# Install pnpm globally (since you're using pnpm)
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm
 
-# Copy package.json and pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using pnpm
 RUN pnpm install
-
-# Copy the rest of the frontend code
 COPY . .
-
-# Build the React app
 RUN pnpm build
+#------------------------------------------------------------------
 
-# Use Nginx to serve the built files
-FROM nginx:latest
+#------------------------------------------------------------------
+FROM build AS dev
+
+EXPOSE 4430
+
+CMD ["pnpm", "dev", "--host"]
+#------------------------------------------------------------------
+
+#------------------------------------------------------------------
+FROM nginx:latest AS prod
 
 WORKDIR /usr/share/nginx/html
 
-# Remove default nginx files and copy the build output
 RUN rm -rf ./*
 COPY --from=build /app/build .
 
-EXPOSE 80
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 4430
 
 CMD ["nginx", "-g", "daemon off;"]
-
+#------------------------------------------------------------------

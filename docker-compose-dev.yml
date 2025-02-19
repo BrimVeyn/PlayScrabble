@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: 
+      context: ./frontend
+      target: dev
+    volumes:
+      - ./frontend:/app 
+  backend:
+      build:
+        context: ./backend
+        target: dev
+      volumes:
+      - ./backend:/app 

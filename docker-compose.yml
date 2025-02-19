@@ -6,49 +6,45 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydatabase
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: db
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - app_network
 
   backend:
-    build: ./backend
+    build: 
+      context: ./backend
+      target: prod
     container_name: zig_backend
     restart: always
     depends_on:
       - postgres
     environment:
-      DATABASE_URL: postgres://user:password@postgres:5432/mydatabase
+      DATABASE_PORT: 5432
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: db
+
     ports:
       - "8080:8080"
     networks:
       - app_network
 
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      target: prod
     container_name: react_frontend
     restart: always
     depends_on:
       - backend
     ports:
-      - "3000:3000"
-    networks:
-      - app_network
-
-  nginx:
-    image: nginx:latest
-    container_name: nginx_proxy
-    restart: always
-    depends_on:
-      - backend
-      - frontend
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - "4430:4430"
     networks:
       - app_network
 
@@ -58,3 +54,4 @@ volumes:
 networks:
   app_network:
     driver: bridge
+
