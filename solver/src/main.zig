@@ -38,12 +38,12 @@ fn lessThanMatch(context: void, a: Match, b: Match) bool {
     return (a.score < b.score);
 }
 
-fn insertSorted(string: *String, ch: u8) !void {
+pub fn insertSorted(string: *String, ch: u8) !void {
     const idx = std.sort.lowerBound(u8, string.items[0..], ch, orderU8);
     try string.insert(idx, ch);
 }
 
-fn insertSortedAssumeCapacity(string: *StringUnmanaged, ch: u8) void {
+pub fn insertSortedAssumeCapacity(string: *StringUnmanaged, ch: u8) void {
     const idx = std.sort.lowerBound(u8, string.items[0..], ch, orderU8);
     string.insertAssumeCapacity(idx, ch);
 }
@@ -393,7 +393,6 @@ fn solveGrid(ctx: *Context) !i64 {
     ctx.transposeGrid();
 
     try evaluateGrid(ctx);
-
     std.mem.sort(Match, ctx.matchVec.items[0..], {}, lessThanMatch);
     // const format = 
     //     \\[{d}] = [
@@ -449,7 +448,7 @@ pub fn main() !void {
     const ArenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "WATOPRS");
+    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "??POTER");
     // for (ctx.basePerm.keys()) |key| {
     //     print("KEY: {s}\n", .{key});
     // }

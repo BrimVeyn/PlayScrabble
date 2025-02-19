@@ -17,10 +17,14 @@ const StringUnmanaged       = std.ArrayListUnmanaged(u8);
 const StringVec             = ArrayList([]const u8);
 const ScrabbleDict          = std.StringHashMap(bool);
 
-const Match                 = @import("main.zig").Match;
+const mainModule            = @import("main.zig");
+const Match                 = mainModule.Match;
 const MatchVec              = ArrayList(Match);
 const Point                 = @Vector(2, u4);
 const Range                 = @Vector(2, u4);
+
+const insertSorted               = mainModule.insertSorted;
+const insertSortedAssumeCapacity = mainModule.insertSortedAssumeCapacity;
 
 const GRID_SIZE             = 15;
 
@@ -48,6 +52,38 @@ fn permutations(alloc: Allocator, perms: *PermSet, pattern: *String, buffer: *St
     try permutations(alloc, perms, pattern, buffer, patternI + 1);
 }
 
+fn wildcardOne(alloc: Allocator, perms: *PermSet) !void {
+    var copy = try perms.clone();
+    defer copy.deinit();
+
+    for (copy.keys()) |perm| {
+        for ('A'..'Z') |ch| {
+            var newPerm = try String.initCapacity(alloc, perm.len + 1);
+            newPerm.appendSliceAssumeCapacity(perm);
+            try insertSorted(&newPerm, @as(u8, @intCast(ch)));
+            try perms.put(newPerm.items[0..], true);
+        }
+    }
+}
+
+fn wildcardTwo(alloc: Allocator, perms: *PermSet) !void {
+    var copy = try perms.clone();
+    defer copy.deinit();
+
+    for (copy.keys()) |perm| {
+        for ('A'..'Z') |ch1| {
+            for ('A'..'Z') |ch2| {
+                var newPerm = try String.initCapacity(alloc, perm.len + 2);
+                newPerm.appendSliceAssumeCapacity(perm);
+                try insertSorted(&newPerm, @as(u8, @intCast(ch1)));
+                try insertSorted(&newPerm, @as(u8, @intCast(ch2)));
+                try perms.put(newPerm.items[0..], true);
+            }
+        }
+    }
+}
+
+
 pub fn populateMap(alloc: Allocator) !Map {
     var mapFile = try std.fs.cwd().openFile(asciiOrderedMapPath, .{});
     defer mapFile.close();
@@ -68,6 +104,7 @@ pub const Context = struct {
     dict: ScrabbleDict,
     matchVec: MatchVec,
     state: Direction = .Horizontal,
+    wildcard: u32 = 0,
 
 
     pub fn init(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
@@ -78,11 +115,27 @@ pub const Context = struct {
         try rack.appendSlice(rackValue);
         std.mem.sort(u8, rack.items[0..], {}, lessThanU8);
 
+        //Since ? < [A-Z], if there's a wildcard its at 0 and 1
+        var wildcard: u32 = 0;
+        if (rack.items[0] == '?') {
+            _ = rack.orderedRemove(0);
+            wildcard += 1;
+        }
+        if (rack.items[0] == '?') {
+            _ = rack.orderedRemove(0);
+            wildcard += 1;
+        }
         var buffer = String.init(alloc);
         defer buffer.deinit();
 
         var perms = PermSet.init(alloc);
         try permutations(alloc, &perms, &rack, &buffer, 0);
+        
+        switch (wildcard) {
+            1 => try wildcardOne(alloc, &perms),
+            2 => try wildcardTwo(alloc, &perms),
+            else => @panic("Found more than two wildcard"),
+        }
 
         var dict = ScrabbleDict.init(alloc);
         var lineIt = std.mem.tokenizeScalar(u8, dictContent, '\n');
@@ -94,6 +147,7 @@ pub const Context = struct {
             .alloc = alloc,
             .grid = grid,
             .rack = rack,
+            .wildcard = wildcard,
             .basePerm = perms,
             .orderedMap = try populateMap(alloc),
             .dict = dict,
