@@ -1,32 +1,30 @@
-const std                   = @import("std");
-const Grid                  = @import("Grid.zig").Grid;
+const std = @import("std");
+const Grid = @import("Grid.zig").Grid;
+const dictContent = @import("data").Data;
+const generator = @import("generator");
+const OrderedMap = generator.OrderedMap;
+const asciiOrderedMapPath = generator.asciiOrderedMapPath;
+const Map = generator.Map;
 
-const dictContent           = @embedFile("generate/Data.txt");
+const Allocator = std.mem.Allocator;
+const ArrayList = std.ArrayList;
 
-const generator             = @import("generate/generate.zig");
-const OrderedMap            = generator.OrderedMap;
-const asciiOrderedMapPath   = generator.asciiOrderedMapPath;
-const Map                   = generator.Map;
+const PermSet = std.StringArrayHashMap(bool);
+const String = ArrayList(u8);
+const StringUnmanaged = std.ArrayListUnmanaged(u8);
+const StringVec = ArrayList([]const u8);
+const ScrabbleDict = std.StringHashMap(bool);
 
-const Allocator             = std.mem.Allocator;
-const ArrayList             = std.ArrayList;
+const mainModule = @import("main.zig");
+const Match = mainModule.Match;
+const MatchVec = ArrayList(Match);
+const Point = @Vector(2, u4);
+const Range = @Vector(2, u4);
 
-const PermSet               = std.StringArrayHashMap(bool);
-const String                = ArrayList(u8);
-const StringUnmanaged       = std.ArrayListUnmanaged(u8);
-const StringVec             = ArrayList([]const u8);
-const ScrabbleDict          = std.StringHashMap(bool);
-
-const mainModule            = @import("main.zig");
-const Match                 = mainModule.Match;
-const MatchVec              = ArrayList(Match);
-const Point                 = @Vector(2, u4);
-const Range                 = @Vector(2, u4);
-
-const insertSorted               = mainModule.insertSorted;
+const insertSorted = mainModule.insertSorted;
 const insertSortedAssumeCapacity = mainModule.insertSortedAssumeCapacity;
 
-const GRID_SIZE             = 15;
+const GRID_SIZE = 15;
 
 pub const Direction = enum {
     Vertical,
@@ -95,7 +93,6 @@ fn wildcardTwo(alloc: Allocator, perms: *PermSet) !void {
     }
 }
 
-
 pub fn populateMap(alloc: Allocator) !Map {
     var mapFile = try std.fs.cwd().openFile(asciiOrderedMapPath, .{});
     defer mapFile.close();
@@ -107,7 +104,6 @@ pub fn populateMap(alloc: Allocator) !Map {
 }
 
 pub const Context = struct {
-
     alloc: Allocator,
     grid: Grid,
     rack: String,
@@ -117,7 +113,6 @@ pub const Context = struct {
     matchVec: MatchVec,
     state: Direction = .Horizontal,
     wildcard: u32 = 0,
-
 
     pub fn init(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
         var grid = Grid.init();
@@ -140,7 +135,7 @@ pub const Context = struct {
 
         var perms = PermSet.init(alloc);
         try permutations(alloc, &perms, &rack, &buffer, 0);
-        
+
         switch (wildcard) {
             0 => {},
             1 => try wildcardOne(alloc, &perms),

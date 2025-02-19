@@ -15,7 +15,7 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   backend:
-    build: ./backend
+    build: ./src/backend
     container_name: zig_backend
     restart: always
     depends_on:
@@ -28,7 +28,7 @@ services:
       - app_network
 
   frontend:
-    build: ./frontend
+    build: ./src/frontend
     container_name: react_frontend
     restart: always
     depends_on:

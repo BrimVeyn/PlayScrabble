@@ -1,33 +1,33 @@
-const std                   = @import("std");
-const print                 = std.debug.print;
-const AutoArrayHashMap      = std.AutoArrayHashMap;
-const AutoHashMap           = std.AutoHashMap;
-const ArrayList             = std.ArrayList;
-const Allocator             = std.mem.Allocator;
+const std = @import("std");
+const print = std.debug.print;
+const AutoArrayHashMap = std.AutoArrayHashMap;
+const AutoHashMap = std.AutoHashMap;
+const ArrayList = std.ArrayList;
+const Allocator = std.mem.Allocator;
 
-const gridFile              = @import("Grid.zig");
-const Grid                  = gridFile.Grid;
-const GRID_SIZE             = 15;
+const gridFile = @import("Grid.zig");
+const Grid = gridFile.Grid;
+const GRID_SIZE = 15;
 
-const generator             = @import("generate/generate.zig");
-const OrderedMap            = generator.OrderedMap;
-const asciiOrderedMapPath   = generator.asciiOrderedMapPath;
-const Map                   = generator.Map;
+const generator = @import("generator");
+const OrderedMap = generator.OrderedMap;
+const asciiOrderedMapPath = generator.asciiOrderedMapPath;
+const Map = generator.Map;
 
-const scoreModule           = @import("Score.zig");
-const Scrabble              = scoreModule.Scrabble;
-const LetterScore           = scoreModule.LetterScore;
-const computeScorePerp      = scoreModule.computeScorePerp;
-const computeScorePar       = scoreModule.computeScorePar;
+const scoreModule = @import("Score.zig");
+const Scrabble = scoreModule.Scrabble;
+const LetterScore = scoreModule.LetterScore;
+const computeScorePerp = scoreModule.computeScorePerp;
+const computeScorePar = scoreModule.computeScorePar;
 
-const ctxModule             = @import("Context.zig");
-const Context               = ctxModule.Context;
-const Direction             = ctxModule.Direction;
+const ctxModule = @import("Context.zig");
+const Context = ctxModule.Context;
+const Direction = ctxModule.Direction;
 
-const PermSet               = std.StringArrayHashMap(bool);
-const String                = ArrayList(u8);
-const StringUnmanaged       = std.ArrayListUnmanaged(u8);
-const StringVec             = ArrayList([]const u8);
+const PermSet = std.StringArrayHashMap(bool);
+const String = ArrayList(u8);
+const StringUnmanaged = std.ArrayListUnmanaged(u8);
+const StringVec = ArrayList([]const u8);
 
 fn orderU8(context: u8, item: u8) std.math.Order {
     return (std.math.order(context, item));
@@ -123,13 +123,13 @@ pub const Match = struct {
     }
 };
 
-const MatchVec  = ArrayList(Match);
-const Point     = @Vector(2, u4);
-const Range     = @Vector(2, u4);
+const MatchVec = ArrayList(Match);
+const Point = @Vector(2, u4);
+const Range = @Vector(2, u4);
 
 const Placement = struct {
-    c:   [GRID_SIZE:0]u8   = .{0} ** GRID_SIZE,
-    pos: [GRID_SIZE:0]u4   = .{0} ** GRID_SIZE,
+    c: [GRID_SIZE:0]u8 = .{0} ** GRID_SIZE,
+    pos: [GRID_SIZE:0]u4 = .{0} ** GRID_SIZE,
 };
 
 const Constraints = struct {
@@ -149,11 +149,11 @@ const Constraints = struct {
         for (0..self.ranges.items.len) |i| {
             const range = self.ranges.items[i];
             const place = self.places.items[i];
-            try writer.print("R: {d}-{d}\n", .{range[0], range[1]});
+            try writer.print("R: {d}-{d}\n", .{ range[0], range[1] });
             for (0..place.pos.len) |j| {
-                if (place.pos[j] == 0) 
+                if (place.pos[j] == 0)
                     break;
-                try writer.print("P[{d}]: {c} {d}\n", .{j, place.c[j], place.pos[j] - 1});
+                try writer.print("P[{d}]: {c} {d}\n", .{ j, place.c[j], place.pos[j] - 1 });
             }
             _ = try writer.write("~~~~~~~~~~~~~~~~\n");
         }
@@ -161,7 +161,7 @@ const Constraints = struct {
     }
 };
 
-const GridError = error {
+const GridError = error{
     NoWordCanBeginHere,
     OutOfBounds,
     UnknownWord,
@@ -173,12 +173,12 @@ fn rGetConstraints(
     cellConst: *Constraints, //Constraints of the current cell
     cell: Point,
     cBuff: *[GRID_SIZE:0]u8, //Buffer to hold mandatory letters
-    posBuff: *[GRID_SIZE:0]u4 //Buffer to hold their positions
+    posBuff: *[GRID_SIZE:0]u4, //Buffer to hold their positions
 ) !void {
     //Iterator on buffers
     var constIt: usize = 0;
     //Number of letters from the rack needed to form the constraint
-    var placed:u4 = 0;
+    var placed: u4 = 0;
     //Virtual cursor for the function
     var cursor: Point = cell;
     const wordStart: u4 = cell[0];
@@ -216,8 +216,8 @@ fn rGetConstraints(
             }
 
             //Backtrack if we hit a letter till we have a space to our right
-            while (ctx.grid.isInBounds(cursor) and placed > 0 and 
-                  (ctx.grid.isAlpha(cursor) or ctx.grid.isAlphaRight(cursor)))
+            while (ctx.grid.isInBounds(cursor) and placed > 0 and
+                (ctx.grid.isAlpha(cursor) or ctx.grid.isAlphaRight(cursor)))
             {
                 cursor[0] -= 1;
                 placed -= 1;
@@ -242,16 +242,16 @@ fn rGetConstraints(
             }
 
             if (rangeS != null and rangeEnd >= 2 and rangeEnd >= rangeS.?) {
-                try cellConst.ranges.append(.{rangeS.?, rangeEnd});
-                try cellConst.places.append(.{.c = cBuff.*, .pos = posBuff.*});
+                try cellConst.ranges.append(.{ rangeS.?, rangeEnd });
+                try cellConst.places.append(.{ .c = cBuff.*, .pos = posBuff.* });
             }
             if (rangeS == null and cursor[0] == GRID_SIZE and constIt != 0)
                 cursor[0] -= 1;
-            //If we didn't find any perpAlpha and we're at the end of our frame 
+            //If we didn't find any perpAlpha and we're at the end of our frame
             //and we didn't find any letter along the way, we know for sure no word is possible here
-            if ((rangeS == null and cursor[0] == 14 and constIt == 0) or 
-               ((rangeS != null and cursor[0] == 14))) 
-                    break;
+            if ((rangeS == null and cursor[0] == 14 and constIt == 0) or
+                ((rangeS != null and cursor[0] == 14)))
+                break;
 
             hasPushed = true;
             continue;
@@ -275,7 +275,7 @@ fn rGetConstraints(
             const posBuffLen = std.mem.indexOfSentinel(u4, 0, posBuff);
             if (posBuffLen > 0 and rangeS < GRID_SIZE) {
                 rangeS = posBuff[posBuffLen - 1];
-                if (ctx.grid.isAlpha(.{posBuff[posBuffLen - 1], cursor[1]})) {
+                if (ctx.grid.isAlpha(.{ posBuff[posBuffLen - 1], cursor[1] })) {
                     rangeS += 1;
                 }
                 rangeS = if (rangeS < 2) 2 else rangeS;
@@ -288,14 +288,14 @@ fn rGetConstraints(
                 cursor[0] += 1;
             }
             if (cursor[0] <= GRID_SIZE and placed <= ctx.rack.items.len and rangeEnd >= 2) {
-                try cellConst.ranges.append(.{rangeS, rangeEnd});
-                try cellConst.places.append(.{.c = cBuff.*, .pos = posBuff.*});
+                try cellConst.ranges.append(.{ rangeS, rangeEnd });
+                try cellConst.places.append(.{ .c = cBuff.*, .pos = posBuff.* });
                 if (placed < ctx.rack.items.len)
                     hasPushed = true;
             }
         }
     }
-} 
+}
 
 fn getConstraints(ctx: *Context, cell: Point) !Constraints {
     if (cell[0] > 0 and ctx.grid.isAlphaLeft(cell))
@@ -303,8 +303,8 @@ fn getConstraints(ctx: *Context, cell: Point) !Constraints {
 
     var cellConst = try Constraints.init(ctx.alloc);
 
-    var c:[GRID_SIZE:0]u8 = .{0} ** GRID_SIZE;
-    var pos:[GRID_SIZE:0]u4 = .{0} ** GRID_SIZE;
+    var c: [GRID_SIZE:0]u8 = .{0} ** GRID_SIZE;
+    var pos: [GRID_SIZE:0]u4 = .{0} ** GRID_SIZE;
 
     try rGetConstraints(ctx, &cellConst, cell, &c, &pos);
 
@@ -316,7 +316,7 @@ fn computeMatchs(ctx: *Context, cell: *const Point, wordVec: *const StringVec, m
         var currMatch = Match.init(word, cell, ctx.state);
 
         for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
-            const currPoint = Point{@intCast(x), currMatch.saveCoord};
+            const currPoint = Point{ @intCast(x), currMatch.saveCoord };
             if (ctx.grid.grid[currMatch.saveCoord][x] == '.' and ctx.grid.isAlphaPerp(currPoint)) {
                 currMatch.score += computeScorePerp(ctx, currPoint, currMatch.word[x - currMatch.range[0]]) catch {
                     continue :outer;
@@ -369,13 +369,13 @@ fn evaluateGrid(ctx: *Context) !void {
     for (0..GRID_SIZE) |y| {
         for (0..GRID_SIZE) |x| {
             // if (y == 12 and x == 1) {
-                var cell = Point{@intCast(x), @intCast(y)};
-                var cellConst = getConstraints(ctx, cell) catch continue;
-                if (cellConst.places.items.len == 0)
-                    continue;
-                // print("Y:{d},X:{d}\n", .{y, x});
-                // print("{}", .{cellConst});
-                evaluateCell(ctx, &cellConst, &cell) catch continue;
+            var cell = Point{ @intCast(x), @intCast(y) };
+            var cellConst = getConstraints(ctx, cell) catch continue;
+            if (cellConst.places.items.len == 0)
+                continue;
+            // print("Y:{d},X:{d}\n", .{y, x});
+            // print("{}", .{cellConst});
+            evaluateCell(ctx, &cellConst, &cell) catch continue;
             // }
         }
     }
@@ -395,7 +395,7 @@ fn solveGrid(ctx: *Context) !i64 {
 
     try evaluateGrid(ctx);
     std.mem.sort(Match, ctx.matchVec.items[0..], {}, lessThanMatch);
-    // const format = 
+    // const format =
     //     \\[{d}] = [
     //     \\  .word: {s},
     //     \\  .range: {d},
@@ -463,7 +463,7 @@ pub fn main() !void {
     // try ctx.loadGrid("grid04.txt");
     // try solveGrid(&ctx);
     // try ctx.loadGrid("grid05.txt");
-    // try solveGrid(&ctx); 
+    // try solveGrid(&ctx);
 
     var argIt = std.process.args();
     _ = argIt.skip(); //Skps program name
@@ -488,9 +488,8 @@ pub fn main() !void {
         totalTime += timeMicro;
     }
     const averageTimeMicro: f64 = @as(f64, @floatFromInt(totalTime)) / @as(f64, @floatFromInt(loopCountInt));
-    const averageTimeMilli :f64 = @as(f64, @floatFromInt(totalTime)) / @as(f64, (1000 * @as(f64, @floatFromInt(loopCountInt)))); 
-    print("Average: {d}µs | {d}ms\n", .{averageTimeMicro, averageTimeMilli});
-
+    const averageTimeMilli: f64 = @as(f64, @floatFromInt(totalTime)) / @as(f64, (1000 * @as(f64, @floatFromInt(loopCountInt))));
+    print("Average: {d}µs | {d}ms\n", .{ averageTimeMicro, averageTimeMilli });
 }
 
 test "simple test" {}
