@@ -14,6 +14,8 @@ pub const LetterScore = [26]u8 {
 };
 
 pub fn computeScorePerp(ctx: *const Context, currPoint: Point, currCh: u8) !u32 {
+    //FIX: A lot of cash misses happen here. Can be fixed by storing a transposed version of the grid
+ 
     var start: u4 = currPoint[1];
     while (start > 0 and ctx.grid.isAlpha(.{currPoint[0], start - 1})) : (start -= 1) {}
 
@@ -49,11 +51,6 @@ pub fn computeScorePar(ctx: *const Context, currMatch: *const Match) u32 {
         const currPoint = Point{@intCast(x), currMatch.saveCoord};
         const letterScore = LetterScore[currMatch.word[x - currMatch.range[0]] - 'A'];
 
-        // if (std.mem.eql(u8, currMatch.word[0..std.mem.indexOfSentinel(u8, 0, currMatch.word[0..])], "ESTROPIA")) {
-        //     print("at: {d}, Wmul: {d}\n", .{currPoint, ctx.grid.getWordModifier(&currPoint).asU32()});
-        //     print("at: {d}, Lmul: {d}\n", .{currPoint, ctx.grid.getLetterModifier(&currPoint).asU32()});
-        //     print("CH: {c}\n", .{ctx.grid.grid[currPoint[1]][currPoint[0]]});
-        // }
         if (ctx.grid.grid[currPoint[1]][currPoint[0]] == '.') {
             wordMultiplier *= ctx.grid.getWordModifier(&currPoint).asU32();
             wordScore += (letterScore * ctx.grid.getLetterModifier(&currPoint).asU32());
@@ -61,8 +58,10 @@ pub fn computeScorePar(ctx: *const Context, currMatch: *const Match) u32 {
             wordScore += letterScore;
         }
     }
-    // if (std.mem.eql(u8, currMatch.word[0..std.mem.indexOfSentinel(u8, 0, currMatch.word[0..])], "ESTROPIA")) {
-    //     print("Finale WM: {d}\n", .{wordMultiplier});
-    // }
     return (wordScore * wordMultiplier);
 }
+
+// W: ??ILOTRE
+// --> PIETRE
+// --> PI?TRE
+// --> PIETR?

@@ -62,11 +62,11 @@ fn wildcardOne(alloc: Allocator, perms: *PermSet) !void {
             var newPerm = try String.initCapacity(alloc, perm.len + 1);
             newPerm.appendSliceAssumeCapacity(perm);
             try insertSorted(&newPerm, chu8);
-            try perms.put(newPerm.items[0..], .{chu8, 0});
+            _  = try perms.getOrPutValue(newPerm.items[0..], .{chu8, 0});
 
             var oneLetter = try alloc.alloc(u8, 1);
             oneLetter[0] = chu8;
-            try perms.put(oneLetter, .{chu8, 0});
+            _ = try perms.getOrPutValue(oneLetter, .{chu8, 0});
         }
     }
 }
@@ -84,16 +84,16 @@ fn wildcardTwo(alloc: Allocator, perms: *PermSet) !void {
                 newPerm.appendSliceAssumeCapacity(perm);
                 try insertSorted(&newPerm, ch1u8);
                 try insertSorted(&newPerm, ch2u8);
-                try perms.put(newPerm.items[0..], .{ch1u8, ch2u8});
+                _ = try perms.getOrPutValue(newPerm.items[0..], .{ch1u8, ch2u8});
 
                 var twoLetters = try alloc.alloc(u8, 2);
                 twoLetters[0] = ch1u8;
                 twoLetters[0] = ch2u8;
-                try perms.put(twoLetters, .{ch1u8, ch2u8});
+                _ = try perms.getOrPutValue(twoLetters, .{ch1u8, ch2u8});
             }
             var oneLetter = try alloc.alloc(u8, 1);
             oneLetter[0] = ch1u8;
-            try perms.put(oneLetter, .{ch1u8, 0});
+            _ = try perms.getOrPutValue(oneLetter, .{ch1u8, 0});
         }
     }
 }

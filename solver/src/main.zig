@@ -33,8 +33,7 @@ fn orderU8(context: u8, item: u8) std.math.Order {
     return (std.math.order(context, item));
 }
 
-fn lessThanMatch(context: void, a: Match, b: Match) bool {
-    _ = context;
+fn lessThanMatch(_: void, a: Match, b: Match) bool {
     return (a.score < b.score);
 }
 
@@ -302,10 +301,22 @@ fn getConstraints(ctx: *Context, cell: Point) !Constraints {
     return cellConst;
 }
 
-fn computeMatchs(ctx: *Context, cell: *const Point, wordVec: *const StringVec, mandatoryLen: usize) !void {
+fn getWildCardPoses(ctx: *Context, word: []const u8, wildcards: [2]u8, cellPlaces: *const Placement) !void {
+    if (wildcards[0] == 0) {
+        return ;
+    }
+    _ = ctx;
+    _ = word;
+    // std.debug.print("RACK: {s}, word: {s}, wildcards: {s}\n", .{ctx.rack.items, word, wildcards});
+    // std.debug.print("RACK: {s}, word: {s}, wildcards: {s}\n", .{ctx.rack.items, word, wildcards});
+    _ = cellPlaces;
+}
+
+fn computeMatchs(ctx: *Context, cell: *const Point, wordVec: *const StringVec, cellPlaces: *const Placement, mandatoryLen: usize) !void {
     outer: for (wordVec.items) |kv| {
         const word = kv[0];
         const wildcards = kv[1];
+        try getWildCardPoses(ctx, word, wildcards, cellPlaces);
         var currMatch = Match.init(word, wildcards, cell, ctx.state);
 
         for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
@@ -329,11 +340,17 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
     var cellPerms = try ctx.basePerm.clone();
     defer cellPerms.deinit();
 
+    // var cellIt = cellPerms.iterator();
+    // while (cellIt.next()) |kv| {
+    //     print("{s} -> {s}\n", .{kv.key_ptr.*, kv.value_ptr.*});
+    // }
+    // print("len: {d}\n", .{cellPerms.count()});
+
     var mandatoryIt: usize = 0;
     for (0..cellConst.ranges.items.len) |it| {
         if (cellConst.places.items[it].c[0] == 0) {
             const cellWords = try getBaseFilteredWordList(ctx, &cellPerms, &cellConst.ranges.items[it]);
-            computeMatchs(ctx, cell, &cellWords, 0) catch continue;
+            computeMatchs(ctx, cell, &cellWords, &cellConst.places.items[it], 0) catch continue;
             continue;
         }
 
@@ -353,7 +370,7 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
         }
 
         const cellWords = try getFilteredWordList(ctx, &cellPerms, &cellConst.places.items[it], &cellConst.ranges.items[it]);
-        try computeMatchs(ctx, cell, &cellWords, mandatoryLen);
+        try computeMatchs(ctx, cell, &cellWords, &cellConst.places.items[it], mandatoryLen);
         mandatoryIt = mandatoryLen;
     }
 }
@@ -387,23 +404,23 @@ fn solveGrid(ctx: *Context) !i64 {
     try evaluateGrid(ctx);
 
     std.mem.sort(Match, ctx.matchVec.items[0..], {}, lessThanMatch);
-    const format = 
-        \\[{d}] = [
-        \\  .word: {s},
-        \\  .range: {d},
-        \\  .saveCoord: {d},
-        \\  .dir: {s},
-        \\  .score: {d},
-        \\  .wildcards: {s},
-        \\]
-        \\
-    ;
-
-    for (ctx.matchVec.items, 0..) |match, i| {
-        std.log.info(format, .{i, match.word, match.range, match.saveCoord, @tagName(match.dir), match.score, match.wildcards});
-    }
+    // const format = 
+    //     \\[{d}] = [
+    //     \\  .word: {s},
+    //     \\  .range: {d},
+    //     \\  .saveCoord: {d},
+    //     \\  .dir: {s},
+    //     \\  .score: {d},
+    //     \\  .wildcards: {s},
+    //     \\]
+    //     \\
+    // ;
+    //
     // for (ctx.matchVec.items, 0..) |match, i| {
-    //     print("[{d}]: {s} -> {d}\n", .{i, match.word, match.score});
+    //     std.log.info(format, .{i, match.word, match.range, match.saveCoord, @tagName(match.dir), match.score, match.wildcards});
+    // }
+    // for (ctx.matchVec.items, 0..) |match, i| {
+    //     std.log.info("[{d}]: {s} -> {d}", .{i, match.word, match.score});
     // }
     //
     // for (ctx.grid.grid) |line| {
@@ -444,7 +461,7 @@ pub fn main() !void {
     const ArenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "SSALOPE");
+    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "??REPAE");
     // for (ctx.basePerm.keys()) |key| {
     //     print("KEY: {s}\n", .{key});
     // }
