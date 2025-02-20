@@ -26,6 +26,7 @@ services:
       - postgres
     environment:
       DATABASE_URL: postgresql://test:test@postgres:5432/db
+      JWT_SECRET: p0jrMzCSas7yxiE8vu5BQ92TVk5ucEdQjF1kXfzdYl5XXe6JMDUIxeoWLuegKiiAcAYvoekGIFdzATZnNT_A0Q
 
     ports:
       - "8080:8080"

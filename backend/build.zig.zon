@@ -31,6 +31,10 @@
             .url = "git+https://github.com/karlseguin/pg.zig?ref=master#0110cfdf387403a5a326115b5184861c4604d711",
             .hash = "12205019ce2bc2e08c76352ea37a14600d412e5e0ecdd7ddd27b4e83a62f37d8ba94",
         },
+        .jwt = .{
+            .url = "https://github.com/BrimVeyn/zig-jwt/archive/refs/tags/0.14.tar.gz",
+            .hash = "1220e72981623f1a9bc85e3fcfd3ac5113c9dc2d526a4de83047a3fac592d7616be1",
+        },
     },
     .paths = .{
         "build.zig",

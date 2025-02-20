@@ -1,6 +1,12 @@
 const std           = @import("std");
 const httpz         = @import("httpz");
 const pg            = @import("pg");
+const jwt           = @import("jwt");
+
+//---------------- Models ----------------//
+const User          = @import("User.zig");
+//----------------------------------------//
+
 const Allocator     = std.mem.Allocator;
 const print         = std.debug.print;
 const log           = std.log;
@@ -10,13 +16,19 @@ const SERVER_ADDR   = "0.0.0.0"; // -> docker network
 
 var server_instance: ?*httpz.Server(*App) = null;
 
-const App = struct {
+pub const App = struct {
     db: *pg.Pool,
+    jwt_secret: []const u8,
+};
+
+pub const std_options = std.Options {
+    .log_level = .info,
 };
 
 pub fn main() !u8 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
+
 
     // SIGINT or SIGTERM are received
     std.posix.sigaction(std.posix.SIG.INT, &.{
@@ -29,6 +41,7 @@ pub fn main() !u8 {
         .mask = std.posix.empty_sigset,
         .flags = 0,
     }, null);
+
 
     const dbUrl = std.process.getEnvVarOwned(allocator, "DATABASE_URL") catch {
         log.err("Encountered Fatal Error missing 'DATABASE_URL'", .{});
@@ -49,7 +62,12 @@ pub fn main() !u8 {
 
     var app = App {
         .db = db,
+        .jwt_secret = std.process.getEnvVarOwned(allocator, "JWT_SECRET") catch {
+            log.err("Encountered Fatal Error missing 'JWT_SECRET'", .{});
+            return 1;
+        },
     };
+    defer allocator.free(app.jwt_secret);
 
     var server = try httpz.Server(*App).init(allocator, .{
         .port = PORT,
@@ -60,20 +78,30 @@ pub fn main() !u8 {
     const cors = try server.middleware(httpz.middleware.Cors, .{
         .origin = "*",
         .methods = "*",
+        .headers = "*",
     });
 
     _ = try app.db.exec(
-        \\CREATE TABLE IF NOT EXISTS "users" (
-        \\name TEXT PRIMARY KEY,
-        \\age INT
+        \\DROP TABLE IF EXISTS "users";
+        \\CREATE TABLE "users" (
+        \\id SERIAL PRIMARY KEY,
+        \\username TEXT UNIQUE,
+        \\email TEXT NOT NULL UNIQUE,
+        \\password TEXT NOT NULL,
+        \\refresh TEXT NULL
         \\);
     , .{});
 
     var router = server.router(.{.middlewares = &.{cors}});
-    router.get("/api/hello", hello, .{});
-    router.get("/api/getUser:name", getUser, .{});
-    router.get("/api/getUsers", getUsers, .{});
-    router.post("/api/addUser", addUser, .{});
+    //-------------------------------GET--------------------------------
+    router.get("/api/getUser:name", User.getUser, .{});
+    router.get("/api/getUsers", User.getUsers, .{});
+    //------------------------------------------------------------------
+
+    //-------------------------------POST-------------------------------
+    router.post("/api/register", User.register, .{});
+    router.post("/api/login", User.login, .{});
+    //------------------------------------------------------------------
 
     log.info("listening http://{s}:{d}/", .{SERVER_ADDR, PORT});
     log.info("process id (pid): {d}", .{std.c.getpid()});
@@ -89,55 +117,4 @@ fn shutdown(_: c_int) callconv(.C) void {
         server_instance = null;
         server.stop();
     }
-}
-
-fn getUser(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
-    _ = res;
-    _ = app;
-}
-
-const User = struct {
-    name: []u8,
-    age: i32,
-};
-
-fn getUsers(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
-    errdefer res.status = 500;
-
-    const queryRes = try app.db.query("SELECT name,age FROM users", .{});
-    defer queryRes.deinit();
-
-    var users = std.ArrayList(User).init(res.arena);
-    while (try queryRes.next()) |row| {
-        const name = row.get([]u8, 0);
-        const age = row.get(i32, 1);
-        try users.append(.{.name = name, .age = age});
-    }
-
-    try res.json(users.items[0..], .{});
-}
-
-fn addUser(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
-    if (try req.json(User)) |body| {
-        _ = app.db.exec("INSERT INTO users (name, age) values ($1, $2)", .{body.name, body.age}) catch |err| {
-            log.err("{!}", .{err});
-            res.status = 409;
-        };
-    }
-}
-
-fn hello(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
-    _ = app;
-    res.status = 200;
-
-    try res.json(.{ 
-        .nathan = "salut",
-    }, .{});
-
-    log.info("Je suis un log", .{});
-}
-
-fn index(_: *httpz.Request, res: *httpz.Response) !void {
-    const writer = res.writer();
-    return std.fmt.format(writer, "To shutdown, run:\nkill -s int {d}", .{std.c.getpid()});
 }

@@ -1,3 +1,4 @@
+#------------------------------------------------------------------
 FROM debian:stable-slim AS zig-master
 WORKDIR /app
 
@@ -22,22 +23,28 @@ ENV PATH="/usr/local/zig:${PATH}"
 
 COPY . .
 
-RUN zig build -Doptimize=ReleaseFast
+#------------------------------------------------------------------
 
+#------------------------------------------------------------------
 FROM zig-master AS prod
 WORKDIR /app
 
 COPY --from=zig-master /app/zig-out/bin/backend /app/backend
+RUN zig build -Doptimize=ReleaseFast
 
 EXPOSE 8080
 
 CMD ["/app/backend"]
+#------------------------------------------------------------------
 
+#------------------------------------------------------------------
 FROM zig-master AS dev
 WORKDIR /app
 
 COPY --from=zig-master /app/zig-out/bin/backend /app/backend
 
+RUN zig build
 EXPOSE 8080
 
 CMD ["./watch.sh"]
+#------------------------------------------------------------------

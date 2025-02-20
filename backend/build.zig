@@ -19,6 +19,11 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const jwt = b.dependency("jwt", .{
+        .target = target,
+        .optimize = optimize,
+    }).module("jwt");
+
 // the executable from your call to b.addExecutable(...)
 
     const exe_mod = b.createModule(.{
@@ -36,6 +41,7 @@ pub fn build(b: *std.Build) void {
 
     exe.root_module.addImport("pg", pg.module("pg"));
     exe.root_module.addImport("httpz", httpz.module("httpz"));
+    exe.root_module.addImport("jwt", jwt);
     exe.linkLibC();
 
     b.installArtifact(exe);
