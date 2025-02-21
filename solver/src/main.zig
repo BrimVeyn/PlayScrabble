@@ -52,12 +52,17 @@ fn popSorted(string: *String, ch: u8) !void {
     _ = string.orderedRemove(idx);
 }
 
-fn getFilteredWordList(ctx: *const Context, perms: *const PermSet, cellPlacement: *const Placement, cellRange: *const Range) !StringVec {
+fn getFilteredWordList(ctx: *Context, perms: *const PermSet, cellPlacement: *const Placement, cellRange: *const Range) !StringVec {
     var vec = StringVec.init(ctx.alloc);
 
     var permIt = perms.iterator();
     while (permIt.next()) |kv| {
-        const permWords = ctx.orderedMap.data.get(kv.key_ptr.*) orelse continue;
+        ctx.mutex.lock();
+        const permWords = ctx.orderedMap.data.get(kv.key_ptr.*) orelse {
+            ctx.mutex.unlock();
+            continue;
+        };
+        ctx.mutex.unlock();
         outer: for (permWords.keys()) |word| {
             if (word.len < cellRange[0] or word.len > cellRange[1]) continue;
             for (0..cellPlacement.c.len) |it| {
@@ -70,12 +75,18 @@ fn getFilteredWordList(ctx: *const Context, perms: *const PermSet, cellPlacement
     return vec;
 }
 
-fn getBaseFilteredWordList(ctx: *const Context, perms: *const PermSet, range: *const Range) !StringVec {
+fn getBaseFilteredWordList(ctx: *Context, perms: *const PermSet, range: *const Range) !StringVec {
     var vec = StringVec.init(ctx.alloc);
 
     var it = perms.iterator();
     while (it.next()) |kv| {
-        const permWords = ctx.orderedMap.data.get(kv.key_ptr.*) orelse continue;
+        ctx.mutex.lock();
+        const permWords = ctx.orderedMap.data.get(kv.key_ptr.*) orelse {
+            ctx.mutex.unlock();
+            continue;
+        };
+        ctx.mutex.unlock();
+
         for (permWords.keys()) |word| {
             if (word.len < range[0] or word.len > range[1]) continue;
             try vec.append(.{ word, kv.value_ptr.*});
@@ -377,7 +388,7 @@ fn computeMatchs(ctx: *Context, cell: *const Point, wordVec: *const StringVec, c
 
 fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
     var cellPerms = try ctx.basePerm.clone();
-    defer cellPerms.deinit();
+    // defer cellPerms.deinit();
 
     // var cellIt = cellPerms.iterator();
     // while (cellIt.next()) |kv| {
@@ -430,36 +441,51 @@ fn evaluateGrid(ctx: *Context) !void {
     }
 }
 
-fn solveGrid(ctx: *Context) !i64 {
+fn solveGrid(gpa: *std.heap.GeneralPurposeAllocator(gpaConfig), ctx: *Context) !i64 {
     const startTime = std.time.microTimestamp();
 
-    // for (wordVec.items, 0..) |word, i| {
-    //     print("vect[{d}] = {s}\n", .{i, word});
+    // var threads = ArrayList(std.Thread).init(ctx.alloc);
+    // defer threads.deinit();
+    //
+    // var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    // const ArenaAlloc = arena.allocator();
+    // defer arena.deinit();
+    //
+    // var ctxCopy = try ctx.clone(ArenaAlloc);
+    // ctxCopy.transposeGrid();
+    //
+    // try threads.append(try std.Thread.spawn(.{}, evaluateGrid, .{ctx}));
+    // try threads.append(try std.Thread.spawn(.{}, evaluateGrid, .{&ctxCopy}));
+    //
+    // // const err = try std.Thread.yield();
+    // // print("err: {!}", .{err});
+    // for (threads.items) |thread| {
+    //     thread.join();
     // }
-
+    _ = gpa;
     try evaluateGrid(ctx);
     //Transpose the grid and update ctx.state to Vertical
     ctx.transposeGrid();
     try evaluateGrid(ctx);
 
     std.mem.sort(Match, ctx.matchVec.items[0..], {}, lessThanMatch);
-    const format = 
-        \\[{d}] = [
-        \\  .word: {s},
-        \\  .range: {d},
-        \\  .saveCoord: {d},
-        \\  .dir: {s},
-        \\  .score: {d},
-        \\  .wildcards: {s},
-        \\]
-        \\
-    ;
-
-    for (ctx.matchVec.items, 0..) |match, i| {
-        print(format, .{i, match.word, match.range, match.saveCoord, @tagName(match.dir), match.score, 
-            match.wildcards});
-    }
+    // const format = 
+    //     \\[{d}] = [
+    //     \\  .word: {s},
+    //     \\  .range: {d},
+    //     \\  .saveCoord: {d},
+    //     \\  .dir: {s},
+    //     \\  .score: {d},
+    //     \\  .wildcards: {s},
+    //     \\]
+    //     \\
+    // ;
+    //
     // for (ctx.matchVec.items, 0..) |match, i| {
+    //     print(format, .{i, match.word, match.range, match.saveCoord, @tagName(match.dir), match.score, 
+    //         match.wildcards});
+    // }
+    // for (ctxCopy.matchVec.items, 0..) |match, i| {
     //     print("[{d}]: {s} -> {d}\n", .{i, match.word, match.score});
     // }
     //
@@ -489,33 +515,25 @@ fn solveGrid(ctx: *Context) !i64 {
     return elapsedMicro;
 }
 
-//HACK: A grid where every cell is a bitmap of already explored paths of known letters
+//PERF: A grid where every cell is a bitmap of already explored paths of known letters
 //  possible, impossible, unexplored --> could speed things up for wildcards
 
+
+const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
+    .thread_safe = true,
+    .safety = true,
+    .retain_metadata = true,
+};
+
 pub fn main() !void {
-    var gpa: std.heap.GeneralPurposeAllocator(.{}) = .init;
-    const GpaAlloc = gpa.allocator();
+    var gpa: std.heap.GeneralPurposeAllocator(gpaConfig) = .init;
     defer _ = gpa.deinit();
 
-    var arena = std.heap.ArenaAllocator.init(GpaAlloc);
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
     const ArenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "??QUEPO");
-    // for (ctx.basePerm.keys()) |key| {
-    //     print("KEY: {s}\n", .{key});
-    // }
-    // try solveGrid(&ctx);
-    // try ctx.loadGrid("grid01.txt");
-    // try solveGrid(&ctx);
-    // try ctx.loadGrid("grid02.txt");
-    // try solveGrid(&ctx);
-    // try ctx.loadGrid("grid03.txt");
-    // try solveGrid(&ctx);
-    // try ctx.loadGrid("grid04.txt");
-    // try solveGrid(&ctx);
-    // try ctx.loadGrid("grid05.txt");
-    // try solveGrid(&ctx); 
+    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "??SALOPESP");
 
     var argIt = std.process.args();
     _ = argIt.skip(); //Skps program name
@@ -532,7 +550,7 @@ pub fn main() !void {
             ctx.matchVec.deinit();
             ctx.matchVec = MatchVec.init(ctx.alloc);
         }
-        try times.append(try solveGrid(&ctx));
+        try times.append(try solveGrid(&gpa, &ctx));
     }
 
     var totalTime: i64 = 0;

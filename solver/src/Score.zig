@@ -13,7 +13,7 @@ pub const LetterScore = [26]u8 {
     1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 10, 1, 2, 1, 1, 3, 8, 1, 1, 1, 1, 4, 10, 10, 10, 10
 };
 
-pub fn computeScorePerp(ctx: *const Context, currPoint: Point, currCh: u8) !u32 {
+pub fn computeScorePerp(ctx: *Context, currPoint: Point, currCh: u8) !u32 {
     //FIX: A lot of cash misses happen here. Can be fixed by storing a transposed version of the grid
  
     var start: u4 = currPoint[1];
@@ -45,6 +45,9 @@ pub fn computeScorePerp(ctx: *const Context, currPoint: Point, currCh: u8) !u32 
     }
     const endOfWord = std.mem.indexOfSentinel(u8, 0, buffer[0..]);
     // std.debug.print("DICT CHECK: {s}\n", .{buffer});
+    ctx.mutex.lock();
+    defer ctx.mutex.unlock();
+
     if (!ctx.dict.contains(buffer[0..endOfWord])) {
         return error.UnknownWord;
     }

@@ -69,6 +69,16 @@ pub const Grid = struct {
         };
     }
 
+    pub fn clone(self: Grid) Grid {
+        var grid: [15][15]u8 = undefined;
+        for (0..grid.len) |y| {
+            std.mem.copyForwards(u8, grid[y][0..], self.grid[y][0..]);
+        }
+        return Grid{
+            .grid = grid,
+        };
+    }
+
     pub fn loadGridState(self: *Grid, path: []const u8) !void {
         var pathBuffer: [MAX_PATH:0]u8 = .{0} ** MAX_PATH;
         std.mem.copyForwards(u8, pathBuffer[0..], gridRootPath);

@@ -10,6 +10,7 @@ const Map                   = generator.Map;
 
 const Allocator             = std.mem.Allocator;
 const ArrayList             = std.ArrayList;
+const Thread                = std.Thread;
 
 const PermSet               = std.StringArrayHashMap([2]u8);
 const String                = ArrayList(u8);
@@ -120,6 +121,7 @@ pub const Context = struct {
     matchVec: MatchVec,
     state: Direction = .Horizontal,
     wildcard: u32 = 0,
+    mutex: std.Thread.Mutex = .{},
 
 
     pub fn init(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
@@ -187,5 +189,25 @@ pub const Context = struct {
 
     pub fn loadGrid(self: *Context, gridState: []const u8) !void {
         try self.grid.loadGridState(gridState);
+    }
+
+
+    pub fn clone(self: Context, alloc: Allocator) !Context {
+
+        var rack = String.init(alloc);
+        try rack.appendSlice(self.rack.items[0..]);
+
+        return Context{
+            .alloc = alloc,
+            .orderedMap = self.orderedMap, //NOTE: Needs mutex
+            .dict = self.dict, //NOTE: Needs mutex
+            .rack = rack,
+            .basePerm = try self.basePerm.cloneWithAllocator(alloc),
+            .matchVec = MatchVec.init(alloc),
+            .state = self.state,
+            .wildcard = self.wildcard,
+            .grid = self.grid.clone(),
+            .mutex = self.mutex,
+        };
     }
 };
