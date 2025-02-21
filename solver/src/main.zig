@@ -104,10 +104,7 @@ pub const Match = struct {
                 cell[0],
                 cell[0] + (@as(u4, @intCast(currWord.len)) - 1),
             },
-            .saveCoord = switch(ctxState) {
-                .Horizontal => cell[0],
-                .Vertical => cell[1],
-            },
+            .saveCoord = cell[1],
             .score = 0,
         };
     }
@@ -301,23 +298,58 @@ fn getConstraints(ctx: *Context, cell: Point) !Constraints {
     return cellConst;
 }
 
-fn getWildCardPoses(ctx: *Context, word: []const u8, wildcards: [2]u8, cellPlaces: *const Placement) !void {
-    if (wildcards[0] == 0) {
-        return ;
+
+fn isMandatory(ch: u8, pos: u4, cellPlaces: *const Placement) bool {
+    for (cellPlaces.pos, cellPlaces.c) |letterPos, letterValue| {
+        if (letterPos == 0 or letterPos > pos) return false;
+        if (letterPos == pos and ch == letterValue) return true;
     }
-    _ = ctx;
-    _ = word;
-    // std.debug.print("RACK: {s}, word: {s}, wildcards: {s}\n", .{ctx.rack.items, word, wildcards});
-    // std.debug.print("RACK: {s}, word: {s}, wildcards: {s}\n", .{ctx.rack.items, word, wildcards});
-    _ = cellPlaces;
+    return false;
+}
+
+fn getWildCardPoses(ctx: *Context, word: []const u8, wildcards: [2]u8, cellPlaces: *const Placement) !ArrayList(u4) {
+    var positions = ArrayList(u4).init(ctx.alloc);
+
+    for (0..word.len) |i| {
+        if (word[i] == wildcards[0] and !isMandatory(word[i], @as(u4, @intCast(i)) + 1, cellPlaces)) {
+            try positions.append(@intCast(i));
+        }
+    }
+    std.log.info("Possible: {any}\n", .{positions.items});
+    return positions;
 }
 
 fn computeMatchs(ctx: *Context, cell: *const Point, wordVec: *const StringVec, cellPlaces: *const Placement, mandatoryLen: usize) !void {
     outer: for (wordVec.items) |kv| {
         const word = kv[0];
         const wildcards = kv[1];
-        try getWildCardPoses(ctx, word, wildcards, cellPlaces);
         var currMatch = Match.init(word, wildcards, cell, ctx.state);
+
+        std.log.info("word: {s}\n", .{word});
+        if (wildcards[0] != 0) {
+            const wildCardArrangments = try getWildCardPoses(ctx, word, wildcards, cellPlaces);
+            var highestScore: usize = 0;
+            for (wildCardArrangments.items) |ghostedPos| {
+
+                for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
+                    const currPoint = Point{@intCast(x), currMatch.saveCoord};
+                    //Not yet a letter and has perpendicular neighbor.s
+                    if (ctx.grid.grid[currMatch.saveCoord][x] == '.' and ctx.grid.isAlphaPerp(currPoint)) {
+                        const currPointScore = computeScorePerp(ctx, currPoint, currMatch.word[x - currMatch.range[0]]) catch {
+                            continue :outer;
+                        };
+                        currMatch.score += if ((x - currMatch.range[0]) == ghostedPos) 0 else currPointScore;
+                    }
+                }
+                currMatch.score += computeScorePar(ctx, &currMatch, ghostedPos);
+
+                if ((std.mem.indexOfSentinel(u8, 0, currMatch.word[0..]) - mandatoryLen) == 7) {
+                    currMatch.score += Scrabble;
+                }
+                highestScore = if (currMatch.score > highestScore) currMatch.score else highestScore;
+            }
+            std.log.info("Highest Score: {d}\n", .{highestScore});
+        }
 
         for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
             const currPoint = Point{@intCast(x), currMatch.saveCoord};
@@ -327,11 +359,18 @@ fn computeMatchs(ctx: *Context, cell: *const Point, wordVec: *const StringVec, c
                 };
             }
         }
-        currMatch.score += computeScorePar(ctx, &currMatch);
+        // print("Word: {s}\n", .{currMatch.word});
+        // print("score: {d}\n", .{currMatch.score});
+        currMatch.score += computeScorePar(ctx, &currMatch, null);
+        // print("score after: {d}\n", .{currMatch.score});
 
         if ((std.mem.indexOfSentinel(u8, 0, currMatch.word[0..]) - mandatoryLen) == 7) {
             currMatch.score += Scrabble;
         }
+        currMatch.saveCoord = switch(ctx.state) {
+            .Horizontal => cell[1],
+            .Vertical => cell[1],
+        };
         try ctx.matchVec.append(currMatch);
     }
 }
@@ -378,13 +417,13 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
 fn evaluateGrid(ctx: *Context) !void {
     for (0..GRID_SIZE) |y| {
         for (0..GRID_SIZE) |x| {
-            // if (y == 12 and x == 1) {
+            // if (y == 14 and x == 0) {
                 var cell = Point{@intCast(x), @intCast(y)};
                 var cellConst = getConstraints(ctx, cell) catch continue;
                 if (cellConst.places.items.len == 0)
                     continue;
-                // print("Y:{d},X:{d}\n", .{y, x});
-                // print("{}", .{cellConst});
+                std.log.info("Y:{d},X:{d}\n", .{y, x});
+                std.log.info("{}", .{cellConst});
                 evaluateCell(ctx, &cellConst, &cell) catch continue;
             // }
         }
@@ -404,23 +443,24 @@ fn solveGrid(ctx: *Context) !i64 {
     try evaluateGrid(ctx);
 
     std.mem.sort(Match, ctx.matchVec.items[0..], {}, lessThanMatch);
-    // const format = 
-    //     \\[{d}] = [
-    //     \\  .word: {s},
-    //     \\  .range: {d},
-    //     \\  .saveCoord: {d},
-    //     \\  .dir: {s},
-    //     \\  .score: {d},
-    //     \\  .wildcards: {s},
-    //     \\]
-    //     \\
-    // ;
-    //
+    const format = 
+        \\[{d}] = [
+        \\  .word: {s},
+        \\  .range: {d},
+        \\  .saveCoord: {d},
+        \\  .dir: {s},
+        \\  .score: {d},
+        \\  .wildcards: {s},
+        \\]
+        \\
+    ;
+
+    for (ctx.matchVec.items, 0..) |match, i| {
+        print(format, .{i, match.word, match.range, match.saveCoord, @tagName(match.dir), match.score, 
+            match.wildcards});
+    }
     // for (ctx.matchVec.items, 0..) |match, i| {
-    //     std.log.info(format, .{i, match.word, match.range, match.saveCoord, @tagName(match.dir), match.score, match.wildcards});
-    // }
-    // for (ctx.matchVec.items, 0..) |match, i| {
-    //     std.log.info("[{d}]: {s} -> {d}", .{i, match.word, match.score});
+    //     print("[{d}]: {s} -> {d}\n", .{i, match.word, match.score});
     // }
     //
     // for (ctx.grid.grid) |line| {
@@ -461,7 +501,7 @@ pub fn main() !void {
     const ArenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "??REPAE");
+    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "??QUEPO");
     // for (ctx.basePerm.keys()) |key| {
     //     print("KEY: {s}\n", .{key});
     // }
@@ -486,7 +526,7 @@ pub fn main() !void {
     };
 
     var times = ArrayList(i64).init(ctx.alloc);
-    try ctx.loadGrid("grid06.txt");
+    try ctx.loadGrid("grid04.txt");
     for (0..loopCountInt) |_| {
         defer {
             ctx.matchVec.deinit();

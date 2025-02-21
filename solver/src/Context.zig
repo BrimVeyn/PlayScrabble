@@ -144,6 +144,10 @@ pub const Context = struct {
 
         var perms = PermSet.init(alloc);
         try permutations(alloc, &perms, &rack, &buffer, 0);
+
+        //FIX: Absolutely disgusting
+        if (wildcard == 2) try rack.appendSlice("??");
+        if (wildcard == 1) try rack.append('?');
         
         switch (wildcard) {
             0 => {},

@@ -26,6 +26,12 @@ pub fn computeScorePerp(ctx: *const Context, currPoint: Point, currCh: u8) !u32 
     var buffer: [GRID_SIZE:0]u8 = .{0} ** GRID_SIZE;
     var wordMultiplier: u32 = 1;
 
+    if (start >= end) return 0;
+
+    std.log.info("Start at: {d}\n", .{currPoint[1]});
+    std.log.info("R: {d}-{d}\n", .{start, end});
+
+
     for (start..end + 1) |y| {
         if (y == currPoint[1]) {
             buffer[y - start] = currCh;
@@ -38,13 +44,14 @@ pub fn computeScorePerp(ctx: *const Context, currPoint: Point, currCh: u8) !u32 
         }
     }
     const endOfWord = std.mem.indexOfSentinel(u8, 0, buffer[0..]);
+    // std.debug.print("DICT CHECK: {s}\n", .{buffer});
     if (!ctx.dict.contains(buffer[0..endOfWord])) {
         return error.UnknownWord;
     }
     return score * wordMultiplier;
 }
 
-pub fn computeScorePar(ctx: *const Context, currMatch: *const Match) u32 {
+pub fn computeScorePar(ctx: *const Context, currMatch: *const Match, ghostedPos: ?u4) u32 {
     var wordScore: u32 = 0;
     var wordMultiplier: u32 = 1;
     for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
@@ -53,7 +60,9 @@ pub fn computeScorePar(ctx: *const Context, currMatch: *const Match) u32 {
 
         if (ctx.grid.grid[currPoint[1]][currPoint[0]] == '.') {
             wordMultiplier *= ctx.grid.getWordModifier(&currPoint).asU32();
-            wordScore += (letterScore * ctx.grid.getLetterModifier(&currPoint).asU32());
+            if (ghostedPos == null or ((x - currMatch.range[0]) != ghostedPos.?)) {
+                wordScore += (letterScore * ctx.grid.getLetterModifier(&currPoint).asU32());
+            }
         } else {
             wordScore += letterScore;
         }
