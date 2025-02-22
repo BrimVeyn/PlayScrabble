@@ -20,12 +20,11 @@ const ScrabbleDict          = std.StringHashMap(bool);
 
 const mainModule            = @import("main.zig");
 const Match                 = mainModule.Match;
+const orderU8               = mainModule.orderU8;
+
 const MatchVec              = ArrayList(Match);
 const Point                 = @Vector(2, u4);
 const Range                 = @Vector(2, u4);
-
-const insertSorted               = mainModule.insertSorted;
-const insertSortedAssumeCapacity = mainModule.insertSortedAssumeCapacity;
 
 const GRID_SIZE             = 15;
 
@@ -51,6 +50,11 @@ fn permutations(alloc: Allocator, perms: *PermSet, pattern: *String, buffer: *St
 
     _ = buffer.pop();
     try permutations(alloc, perms, pattern, buffer, patternI + 1);
+}
+
+pub fn insertSorted(string: *String, ch: u8) !void {
+    const idx = std.sort.lowerBound(u8, string.items[0..], ch, orderU8);
+    try string.insert(idx, ch);
 }
 
 fn wildcardOne(alloc: Allocator, perms: *PermSet) !void {
@@ -111,8 +115,6 @@ pub fn populateMap(alloc: Allocator) !Map {
 }
 
 pub const Context = struct {
-
-    arena: std.heap.ArenaAllocator,
     alloc: Allocator,
     grid: Grid,
     rack: String,
@@ -125,10 +127,7 @@ pub const Context = struct {
     mutex: std.Thread.Mutex = .{}, //INFO: used to lock access to orderedMap and dict
 
 
-    pub fn init(gpa: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
-        var arena: std.heap.ArenaAllocator = .init(gpa);
-        const alloc = arena.allocator();
-
+    pub fn init(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
         var grid = Grid.init();
         try grid.loadGridState(gridState);
 
@@ -169,7 +168,6 @@ pub const Context = struct {
         }
 
         return .{
-            .arena = arena,
             .alloc = alloc,
             .grid = grid,
             .rack = rack,
@@ -192,16 +190,9 @@ pub const Context = struct {
         self.state = .Vertical;
     }
 
+
     pub fn loadGrid(self: *Context, gridState: []const u8) !void {
         try self.grid.loadGridState(gridState);
-    }
-
-    pub fn deinit(self: *Context) void {
-        // for (self.orderedMap.data.keys()) |k| {
-        //     self.alloc.free(k);
-        // }
-        // self.orderedMap.deinit(self.alloc);
-        self.arena.deinit();
     }
 
     pub fn clone(self: Context, gpa: Allocator) !Context {
@@ -212,7 +203,6 @@ pub const Context = struct {
         try rack.appendSlice(self.rack.items[0..]);
 
         return Context{
-            // .arena = arena,
             .alloc = alloc,
             .orderedMap = self.orderedMap, //NOTE: Needs mutex
             .dict = self.dict, //NOTE: Needs mutex

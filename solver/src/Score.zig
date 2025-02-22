@@ -58,7 +58,7 @@ pub fn computeScorePar(ctx: *const Context, currMatch: *const Match, ghostedPos:
     var wordScore: u32 = 0;
     var wordMultiplier: u32 = 1;
     for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
-        const currPoint = Point{@intCast(x), currMatch.saveCoord};
+        const currPoint = Point{@intCast(x), currMatch.perpCoord};
         const letterScore = LetterScore[currMatch.word[x - currMatch.range[0]] - 'A'];
 
         if (ctx.grid.grid[currPoint[1]][currPoint[0]] == '.') {
@@ -72,8 +72,3 @@ pub fn computeScorePar(ctx: *const Context, currMatch: *const Match, ghostedPos:
     }
     return (wordScore * wordMultiplier);
 }
-
-// W: ??ILOTRE
-// --> PIETRE
-// --> PI?TRE
-// --> PIETR?
