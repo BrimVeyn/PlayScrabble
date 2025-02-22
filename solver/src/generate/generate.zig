@@ -74,7 +74,6 @@ pub const Map = struct {
         }
         self.data.deinit();
     }
-
 };
 
 pub fn lessThan(_ : void, a: u8, b: u8) bool {

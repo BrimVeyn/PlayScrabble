@@ -112,6 +112,7 @@ pub fn populateMap(alloc: Allocator) !Map {
 
 pub const Context = struct {
 
+    arena: std.heap.ArenaAllocator,
     alloc: Allocator,
     grid: Grid,
     rack: String,
@@ -121,10 +122,13 @@ pub const Context = struct {
     matchVec: MatchVec,
     state: Direction = .Horizontal,
     wildcard: u32 = 0,
-    mutex: std.Thread.Mutex = .{},
+    mutex: std.Thread.Mutex = .{}, //INFO: used to lock access to orderedMap and dict
 
 
-    pub fn init(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
+    pub fn init(gpa: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
+        var arena: std.heap.ArenaAllocator = .init(gpa);
+        const alloc = arena.allocator();
+
         var grid = Grid.init();
         try grid.loadGridState(gridState);
 
@@ -165,6 +169,7 @@ pub const Context = struct {
         }
 
         return .{
+            .arena = arena,
             .alloc = alloc,
             .grid = grid,
             .rack = rack,
@@ -191,13 +196,23 @@ pub const Context = struct {
         try self.grid.loadGridState(gridState);
     }
 
+    pub fn deinit(self: *Context) void {
+        // for (self.orderedMap.data.keys()) |k| {
+        //     self.alloc.free(k);
+        // }
+        // self.orderedMap.deinit(self.alloc);
+        self.arena.deinit();
+    }
 
-    pub fn clone(self: Context, alloc: Allocator) !Context {
+    pub fn clone(self: Context, gpa: Allocator) !Context {
+        var arena = std.heap.ArenaAllocator.init(gpa);
+        const alloc = arena.allocator();
 
         var rack = String.init(alloc);
         try rack.appendSlice(self.rack.items[0..]);
 
         return Context{
+            // .arena = arena,
             .alloc = alloc,
             .orderedMap = self.orderedMap, //NOTE: Needs mutex
             .dict = self.dict, //NOTE: Needs mutex

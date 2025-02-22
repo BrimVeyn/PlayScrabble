@@ -441,33 +441,47 @@ fn evaluateGrid(ctx: *Context) !void {
     }
 }
 
-fn solveGrid(gpa: *std.heap.GeneralPurposeAllocator(gpaConfig), ctx: *Context) !i64 {
+fn solveGridMonoThread(ctx: *Context) !i64 {
     const startTime = std.time.microTimestamp();
 
-    // var threads = ArrayList(std.Thread).init(ctx.alloc);
-    // defer threads.deinit();
-    //
-    // var arena = std.heap.ArenaAllocator.init(gpa.allocator());
-    // const ArenaAlloc = arena.allocator();
-    // defer arena.deinit();
-    //
-    // var ctxCopy = try ctx.clone(ArenaAlloc);
-    // ctxCopy.transposeGrid();
-    //
-    // try threads.append(try std.Thread.spawn(.{}, evaluateGrid, .{ctx}));
-    // try threads.append(try std.Thread.spawn(.{}, evaluateGrid, .{&ctxCopy}));
-    //
-    // // const err = try std.Thread.yield();
-    // // print("err: {!}", .{err});
-    // for (threads.items) |thread| {
-    //     thread.join();
-    // }
-    _ = gpa;
     try evaluateGrid(ctx);
     //Transpose the grid and update ctx.state to Vertical
     ctx.transposeGrid();
     try evaluateGrid(ctx);
 
+    std.mem.sort(Match, ctx.matchVec.items[0..], {}, lessThanMatch);
+
+    const endTime = std.time.microTimestamp();
+    const elapsedMicro: i64 = endTime - startTime;
+    const elapsedMilli: f64 = @as(f64, @floatFromInt(elapsedMicro)) / @as(f64, 1000);
+    _ = elapsedMilli;
+
+    // print("Elapsed: {d}µs | {d}ms\n", .{elapsedMicro, elapsedMilli});
+    return elapsedMicro;
+}
+
+fn solveGridMultiThread(
+    gpa: Allocator,
+    ctx: *Context
+) !i64 {
+    const startTime = std.time.microTimestamp();
+
+    var threads = ArrayList(std.Thread).init(ctx.alloc);
+    defer threads.deinit();
+
+
+    var ctxCopy = try ctx.clone(gpa);
+    ctxCopy.transposeGrid();
+    defer ctxCopy.deinit() catch {};
+
+    try threads.append(try std.Thread.spawn(.{}, evaluateGrid, .{ctx}));
+    try threads.append(try std.Thread.spawn(.{}, evaluateGrid, .{&ctxCopy}));
+
+    // const err = try std.Thread.yield();
+    // print("err: {!}", .{err});
+    for (threads.items) |thread| {
+        thread.join();
+    }
     std.mem.sort(Match, ctx.matchVec.items[0..], {}, lessThanMatch);
     // const format = 
     //     \\[{d}] = [
@@ -488,24 +502,6 @@ fn solveGrid(gpa: *std.heap.GeneralPurposeAllocator(gpaConfig), ctx: *Context) !
     // for (ctxCopy.matchVec.items, 0..) |match, i| {
     //     print("[{d}]: {s} -> {d}\n", .{i, match.word, match.score});
     // }
-    //
-    // for (ctx.grid.grid) |line| {
-    //     print("{s}\n", .{line});
-    // }
-
-    // for (ctx.grid.modifiers) |line| {
-    //     for (line) |mod| {
-    //         switch (mod) {
-    //             .DLETTER => print("D", .{}),
-    //             .TLETTER => print("T", .{}),
-    //             .DWORD => print("L", .{}),
-    //             .TWORD => print("O", .{}),
-    //             .NONE => print(".", .{}),
-    //         }
-    //     }
-    //     print("\n", .{});
-    // }
-
     const endTime = std.time.microTimestamp();
     const elapsedMicro: i64 = endTime - startTime;
     const elapsedMilli: f64 = @as(f64, @floatFromInt(elapsedMicro)) / @as(f64, 1000);
@@ -513,6 +509,15 @@ fn solveGrid(gpa: *std.heap.GeneralPurposeAllocator(gpaConfig), ctx: *Context) !
 
     // print("Elapsed: {d}µs | {d}ms\n", .{elapsedMicro, elapsedMilli});
     return elapsedMicro;
+}
+
+
+fn solveGrid(gpa: Allocator, ctx: *Context) !i64 {
+    if (ctx.wildcard == 0) {
+        return try solveGridMonoThread(ctx);
+    } else {
+        return try solveGridMultiThread(gpa, ctx);
+    }
 }
 
 //PERF: A grid where every cell is a bitmap of already explored paths of known letters
@@ -523,44 +528,48 @@ const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
     .thread_safe = true,
     .safety = true,
     .retain_metadata = true,
+    .stack_trace_frames = 50,
 };
 
 pub fn main() !void {
     var gpa: std.heap.GeneralPurposeAllocator(gpaConfig) = .init;
+    const gpaAlloc = gpa.allocator();
     defer _ = gpa.deinit();
 
-    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
-    const ArenaAlloc = arena.allocator();
-    defer arena.deinit();
+    // var arena: std.heap.ArenaAllocator = .init(gpaAlloc);
+    // const alloc = arena.allocator();
+    // defer arena.deinit();
 
-    var ctx = try Context.init(ArenaAlloc, "grid00.txt", "??SALOPESP");
+    var ctx = try Context.init(gpaAlloc, "grid00.txt", "SALOPEP");
+    ctx.deinit();
 
-    var argIt = std.process.args();
-    _ = argIt.skip(); //Skps program name
-    const loopCountStr = argIt.next() orelse "1";
-    const loopCountInt = std.fmt.parseInt(usize, loopCountStr, 10) catch {
-        print("Argument must be an integer\n", .{});
-        return;
-    };
+    // var argIt = std.process.args();
+    // _ = argIt.skip(); //Skips program name
+    // const loopCountStr = argIt.next() orelse "1";
+    // const loopCountInt = std.fmt.parseInt(usize, loopCountStr, 10) catch {
+    //     print("Argument must be an integer\n", .{});
+    //     return;
+    // };
+    // //
+    // const times = ArrayList(i64).init(ctx.alloc);
+    // try ctx.loadGrid("grid04.txt");
+    // for (0..loopCountInt) |_| {
+    //     defer {
+    //         ctx.matchVec.deinit();
+    //         ctx.matchVec = MatchVec.init(ctx.alloc);
+    //     }
+    //     // try times.append(try solveGrid(gpa.allocator(), &ctx));
+    // }
+    //
+    // var totalTime: i64 = 0;
+    // for (times.items) |timeMicro| {
+    //     totalTime += timeMicro;
+    // }
+    // const averageTimeMicro: f64 = @as(f64, @floatFromInt(totalTime)) / @as(f64, @floatFromInt(loopCountInt));
+    // const averageTimeMilli :f64 = @as(f64, @floatFromInt(totalTime)) / @as(f64, (1000 * @as(f64, @floatFromInt(loopCountInt)))); 
+    // print("Average: {d}µs | {d}ms\n", .{averageTimeMicro, averageTimeMilli});
 
-    var times = ArrayList(i64).init(ctx.alloc);
-    try ctx.loadGrid("grid04.txt");
-    for (0..loopCountInt) |_| {
-        defer {
-            ctx.matchVec.deinit();
-            ctx.matchVec = MatchVec.init(ctx.alloc);
-        }
-        try times.append(try solveGrid(&gpa, &ctx));
-    }
-
-    var totalTime: i64 = 0;
-    for (times.items) |timeMicro| {
-        totalTime += timeMicro;
-    }
-    const averageTimeMicro: f64 = @as(f64, @floatFromInt(totalTime)) / @as(f64, @floatFromInt(loopCountInt));
-    const averageTimeMilli :f64 = @as(f64, @floatFromInt(totalTime)) / @as(f64, (1000 * @as(f64, @floatFromInt(loopCountInt)))); 
-    print("Average: {d}µs | {d}ms\n", .{averageTimeMicro, averageTimeMilli});
-
+    
 }
 
 test "simple test" {}
