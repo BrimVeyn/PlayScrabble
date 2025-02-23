@@ -59,7 +59,6 @@ pub fn insertSorted(string: *String, ch: u8) !void {
 
 fn wildcardOne(alloc: Allocator, perms: *PermSet) !void {
     var copy = try perms.clone();
-    defer copy.deinit();
 
     for (copy.keys()) |perm| {
         for ('A'..'Z') |ch| {
@@ -78,7 +77,6 @@ fn wildcardOne(alloc: Allocator, perms: *PermSet) !void {
 
 fn wildcardTwo(alloc: Allocator, perms: *PermSet) !void {
     var copy = try perms.clone();
-    defer copy.deinit();
 
     for (copy.keys()) |perm| {
         for ('A'..'Z') |ch1| {
@@ -93,7 +91,7 @@ fn wildcardTwo(alloc: Allocator, perms: *PermSet) !void {
 
                 var twoLetters = try alloc.alloc(u8, 2);
                 twoLetters[0] = ch1u8;
-                twoLetters[0] = ch2u8;
+                twoLetters[1] = ch2u8;
                 _ = try perms.getOrPutValue(twoLetters, .{ch1u8, ch2u8});
             }
             var oneLetter = try alloc.alloc(u8, 1);
@@ -137,29 +135,26 @@ pub const Context = struct {
 
         //Since ? < [A-Z], if there's a wildcard its at 0 and 1
         var wildcard: u32 = 0;
-        while (true) {
-            if (rack.items[0] == '?') {
-                _ = rack.orderedRemove(0);
-                wildcard += 1;
-            } else break;
-        }
+        wildcard += if (rack.items[0] == '?') 1 else 0;
+        wildcard += if (rack.items[1] == '?') 1 else 0;
 
         var buffer = String.init(alloc);
-        defer buffer.deinit();
-
         var perms = PermSet.init(alloc);
-        try permutations(alloc, &perms, &rack, &buffer, 0);
+        try permutations(alloc, &perms, &rack, &buffer, wildcard);
 
-        //FIX: Absolutely disgusting
-        if (wildcard == 2) try rack.appendSlice("??");
-        if (wildcard == 1) try rack.append('?');
-        
+        //TODO: Allow word of len 1 <-- enormous mistake
+
         switch (wildcard) {
             0 => {},
             1 => try wildcardOne(alloc, &perms),
             2 => try wildcardTwo(alloc, &perms),
             else => return error.TooManyWildcards,
         }
+
+        // var permIt = perms.iterator();
+        // while (permIt.next()) |kv| {
+        //     std.debug.print("KV: {s}: {s}\n", .{kv.key_ptr.*, kv.value_ptr.*});
+        // }
 
         var dict = ScrabbleDict.init(alloc);
         var lineIt = std.mem.tokenizeScalar(u8, dictContent, '\n');
@@ -182,9 +177,9 @@ pub const Context = struct {
     pub fn transposeGrid(self: *Context) void {
         for (0..GRID_SIZE) |y| {
             for (y + 1..GRID_SIZE) |x| {
-                const tmp = self.grid.grid[x][y];
-                self.grid.grid[x][y] = self.grid.grid[y][x];
-                self.grid.grid[y][x] = tmp;
+                const tmp = self.grid.cells[(x * GRID_SIZE) + y];
+                self.grid.cells[(x * GRID_SIZE) + y] = self.grid.cells[(y * GRID_SIZE) + x];
+                self.grid.cells[(y * GRID_SIZE) + x] = tmp;
             }
         }
         self.state = .Vertical;

@@ -81,6 +81,7 @@ fn getBaseFilteredWordList(ctx: *Context, perms: *const PermSet, range: *const R
 
         for (permWords.keys()) |word| {
             if (word.len < range[0] or word.len > range[1]) continue;
+
             try vec.append(.{ word, kv.value_ptr.*});
         }
     }
@@ -120,16 +121,34 @@ fn isMandatory(ch: u8, pos: u4, cellPlaces: *const Placement) bool {
     return false;
 }
 
-fn getWildCardPoses(ctx: *Context, word: []const u8, wildcards: [2]u8, cellPlaces: *const Placement) !ArrayList(u4) {
-    var positions = ArrayList(u4).init(ctx.alloc);
+fn getWildCardPoses(ctx: *Context, word: []const u8, wildcards: [2]u8, cellPlaces: *const Placement) !ArrayList([2]?u4) {
+    var posFirst = ArrayList(u4).init(ctx.alloc);
+    var posSecond = ArrayList(u4).init(ctx.alloc);
 
     for (0..word.len) |i| {
         if (word[i] == wildcards[0] and !isMandatory(word[i], @as(u4, @intCast(i)) + 1, cellPlaces)) {
-            try positions.append(@intCast(i));
+            try posFirst.append(@intCast(i));
+        } else if (word[i] == wildcards[1] and !isMandatory(word[i], @as(u4, @intCast(i)) + 1, cellPlaces)) {
+            try posSecond.append(@intCast(i));
         }
     }
-    std.log.info("Possible: {any}\n", .{positions.items});
-    return positions;
+
+    var posFinal = ArrayList([2]?u4).init(ctx.alloc);
+
+    for (posFirst.items) |pos1| {
+        if (posSecond.items.len == 0) {
+            try posFinal.append(.{pos1, null});
+            continue;
+        }
+        for (posSecond.items) |pos2| {
+            try posFinal.append(.{pos1, pos2});
+        }
+    }
+
+    // std.log.info("FINAL: {s}\nCom: {any}", .{wildcards, posFinal.items});
+    // std.log.info("W1: {c}, Possible: {any}", .{wildcards[0], posFirst.items});
+    // std.log.info("W2: {c}, Possible: {any}", .{wildcards[1], posSecond.items});
+    return posFinal;
 }
 
 fn computeMatchs(
@@ -144,48 +163,59 @@ fn computeMatchs(
         const wildcards = kv[1];
         var currMatch = Match.init(word, wildcards, cell, ctx.state);
 
-        std.log.info("word: {s}\n", .{word});
         if (wildcards[0] != 0) {
+            // std.log.info("--------------------------", .{});
+            // std.log.info("TRYING WORD: {s}", .{word});
             const wildCardArrangments = try getWildCardPoses(ctx, word, wildcards, cellPlaces);
             var highestScore: usize = 0;
-            for (wildCardArrangments.items) |ghostedPos| {
+
+            for (wildCardArrangments.items) |jokerPoses| {
+                currMatch.score = 0;
 
                 for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
                     const currPoint = Point{@intCast(x), currMatch.perpCoord};
                     //Not yet a letter and has perpendicular neighbor.s
-                    if (ctx.grid.grid[currMatch.perpCoord][x] == '.' and ctx.grid.isAlphaPerp(currPoint)) {
-                        const currPointScore = computeScorePerp(ctx, currPoint, currMatch.word[x - currMatch.range[0]]) catch {
+                    const isJoker = (x - currMatch.range[0] == jokerPoses[0].? or
+                                    jokerPoses[1] != null and x - currMatch.range[0] == jokerPoses[1].?);
+
+                    if (ctx.grid.isEmpty(currPoint) and 
+                        ctx.grid.isAlphaPerp(currPoint)) 
+                    {
+                        const currPointScore = computeScorePerp(ctx, currPoint, currMatch.word[x - currMatch.range[0]], isJoker) catch {
                             continue :outer;
                         };
-                        currMatch.score += if ((x - currMatch.range[0]) == ghostedPos) 0 else currPointScore;
+                        // std.log.info("Vertical score: {d}", .{currPointScore});
+                        currMatch.score += currPointScore;
                     }
                 }
-                currMatch.score += computeScorePar(ctx, &currMatch, ghostedPos);
+                currMatch.score += computeScorePar(ctx, &currMatch, jokerPoses);
 
                 if ((std.mem.indexOfSentinel(u8, 0, currMatch.word[0..]) - mandatoryLen) == 7) {
                     currMatch.score += Scrabble;
                 }
+                // std.log.info("Score with: {any} is {d}", .{jokerPoses, currMatch.score});
                 highestScore = if (currMatch.score > highestScore) currMatch.score else highestScore;
             }
-            std.log.info("Highest Score: {d}\n", .{highestScore});
-        }
+            // std.log.info("Highest Score: {d}", .{highestScore});
+        } else {
+            for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
+                const currPoint = Point{@intCast(x), currMatch.perpCoord};
+                if (ctx.grid.isEmpty(currPoint) and ctx.grid.isAlphaPerp(currPoint)) {
+                    currMatch.score += computeScorePerp(ctx, currPoint, currMatch.word[x - currMatch.range[0]], false) catch {
+                        continue :outer;
+                    };
+                }
+            }
+            // print("Word: {s}\n", .{currMatch.word});
+            // print("score: {d}\n", .{currMatch.score});
+            currMatch.score += computeScorePar(ctx, &currMatch, .{null, null});
+            // print("score after: {d}\n", .{currMatch.score});
 
-        for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
-            const currPoint = Point{@intCast(x), currMatch.perpCoord};
-            if (ctx.grid.grid[currMatch.perpCoord][x] == '.' and ctx.grid.isAlphaPerp(currPoint)) {
-                currMatch.score += computeScorePerp(ctx, currPoint, currMatch.word[x - currMatch.range[0]]) catch {
-                    continue :outer;
-                };
+            if ((std.mem.indexOfSentinel(u8, 0, currMatch.word[0..]) - mandatoryLen) == 7) {
+                currMatch.score += Scrabble;
             }
         }
-        // print("Word: {s}\n", .{currMatch.word});
-        // print("score: {d}\n", .{currMatch.score});
-        currMatch.score += computeScorePar(ctx, &currMatch, null);
-        // print("score after: {d}\n", .{currMatch.score});
 
-        if ((std.mem.indexOfSentinel(u8, 0, currMatch.word[0..]) - mandatoryLen) == 7) {
-            currMatch.score += Scrabble;
-        }
         try ctx.matchVec.append(currMatch);
     }
 }
@@ -197,6 +227,12 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
     for (0..cellConst.ranges.items.len) |it| {
         if (cellConst.places.items[it].c[0] == 0) {
             const cellWords = try getBaseFilteredWordList(ctx, &cellPerms, &cellConst.ranges.items[it]);
+            // for (cellWords.items) |word| {
+            //     print("WORD: {s}\n", .{word[0]});
+            // }
+            // for (cellPerms.keys()) |word| {
+            //     print("Word: {s}\n", .{word});
+            // }
             computeMatchs(ctx, cell, &cellWords, &cellConst.places.items[it], 0) catch continue;
             continue;
         }
@@ -252,8 +288,8 @@ fn solveSingleThread(ctx: *Context) !void {
     const startTime = std.time.microTimestamp();
 
     try evaluateGrid(ctx);
-    ctx.transposeGrid();
-    try evaluateGrid(ctx);
+    // ctx.transposeGrid();
+    // try evaluateGrid(ctx);
 
     sortMatchVec(ctx.matchVec);
 
@@ -273,9 +309,9 @@ fn solveSingleThread(ctx: *Context) !void {
     //     print(format, .{i, match.word, match.range, match.perpCoord, @tagName(match.dir), match.score, 
     //         match.wildcards});
     // }
-    // for (ctxCopy.matchVec.items, 0..) |match, i| {
-    //     print("[{d}]: {s} -> {d}\n", .{i, match.word, match.score});
-    // }
+    for (ctx.matchVec.items, 0..) |match, i| {
+        print("[{d}]: {s} -> {d} | WC: {s}\n", .{i, match.word, match.score, match.wildcards});
+    }
 
     const endTime = std.time.microTimestamp();
     const elapsedMicro: i64 = endTime - startTime;
@@ -290,8 +326,8 @@ fn solveSingleThread(ctx: *Context) !void {
 const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
     .thread_safe = true,
     .safety = true,
-    .retain_metadata = true,
-    .stack_trace_frames = 50,
+    // .retain_metadata = true,
+    // .stack_trace_frames = 50,
 };
 
 pub fn main() !void {
@@ -303,7 +339,7 @@ pub fn main() !void {
     const arenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(arenaAlloc, "grid04.txt", "SALOPES");
+    var ctx = try Context.init(arenaAlloc, "grid04.txt", "SALOP??");
     try solveSingleThread(&ctx);
 }
 

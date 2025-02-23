@@ -38,7 +38,7 @@ fn rGetConstraints(
 
         if (cursor[0] < GRID_SIZE and ctx.grid.isAlpha(cursor) and loopIterator == 0) {
             while (cursor[0] < GRID_SIZE and ctx.grid.isAlpha(cursor) and placed < ctx.rack.items.len) {
-                cBuff[constIt] = try ctx.grid.getChar(cursor);
+                cBuff[constIt] = '@' + @as(u8, ctx.grid.getChar(cursor));
                 posBuff[constIt] = (cursor[0] - wordStart) + 1;
                 constIt += 1;
                 cursor[0] += 1;
@@ -109,7 +109,7 @@ fn rGetConstraints(
                 placed += 1;
             }
             while (cursor[0] < GRID_SIZE and ctx.grid.isAlpha(cursor)) {
-                cBuff[constIt] = try ctx.grid.getChar(cursor);
+                cBuff[constIt] = '@' + @as(u8, ctx.grid.getChar(cursor));
                 posBuff[constIt] = (cursor[0] - wordStart) + 1;
                 constIt += 1;
                 cursor[0] += 1;
