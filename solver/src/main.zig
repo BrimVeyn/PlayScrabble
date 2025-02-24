@@ -34,11 +34,7 @@ const StringVec             = ArrayList(struct {[]const u8, [2]u8});
 const Point                 = @Vector(2, u4);
 const Range                 = @Vector(2, u4);
 
-pub fn orderU8(context: u8, item: u8) std.math.Order {
-    return (std.math.order(context, item));
-}
-
-pub fn insertSortedAssumeCapacity(string: *String, ch: u8) void {
+pub inline fn insertSortedAssumeCapacity(string: *String, ch: u8) void {
     var i: usize = 0;
     while (i < string.items.len and string.items[i] <= ch) : (i += 1) {}
     string.insertAssumeCapacity(i, ch);
@@ -219,7 +215,7 @@ fn computeMatchs(
     }
 }
 
-var totalRecord: i64 = 0;
+var totalRecord: u64 = 0;
 
 fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
     var cellPerms = try ctx.basePerm.clone();
@@ -238,18 +234,15 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
             mandatoryLen += 1;
         }
 
-        // const st = std.time.microTimestamp();
         for (cellPerms.keys()) |*permutation| {
             var newPermutation = try String.initCapacity(ctx.alloc, (mandatoryLen + permutation.len) - mandatoryIt);
             newPermutation.appendSliceAssumeCapacity(permutation.*);
 
-            for (mandatoryIt..mandatoryLen) |i| {
-                insertSortedAssumeCapacity(&newPermutation, cellConst.places.items[it].c[i]);
-            }
+            for (cellConst.places.items[it].c[mandatoryIt..mandatoryLen]) |ch|
+                insertSortedAssumeCapacity(&newPermutation, ch);
+
             permutation.* = newPermutation.items[0..];
         }
-        // const et = std.time.microTimestamp();
-        // totalRecord += (et - st);
 
         const cellWords = try getFilteredWordList(ctx, &cellPerms, &cellConst.places.items[it], &cellConst.ranges.items[it]);
         try computeMatchs(ctx, cell, &cellWords, &cellConst.places.items[it], mandatoryLen);
@@ -328,17 +321,19 @@ fn fillCrossCheck(ctx: *Context) !void {
             @memset(buffer[0..], 0);
             const dotPos, const dummyScore = getDummy(ctx, currPoint, &buffer);
             const wordLen = std.mem.indexOfSentinel(u8, 0, buffer[0..]);
+            const letterModifier = ctx.grid.getLetterModifier(&currPoint);
+            const wordModifier = ctx.grid.getWordModifier(&currPoint);
 
             for ('A'..'[' + 1) |ch| {
                 if (ch == '[') {
                     ctx.crossChecks[y][x].set(ch - 'A');
-                    ctx.crossChecksScore[y][x][ch - 'A'] = (dummyScore * ctx.grid.getWordModifier(&currPoint));
+                    ctx.crossChecksScore[y][x][ch - 'A'] = (dummyScore * wordModifier);
                     break;
                 }
                 buffer[dotPos] = @as(u8, @intCast(ch));
                 if (ctx.dict.contains(buffer[0..wordLen])) {
                     ctx.crossChecks[y][x].set(ch - 'A');
-                    ctx.crossChecksScore[y][x][ch - 'A'] = (dummyScore + (LetterScore[ch - 'A'] * ctx.grid.getLetterModifier(&currPoint))) * ctx.grid.getWordModifier(&currPoint);
+                    ctx.crossChecksScore[y][x][ch - 'A'] = (dummyScore + (LetterScore[ch - 'A'] * letterModifier)) * wordModifier;
                 }
             }
         }
@@ -346,7 +341,7 @@ fn fillCrossCheck(ctx: *Context) !void {
 }
 
 fn solveSingleThread(ctx: *Context) !void {
-    const startTime = std.time.microTimestamp();
+    var startTime = try std.time.Timer.start();
 
     try fillCrossCheck(ctx);
     try evaluateGrid(ctx);
@@ -358,7 +353,6 @@ fn solveSingleThread(ctx: *Context) !void {
 
     sortMatchVec(ctx.matchVec);
 
-    // std.debug.print("Total recorded: {d}us | {d}ms\n", .{totalRecord, @as(f64, @floatFromInt(totalRecord)) / @as(f64, 1000)});
 
     // const format = 
     //     \\[{d}] = [
@@ -377,14 +371,15 @@ fn solveSingleThread(ctx: *Context) !void {
     //     print(format, .{i, match.word, match.range, match.perpCoord, @tagName(match.dir), match.score, 
     //         match.jokers, match.jokerPoses});
     // }
+    const recordFormated = std.fmt.fmtDuration(totalRecord);
+    std.debug.print("Total recorded: {}\n", .{recordFormated});
     for (ctx.matchVec.items, 0..) |match, i| {
         std.log.info("[{d}]: {s} -> {d} | WC: {s}", .{i, match.word, match.score, match.jokers});
     }
 
-    const endTime = std.time.microTimestamp();
-    const elapsedMicro: i64 = endTime - startTime;
-    const elapsedMilli: f64 = @as(f64, @floatFromInt(elapsedMicro)) / @as(f64, 1000);
-    print("Elapsed: {d}µs | {d}ms\n", .{elapsedMicro, elapsedMilli});
+    const elapsed = std.time.Timer.read(&startTime);
+    const elapsedFormated = std.fmt.fmtDuration(elapsed);
+    print("Elapsed: {}\n", .{elapsedFormated});
 }
 
 const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{

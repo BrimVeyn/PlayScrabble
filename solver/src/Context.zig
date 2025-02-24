@@ -20,7 +20,6 @@ const ScrabbleDict          = std.StringHashMap(bool);
 
 const mainModule            = @import("main.zig");
 const Match                 = mainModule.Match;
-const orderU8               = mainModule.orderU8;
 const insertSortedAssumeCapacity = mainModule.insertSortedAssumeCapacity;
 
 const MatchVec              = ArrayList(Match);
