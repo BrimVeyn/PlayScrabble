@@ -13,12 +13,11 @@ pub const Map = struct {
     data: OrderedMap,
 
     pub fn fromJson(alloc: Allocator, json: []const u8) !Map {
-        var parsed = try std.json.parseFromSlice(std.json.Value, alloc, json, .{});
-        defer parsed.deinit();
+        const parsed = try std.json.parseFromSliceLeaky(std.json.Value, alloc, json, .{});
 
         var map = Map{ .data = OrderedMap.init(alloc) };
 
-        var obj = parsed.value.object;
+        var obj = parsed.object;
         var it = obj.iterator();
         while (it.next()) |entry| {
             const key = entry.key_ptr.*;
@@ -34,7 +33,6 @@ pub const Map = struct {
 
             try map.data.put(sorted_key, value_map);
         }
-
         return map;
     }
 

@@ -21,6 +21,7 @@ const ScrabbleDict          = std.StringHashMap(bool);
 const mainModule            = @import("main.zig");
 const Match                 = mainModule.Match;
 const orderU8               = mainModule.orderU8;
+const insertSortedAssumeCapacity = mainModule.insertSortedAssumeCapacity;
 
 const MatchVec              = ArrayList(Match);
 const Point                 = @Vector(2, u4);
@@ -52,20 +53,15 @@ fn permutations(alloc: Allocator, perms: *PermSet, pattern: *String, buffer: *St
     try permutations(alloc, perms, pattern, buffer, patternI + 1);
 }
 
-pub fn insertSorted(string: *String, ch: u8) !void {
-    const idx = std.sort.lowerBound(u8, string.items[0..], ch, orderU8);
-    try string.insert(idx, ch);
-}
-
-fn wildcardOne(alloc: Allocator, perms: *PermSet) !void {
+fn jokerOne(alloc: Allocator, perms: *PermSet) !void {
     var copy = try perms.clone();
 
     for (copy.keys()) |perm| {
-        for ('A'..'Z') |ch| {
+        for ('A'..'Z' + 1) |ch| {
             const chu8:u8 = @intCast(ch);
             var newPerm = try String.initCapacity(alloc, perm.len + 1);
             newPerm.appendSliceAssumeCapacity(perm);
-            try insertSorted(&newPerm, chu8);
+            insertSortedAssumeCapacity(&newPerm, chu8);
             _  = try perms.getOrPutValue(newPerm.items[0..], .{chu8, 0});
 
             var oneLetter = try alloc.alloc(u8, 1);
@@ -75,28 +71,31 @@ fn wildcardOne(alloc: Allocator, perms: *PermSet) !void {
     }
 }
 
-fn wildcardTwo(alloc: Allocator, perms: *PermSet) !void {
+fn jokerTwo(alloc: Allocator, perms: *PermSet) !void {
     var copy = try perms.clone();
 
+    try jokerOne(alloc, perms);
+
     for (copy.keys()) |perm| {
-        for ('A'..'Z') |ch1| {
+        for ('A'..'Z' + 1) |ch1| {
             const ch1u8: u8 = @intCast(ch1);
-            for ('A'..'Z') |ch2| {
+
+            for ('A'..'Z' + 1) |ch2| {
                 const ch2u8: u8 = @intCast(ch2);
+
                 var newPerm = try String.initCapacity(alloc, perm.len + 2);
                 newPerm.appendSliceAssumeCapacity(perm);
-                try insertSorted(&newPerm, ch1u8);
-                try insertSorted(&newPerm, ch2u8);
+                insertSortedAssumeCapacity(&newPerm, ch1u8);
+                insertSortedAssumeCapacity(&newPerm, ch2u8);
+
                 _ = try perms.getOrPutValue(newPerm.items[0..], .{ch1u8, ch2u8});
 
-                var twoLetters = try alloc.alloc(u8, 2);
-                twoLetters[0] = ch1u8;
-                twoLetters[1] = ch2u8;
-                _ = try perms.getOrPutValue(twoLetters, .{ch1u8, ch2u8});
+                var twoLetters = try String.initCapacity(alloc, 2);
+                insertSortedAssumeCapacity(&twoLetters, ch1u8);
+                insertSortedAssumeCapacity(&twoLetters, ch2u8);
+
+                _ = try perms.getOrPutValue(twoLetters.items[0..], .{ch1u8, ch2u8});
             }
-            var oneLetter = try alloc.alloc(u8, 1);
-            oneLetter[0] = ch1u8;
-            _ = try perms.getOrPutValue(oneLetter, .{ch1u8, 0});
         }
     }
 }
@@ -121,7 +120,9 @@ pub const Context = struct {
     dict: ScrabbleDict,
     matchVec: MatchVec,
     state: Direction = .Horizontal,
-    wildcard: u32 = 0,
+    jokers: u32 = 0,
+    crossChecks: [GRID_SIZE][GRID_SIZE]std.StaticBitSet(27) = undefined,
+    crossChecksScore: [GRID_SIZE][GRID_SIZE][27]u8 = undefined,
     mutex: std.Thread.Mutex = .{}, //INFO: used to lock access to orderedMap and dict
 
 
@@ -133,28 +134,21 @@ pub const Context = struct {
         try rack.appendSlice(rackValue);
         std.mem.sort(u8, rack.items[0..], {}, lessThanU8);
 
-        //Since ? < [A-Z], if there's a wildcard its at 0 and 1
-        var wildcard: u32 = 0;
-        wildcard += if (rack.items[0] == '?') 1 else 0;
-        wildcard += if (rack.items[1] == '?') 1 else 0;
+        //NOTE: Since ? < [A-Z], if there's a wildcard its at 0 and 1
+        var jokers: u32 = 0;
+        jokers += if (rack.items[0] == '?') 1 else 0;
+        jokers += if (rack.items[1] == '?') 1 else 0;
 
         var buffer = String.init(alloc);
         var perms = PermSet.init(alloc);
-        try permutations(alloc, &perms, &rack, &buffer, wildcard);
+        try permutations(alloc, &perms, &rack, &buffer, jokers);
 
-        //TODO: Allow word of len 1 <-- enormous mistake
-
-        switch (wildcard) {
+        switch (jokers) {
             0 => {},
-            1 => try wildcardOne(alloc, &perms),
-            2 => try wildcardTwo(alloc, &perms),
+            1 => try jokerOne(alloc, &perms),
+            2 => try jokerTwo(alloc, &perms),
             else => return error.TooManyWildcards,
         }
-
-        // var permIt = perms.iterator();
-        // while (permIt.next()) |kv| {
-        //     std.debug.print("KV: {s}: {s}\n", .{kv.key_ptr.*, kv.value_ptr.*});
-        // }
 
         var dict = ScrabbleDict.init(alloc);
         var lineIt = std.mem.tokenizeScalar(u8, dictContent, '\n');
@@ -166,7 +160,7 @@ pub const Context = struct {
             .alloc = alloc,
             .grid = grid,
             .rack = rack,
-            .wildcard = wildcard,
+            .jokers = jokers,
             .basePerm = perms,
             .orderedMap = try populateMap(alloc),
             .dict = dict,
@@ -205,7 +199,7 @@ pub const Context = struct {
             .basePerm = try self.basePerm.cloneWithAllocator(alloc),
             .matchVec = MatchVec.init(alloc),
             .state = self.state,
-            .wildcard = self.wildcard,
+            .jokers = self.jokers,
             .grid = self.grid.clone(),
             .mutex = self.mutex,
         };

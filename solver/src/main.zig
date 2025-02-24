@@ -17,7 +17,6 @@ const Map                   = generator.Map;
 const scoreModule           = @import("Score.zig");
 const Scrabble              = scoreModule.Scrabble;
 const LetterScore           = scoreModule.LetterScore;
-const computeScorePerp      = scoreModule.computeScorePerp;
 const computeScorePar       = scoreModule.computeScorePar;
 
 const ctxModule             = @import("Context.zig");
@@ -40,8 +39,9 @@ pub fn orderU8(context: u8, item: u8) std.math.Order {
 }
 
 pub fn insertSortedAssumeCapacity(string: *String, ch: u8) void {
-    const idx = std.sort.lowerBound(u8, string.items[0..], ch, orderU8);
-    string.insertAssumeCapacity(idx, ch);
+    var i: usize = 0;
+    while (i < string.items.len and string.items[i] <= ch) : (i += 1) {}
+    string.insertAssumeCapacity(i, ch);
 }
 
 fn getFilteredWordList(ctx: *Context, perms: *const PermSet, cellPlacement: *const Placement, cellRange: *const Range) !StringVec {
@@ -94,13 +94,14 @@ pub const Match = struct {
     range: Range,
     perpCoord: u4,
     score: u32,
-    wildcards: [2]u8 = .{0, 0},
+    jokers: [2]u8 = .{0, 0},
+    jokerPoses: [2]?u4 = .{null, null},
 
-    pub fn init(currWord: []const u8, wildcards: [2]u8, cell: *const Point, ctxState: Direction) Match {
+    pub fn init(currWord: []const u8, jokers: [2]u8, cell: *const Point, ctxState: Direction) Match {
         var word: [GRID_SIZE:0]u8 = .{0} ** GRID_SIZE;
         std.mem.copyForwards(u8, word[0..], currWord);
         return .{
-            .wildcards = wildcards,
+            .jokers = jokers,
             .dir = ctxState,
             .word = word,
             .range = Range{
@@ -121,14 +122,15 @@ fn isMandatory(ch: u8, pos: u4, cellPlaces: *const Placement) bool {
     return false;
 }
 
-fn getWildCardPoses(ctx: *Context, word: []const u8, wildcards: [2]u8, cellPlaces: *const Placement) !ArrayList([2]?u4) {
+fn getJokerPoses(ctx: *Context, word: []const u8, jokers: [2]u8, cellPlaces: *const Placement) !ArrayList([2]?u4) {
     var posFirst = ArrayList(u4).init(ctx.alloc);
     var posSecond = ArrayList(u4).init(ctx.alloc);
 
     for (0..word.len) |i| {
-        if (word[i] == wildcards[0] and !isMandatory(word[i], @as(u4, @intCast(i)) + 1, cellPlaces)) {
+        if (word[i] == jokers[0] and !isMandatory(word[i], @as(u4, @intCast(i)) + 1, cellPlaces)) {
             try posFirst.append(@intCast(i));
-        } else if (word[i] == wildcards[1] and !isMandatory(word[i], @as(u4, @intCast(i)) + 1, cellPlaces)) {
+        }
+        if (word[i] == jokers[1] and !isMandatory(word[i], @as(u4, @intCast(i)) + 1, cellPlaces)) {
             try posSecond.append(@intCast(i));
         }
     }
@@ -140,14 +142,12 @@ fn getWildCardPoses(ctx: *Context, word: []const u8, wildcards: [2]u8, cellPlace
             try posFinal.append(.{pos1, null});
             continue;
         }
+        //NOTE: Not optimal as if the two jokers are identical on this try it'll duplicate possibilities
+        //ex: .{3, 6}, .{6, 3}
         for (posSecond.items) |pos2| {
-            try posFinal.append(.{pos1, pos2});
+            if (pos1 != pos2) try posFinal.append(.{pos1, pos2});
         }
     }
-
-    // std.log.info("FINAL: {s}\nCom: {any}", .{wildcards, posFinal.items});
-    // std.log.info("W1: {c}, Possible: {any}", .{wildcards[0], posFirst.items});
-    // std.log.info("W2: {c}, Possible: {any}", .{wildcards[1], posSecond.items});
     return posFinal;
 }
 
@@ -160,16 +160,16 @@ fn computeMatchs(
 ) !void {
     outer: for (wordVec.items) |kv| {
         const word = kv[0];
-        const wildcards = kv[1];
-        var currMatch = Match.init(word, wildcards, cell, ctx.state);
+        const jokers = kv[1];
+        var currMatch = Match.init(word, jokers, cell, ctx.state);
 
-        if (wildcards[0] != 0) {
+        if (jokers[0] != 0) {
             // std.log.info("--------------------------", .{});
             // std.log.info("TRYING WORD: {s}", .{word});
-            const wildCardArrangments = try getWildCardPoses(ctx, word, wildcards, cellPlaces);
+            const jokerArrangement = try getJokerPoses(ctx, word, jokers, cellPlaces);
             var highestScore: usize = 0;
 
-            for (wildCardArrangments.items) |jokerPoses| {
+            for (jokerArrangement.items) |jokerPoses| {
                 currMatch.score = 0;
 
                 for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
@@ -178,14 +178,15 @@ fn computeMatchs(
                     const isJoker = (x - currMatch.range[0] == jokerPoses[0].? or
                                     jokerPoses[1] != null and x - currMatch.range[0] == jokerPoses[1].?);
 
-                    if (ctx.grid.isEmpty(currPoint) and 
-                        ctx.grid.isAlphaPerp(currPoint)) 
-                    {
-                        const currPointScore = computeScorePerp(ctx, currPoint, currMatch.word[x - currMatch.range[0]], isJoker) catch {
-                            continue :outer;
-                        };
-                        // std.log.info("Vertical score: {d}", .{currPointScore});
-                        currMatch.score += currPointScore;
+                    if (ctx.grid.isEmpty(currPoint) and ctx.grid.isAlphaPerp(currPoint)) {
+                        if (!ctx.crossChecks[currPoint[1]][currPoint[0]].isSet(currMatch.word[x - currMatch.range[0]] - 'A')) {
+                            continue:outer;
+                        }
+                        currMatch.score += 
+                            if (isJoker) 
+                                ctx.crossChecksScore[currPoint[1]][currPoint[0]][26] 
+                            else 
+                                ctx.crossChecksScore[currPoint[1]][currPoint[0]][currMatch.word[x - currMatch.range[0]] - 'A'];
                     }
                 }
                 currMatch.score += computeScorePar(ctx, &currMatch, jokerPoses);
@@ -193,32 +194,32 @@ fn computeMatchs(
                 if ((std.mem.indexOfSentinel(u8, 0, currMatch.word[0..]) - mandatoryLen) == 7) {
                     currMatch.score += Scrabble;
                 }
-                // std.log.info("Score with: {any} is {d}", .{jokerPoses, currMatch.score});
-                highestScore = if (currMatch.score > highestScore) currMatch.score else highestScore;
+                if (currMatch.score > highestScore) {
+                    highestScore = currMatch.score;
+                    currMatch.jokerPoses = jokerPoses;
+                }
             }
-            // std.log.info("Highest Score: {d}", .{highestScore});
         } else {
             for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
                 const currPoint = Point{@intCast(x), currMatch.perpCoord};
                 if (ctx.grid.isEmpty(currPoint) and ctx.grid.isAlphaPerp(currPoint)) {
-                    currMatch.score += computeScorePerp(ctx, currPoint, currMatch.word[x - currMatch.range[0]], false) catch {
-                        continue :outer;
-                    };
+                    if (!ctx.crossChecks[currPoint[1]][currPoint[0]].isSet(currMatch.word[x - currMatch.range[0]] - 'A')) {
+                        continue:outer;
+                    }
+                    currMatch.score += ctx.crossChecksScore[currPoint[1]][currPoint[0]][currMatch.word[x - currMatch.range[0]] - 'A'];
                 }
             }
-            // print("Word: {s}\n", .{currMatch.word});
-            // print("score: {d}\n", .{currMatch.score});
             currMatch.score += computeScorePar(ctx, &currMatch, .{null, null});
-            // print("score after: {d}\n", .{currMatch.score});
 
             if ((std.mem.indexOfSentinel(u8, 0, currMatch.word[0..]) - mandatoryLen) == 7) {
                 currMatch.score += Scrabble;
             }
         }
-
         try ctx.matchVec.append(currMatch);
     }
 }
+
+var totalRecord: i64 = 0;
 
 fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
     var cellPerms = try ctx.basePerm.clone();
@@ -227,12 +228,6 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
     for (0..cellConst.ranges.items.len) |it| {
         if (cellConst.places.items[it].c[0] == 0) {
             const cellWords = try getBaseFilteredWordList(ctx, &cellPerms, &cellConst.ranges.items[it]);
-            // for (cellWords.items) |word| {
-            //     print("WORD: {s}\n", .{word[0]});
-            // }
-            // for (cellPerms.keys()) |word| {
-            //     print("Word: {s}\n", .{word});
-            // }
             computeMatchs(ctx, cell, &cellWords, &cellConst.places.items[it], 0) catch continue;
             continue;
         }
@@ -243,14 +238,18 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
             mandatoryLen += 1;
         }
 
+        // const st = std.time.microTimestamp();
         for (cellPerms.keys()) |*permutation| {
             var newPermutation = try String.initCapacity(ctx.alloc, (mandatoryLen + permutation.len) - mandatoryIt);
             newPermutation.appendSliceAssumeCapacity(permutation.*);
+
             for (mandatoryIt..mandatoryLen) |i| {
                 insertSortedAssumeCapacity(&newPermutation, cellConst.places.items[it].c[i]);
             }
             permutation.* = newPermutation.items[0..];
         }
+        // const et = std.time.microTimestamp();
+        // totalRecord += (et - st);
 
         const cellWords = try getFilteredWordList(ctx, &cellPerms, &cellConst.places.items[it], &cellConst.ranges.items[it]);
         try computeMatchs(ctx, cell, &cellWords, &cellConst.places.items[it], mandatoryLen);
@@ -266,8 +265,8 @@ fn evaluateGrid(ctx: *Context) !void {
                 var cellConst = Constraints.getCellConstraints(ctx, cell) catch continue;
                 if (cellConst.places.items.len == 0)
                     continue;
-                std.log.info("Y:{d},X:{d}\n", .{y, x});
-                std.log.info("{}", .{cellConst});
+                // std.log.info("Y:{d},X:{d}\n", .{y, x});
+                // std.log.info("{}", .{cellConst});
                 evaluateCell(ctx, &cellConst, &cell) catch continue;
             // }
         }
@@ -284,14 +283,82 @@ fn sortMatchVec(matchVec: MatchVec) void {
     std.mem.sort(Match, matchVec.items[0..], {}, lessThanMatch);
 }
 
+pub fn getDummy(ctx: *Context, currPoint: Point, buffer: *[GRID_SIZE:0]u8) struct {u4, u8} {
+    var start: u4 = currPoint[1];
+    var end: u4 = currPoint[1];
+
+    // Expand start and end positions in one loop for cache efficiency
+    var moved = true;
+    while (moved) {
+        moved = false;
+        if (start > 0 and ctx.grid.isAlpha(.{currPoint[0], start - 1})) {
+            start -= 1;
+            moved = true;
+        }
+        if (end < GRID_SIZE - 1 and ctx.grid.isAlpha(.{currPoint[0], end + 1})) {
+            end += 1;
+            moved = true;
+        }
+    }
+
+    var score: u8 = 0;
+    for (start..end + 1) |y| {
+        if (y == currPoint[1]) {
+            buffer[y - start] = '.';
+        } else {
+            // print("pos: {d}, ch: {c}\n", .{currPoint, try getChar(ctx.grid, currPoint)});
+            buffer[y - start] = '@' + @as(u8, ctx.grid.getChar(.{currPoint[0], @intCast(y)}));
+            score += LetterScore[ctx.grid.getChar(.{currPoint[0], @intCast(y)}) - 1];
+        }
+    }
+    return .{currPoint[1] - start, score};
+}
+
+fn fillCrossCheck(ctx: *Context) !void {
+    var buffer: [GRID_SIZE:0]u8 = .{0} ** GRID_SIZE;
+
+    for (0..GRID_SIZE) |y| {
+        for (0..GRID_SIZE) |x| {
+            const currPoint = Point{@intCast(x), @intCast(y)};
+            ctx.crossChecks[y][x] = std.StaticBitSet(27).initEmpty();
+            @memset(ctx.crossChecksScore[y][x][0..], 0);
+
+            if (!ctx.grid.isEmpty(currPoint) or !ctx.grid.isAlphaPerp(currPoint)) continue;
+
+            @memset(buffer[0..], 0);
+            const dotPos, const dummyScore = getDummy(ctx, currPoint, &buffer);
+            const wordLen = std.mem.indexOfSentinel(u8, 0, buffer[0..]);
+
+            for ('A'..'[' + 1) |ch| {
+                if (ch == '[') {
+                    ctx.crossChecks[y][x].set(ch - 'A');
+                    ctx.crossChecksScore[y][x][ch - 'A'] = (dummyScore * ctx.grid.getWordModifier(&currPoint));
+                    break;
+                }
+                buffer[dotPos] = @as(u8, @intCast(ch));
+                if (ctx.dict.contains(buffer[0..wordLen])) {
+                    ctx.crossChecks[y][x].set(ch - 'A');
+                    ctx.crossChecksScore[y][x][ch - 'A'] = (dummyScore + (LetterScore[ch - 'A'] * ctx.grid.getLetterModifier(&currPoint))) * ctx.grid.getWordModifier(&currPoint);
+                }
+            }
+        }
+    }
+}
+
 fn solveSingleThread(ctx: *Context) !void {
     const startTime = std.time.microTimestamp();
 
+    try fillCrossCheck(ctx);
     try evaluateGrid(ctx);
-    // ctx.transposeGrid();
-    // try evaluateGrid(ctx);
+
+    ctx.transposeGrid();
+
+    try fillCrossCheck(ctx);
+    try evaluateGrid(ctx);
 
     sortMatchVec(ctx.matchVec);
+
+    // std.debug.print("Total recorded: {d}us | {d}ms\n", .{totalRecord, @as(f64, @floatFromInt(totalRecord)) / @as(f64, 1000)});
 
     // const format = 
     //     \\[{d}] = [
@@ -300,17 +367,18 @@ fn solveSingleThread(ctx: *Context) !void {
     //     \\  .perpCoord: {d},
     //     \\  .dir: {s},
     //     \\  .score: {d},
-    //     \\  .wildcards: {s},
+    //     \\  .jokers: {s},
+    //     \\  .jokerPose: {any},
     //     \\]
     //     \\
     // ;
     //
     // for (ctx.matchVec.items, 0..) |match, i| {
     //     print(format, .{i, match.word, match.range, match.perpCoord, @tagName(match.dir), match.score, 
-    //         match.wildcards});
+    //         match.jokers, match.jokerPoses});
     // }
     for (ctx.matchVec.items, 0..) |match, i| {
-        print("[{d}]: {s} -> {d} | WC: {s}\n", .{i, match.word, match.score, match.wildcards});
+        std.log.info("[{d}]: {s} -> {d} | WC: {s}", .{i, match.word, match.score, match.jokers});
     }
 
     const endTime = std.time.microTimestamp();
@@ -318,10 +386,6 @@ fn solveSingleThread(ctx: *Context) !void {
     const elapsedMilli: f64 = @as(f64, @floatFromInt(elapsedMicro)) / @as(f64, 1000);
     print("Elapsed: {d}µs | {d}ms\n", .{elapsedMicro, elapsedMilli});
 }
-
-
-//PERF: A grid where every cell is a bitmap of already explored paths of known letters
-//  possible, impossible, unexplored --> could speed things up for wildcards
 
 const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
     .thread_safe = true,
