@@ -189,8 +189,6 @@ fn computeMatchs(
         const wordRange = (currMatch.range[1] - currMatch.range[0]) + 1;
 
         if (jokers[0] != 0) {
-            // std.log.info("--------------------------", .{});
-            // std.log.info("TRYING WORD: {s}", .{word});
             const jokerArrangement = try getJokerPoses(ctx, word, jokers, cellPlaces);
             var highestScore: usize = 0;
 
@@ -201,7 +199,7 @@ fn computeMatchs(
                     const currPoint = Point{@intCast(idx + currMatch.range[0]), currMatch.perpCoord};
                     //Not yet a letter and has perpendicular neighbor.s
                     const isJoker = (idx == jokerPoses[0].? or
-                                    jokerPoses[1] != null and idx == jokerPoses[1].?);
+                                    (jokerPoses[1] != null and idx == jokerPoses[1].?));
 
                     if (ctx.grid.isEmpty(currPoint) and ctx.grid.isAlphaPerp(currPoint)) {
                         if (!ctx.crossChecks[currPoint[1]][currPoint[0]].isSet(currMatch.word[idx] - 'A')) {
@@ -315,7 +313,6 @@ pub fn getDummy(ctx: *Context, currPoint: Point, buffer: *[GRID_SIZE:0]u8) struc
         if (y == currPoint[1]) {
             buffer[y - start] = '.';
         } else {
-            // print("pos: {d}, ch: {c}\n", .{currPoint, try getChar(ctx.grid, currPoint)});
             buffer[y - start] = '@' + @as(u8, ctx.grid.getChar(.{currPoint[0], @intCast(y)}));
             score += LetterScore[ctx.grid.getChar(.{currPoint[0], @intCast(y)}) - 1];
         }
@@ -362,15 +359,11 @@ fn fillCrossCheck(ctx: *Context) !void {
 fn evaluateGrid(ctx: *Context, rY: Range, rX: Range) !void {
     for (rY[0]..rY[1]) |y| {
         for (rX[0]..rX[1]) |x| {
-            // if (y == 14 and x == 0) {
                 var cell = Point{@intCast(x), @intCast(y)};
                 var cellConst = Constraints.getCellConstraints(ctx, cell) catch continue;
                 if (cellConst.places.items.len == 0)
                     continue;
-                // std.log.info("Y:{d},X:{d}\n", .{y, x});
-                // std.log.info("{}", .{cellConst});
                 evaluateCell(ctx, &cellConst, &cell) catch continue;
-            // }
         }
     }
 }
@@ -394,9 +387,7 @@ fn routineSafe(gpa: Allocator, ctx: *Context, rY: Range, rX: Range, rotate: bool
     ctx.matchVec.appendSlice(tmpRes.items[0..]) catch {};
 }
 
-
-fn solveSingleThread(ctx: *Context, gpa: Allocator) !void {
-    _ = gpa;
+fn solveSingleThread(ctx: *Context, _: Allocator) !void {
     var startTime = try std.time.Timer.start();
 
     try fillCrossCheck(ctx);
@@ -408,12 +399,6 @@ fn solveSingleThread(ctx: *Context, gpa: Allocator) !void {
     try evaluateGrid(ctx, .{0, GRID_SIZE}, .{0, GRID_SIZE});
 
     sortMatchVec(ctx.matchVec);
-
-    // const recordFormated = std.fmt.fmtDuration(totalRecord);
-    // std.debug.print("Total recorded: {}\n", .{recordFormated});
-    // for (ctx.matchVec.items, 0..) |match, i| {
-    //     std.log.info("[{d}]: {s} -> {d} | WC: {s}", .{i, match.word, match.score, match.jokers});
-    // }
 
     const elapsed = std.time.Timer.read(&startTime);
     const elapsedFormated = std.fmt.fmtDuration(elapsed);
@@ -447,32 +432,12 @@ fn solveMultiThread(ctx: *Context, gpa: Allocator) !void {
     pool.waitAndWork(&waitGroup);
     sortMatchVec(ctx.matchVec);
 
-    // const format = 
-    //     \\[{d}] = [
-    //     \\  .word: {s},
-    //     \\  .range: {d},
-    //     \\  .perpCoord: {d},
-    //     \\  .dir: {s},
-    //     \\  .score: {d},
-    //     \\  .jokers: {s},
-    //     \\  .jokerPose: {any},
-    //     \\]
-    //     \\
-    // ;
-    //
-    // for (ctx.matchVec.items, 0..) |match, i| {
-    //     print(format, .{i, match.word, match.range, match.perpCoord, @tagName(match.dir), match.score, 
-    //         match.jokers, match.jokerPoses});
-    // }
     // const recordFormated = std.fmt.fmtDuration(totalRecord);
     // std.debug.print("Total recorded: {}\n", .{recordFormated});
-    // for (ctx.matchVec.items, 0..) |match, i| {
-    //     std.log.info("[{d}]: {s} -> {d} | WC: {s}", .{i, match.word, match.score, match.jokers});
-    // }
 
     const elapsed = std.time.Timer.read(&startTime);
     const elapsedFormated = std.fmt.fmtDuration(elapsed);
-    print("Elapsed: {}\n", .{elapsedFormated});
+    std.log.info("Elapsed: {}", .{elapsedFormated});
 }
 
 const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
@@ -512,6 +477,29 @@ fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     }
 }
 
+var server_instance: ?*httpz.Server(*App) = null;
+
+fn shutdown(_: c_int) callconv(.C) void {
+    if (server_instance) |server| {
+        log.info("Server shutting down...", .{});
+        server_instance = null;
+        server.stop();
+    }
+}
+
+fn initSignals() void {
+    std.posix.sigaction(std.posix.SIG.INT, &.{
+        .handler = .{ .handler = shutdown },
+        .mask = std.posix.empty_sigset,
+        .flags = 0,
+    }, null);
+    std.posix.sigaction(std.posix.SIG.TERM, &.{
+        .handler = .{ .handler = shutdown },
+        .mask = std.posix.empty_sigset,
+        .flags = 0,
+    }, null);
+}
+
 pub fn main() !void {
     var gpa: std.heap.GeneralPurposeAllocator(gpaConfig) = .init;
     var gpaAlloc = gpa.allocator();
@@ -521,8 +509,12 @@ pub fn main() !void {
     const arenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(arenaAlloc);
-    var app: App = .{.permInfos = &ctx, .gpa = &gpaAlloc};
+    //NOTE: Initialize what will live as long as the server is alive
+    var permInfos = try Context.CtxPerm.init(arenaAlloc);
+    var app: App = .{.permInfos = &permInfos, .gpa = &gpaAlloc};
+
+    //INFO: Catching SIGINT and SIGTERM
+    initSignals();
 
     var server = try httpz.Server(*App).init(gpaAlloc, .{
         .port = PORT,
@@ -535,10 +527,6 @@ pub fn main() !void {
 
     log.info("Solver listening http://{s}:{d}/", .{"0.0.0.0", PORT});
 
+    server_instance = &server;
     try server.listen();
-
-    // try solveSingleThread(&ctx, gpaAlloc);
-    // try solveMultiThread(app.ctx, gpaAlloc);
 }
-
-test "simple test" {}

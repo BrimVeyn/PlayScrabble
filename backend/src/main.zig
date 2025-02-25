@@ -30,18 +30,8 @@ pub fn main() !u8 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    // SIGINT or SIGTERM are received
-    std.posix.sigaction(std.posix.SIG.INT, &.{
-        .handler = .{ .handler = shutdown },
-        .mask = std.posix.empty_sigset,
-        .flags = 0,
-    }, null);
-    std.posix.sigaction(std.posix.SIG.TERM, &.{
-        .handler = .{ .handler = shutdown },
-        .mask = std.posix.empty_sigset,
-        .flags = 0,
-    }, null);
-
+    //INFO: Catching SIGINT and SIGTERM
+    initSignals();
 
     const dbUrl = std.process.getEnvVarOwned(allocator, "DATABASE_URL") catch {
         log.err("Encountered Fatal Error missing 'DATABASE_URL'", .{});
@@ -111,6 +101,19 @@ pub fn main() !u8 {
     server_instance = &server;
     try server.listen();
     return 0;
+}
+
+fn initSignals() void {
+    std.posix.sigaction(std.posix.SIG.INT, &.{
+        .handler = .{ .handler = shutdown },
+        .mask = std.posix.empty_sigset,
+        .flags = 0,
+    }, null);
+    std.posix.sigaction(std.posix.SIG.TERM, &.{
+        .handler = .{ .handler = shutdown },
+        .mask = std.posix.empty_sigset,
+        .flags = 0,
+    }, null);
 }
 
 fn shutdown(_: c_int) callconv(.C) void {

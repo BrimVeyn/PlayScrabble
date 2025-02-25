@@ -134,6 +134,20 @@ pub const Context = struct {
         dict: ScrabbleDict,
         orderedMap: Map,
 
+        pub fn init(alloc: Allocator) !CtxPerm {
+            var dict = ScrabbleDict.init(alloc);
+            var lineIt = std.mem.tokenizeScalar(u8, dictContent, '\n');
+            while (lineIt.next()) |word| {
+                try dict.put(word, true);
+            }
+            const orderedMap = try populateMap(alloc);
+
+            return .{
+                .dict = dict,
+                .orderedMap = orderedMap,
+            };
+        }
+
         pub fn loadConfig(self: CtxPerm, alloc: Allocator, config: CtxConfig) !Context {
             var grid = Grid.init();
             try grid.loadGridStateFromSlice(config.grid);
@@ -169,20 +183,6 @@ pub const Context = struct {
         }
     };
 
-    pub fn init(alloc: Allocator) !CtxPerm {
-        var dict = ScrabbleDict.init(alloc);
-        var lineIt = std.mem.tokenizeScalar(u8, dictContent, '\n');
-        while (lineIt.next()) |word| {
-            try dict.put(word, true);
-        }
-        const orderedMap = try populateMap(alloc);
-
-
-        return .{
-            .dict = dict,
-            .orderedMap = orderedMap,
-        };
-    }
 
     pub fn initTest(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
         var grid = Grid.init();
@@ -235,11 +235,6 @@ pub const Context = struct {
             }
         }
         self.state = .Vertical;
-    }
-
-
-    pub fn loadGrid(self: *Context, gridState: []const u8) !void {
-        try self.grid.loadGridState(gridState);
     }
 
     pub fn clone(self: Context, alloc: Allocator) !Context {

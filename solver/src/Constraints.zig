@@ -32,12 +32,14 @@ fn rGetConstraints(
     var hasPushed = true;
     var loopIterator: usize = 0;
 
+    const rackLen = ctx.rack.items.len;
+
     while (hasPushed) {
         defer loopIterator += 1;
         hasPushed = false;
 
         if (cursor[0] < GRID_SIZE and ctx.grid.isAlpha(cursor) and loopIterator == 0) {
-            while (cursor[0] < GRID_SIZE and ctx.grid.isAlpha(cursor) and placed < ctx.rack.items.len) {
+            while (cursor[0] < GRID_SIZE and ctx.grid.isAlpha(cursor) and placed < rackLen) {
                 cBuff[constIt] = '@' + @as(u8, ctx.grid.getChar(cursor));
                 posBuff[constIt] = (cursor[0] - wordStart) + 1;
                 constIt += 1;
@@ -47,7 +49,7 @@ fn rGetConstraints(
 
         if (cursor[0] < GRID_SIZE and !ctx.grid.isAlpha(cursor) and loopIterator == 0) {
             var rangeS: ?u4 = null;
-            while (cursor[0] < GRID_SIZE and !ctx.grid.isAlpha(cursor) and placed < ctx.rack.items.len) {
+            while (cursor[0] < GRID_SIZE and !ctx.grid.isAlpha(cursor) and placed < rackLen) {
                 //If we have a letter above or bellow, we set the rangeStart to that distance
                 if (ctx.grid.isAlphaPerp(cursor)) {
                     if (rangeS == null)
@@ -77,12 +79,12 @@ fn rGetConstraints(
                 hasPushed = true;
                 continue;
             }
-            rangeEnd += if (placed == ctx.rack.items.len or cursor[0] == GRID_SIZE) 0 else 1;
+            rangeEnd += if (placed == rackLen or cursor[0] == GRID_SIZE) 0 else 1;
 
             //Fix range at min 2 as a word can't be a single letter
             rangeS = if (rangeS != null and rangeS.? < 2) 2 else rangeS;
 
-            if (cursor[0] < GRID_SIZE and !ctx.grid.isAlphaRight(cursor) and placed < ctx.rack.items.len) {
+            if (cursor[0] < GRID_SIZE and !ctx.grid.isAlphaRight(cursor) and placed < rackLen) {
                 cursor[0] += 1;
                 placed += 1;
             }
@@ -103,8 +105,8 @@ fn rGetConstraints(
             continue;
         }
 
-        if (cursor[0] < GRID_SIZE and !ctx.grid.isAlpha(cursor) and loopIterator != 0 and placed < ctx.rack.items.len) {
-            while (cursor[0] < GRID_SIZE and !ctx.grid.isAlpha(cursor) and placed < ctx.rack.items.len) {
+        if (cursor[0] < GRID_SIZE and !ctx.grid.isAlpha(cursor) and loopIterator != 0 and placed < rackLen) {
+            while (cursor[0] < GRID_SIZE and !ctx.grid.isAlpha(cursor) and placed < rackLen) {
                 cursor[0] += 1;
                 placed += 1;
             }
@@ -128,15 +130,15 @@ fn rGetConstraints(
                 rangeS = if (rangeS > rangeEnd) rangeEnd else rangeS;
             }
 
-            while (cursor[0] < GRID_SIZE and !ctx.grid.isAlphaRight(cursor) and placed < ctx.rack.items.len) {
+            while (cursor[0] < GRID_SIZE and !ctx.grid.isAlphaRight(cursor) and placed < rackLen) {
                 rangeEnd += 1;
                 placed += 1;
                 cursor[0] += 1;
             }
-            if (cursor[0] <= GRID_SIZE and placed <= ctx.rack.items.len and rangeEnd >= 2) {
+            if (cursor[0] <= GRID_SIZE and placed <= rackLen and rangeEnd >= 2) {
                 try cellConst.ranges.append(.{rangeS, rangeEnd});
                 try cellConst.places.append(.{.c = cBuff.*, .pos = posBuff.*});
-                if (placed < ctx.rack.items.len)
+                if (placed < rackLen)
                     hasPushed = true;
             }
         }
