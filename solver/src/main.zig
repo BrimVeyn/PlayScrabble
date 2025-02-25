@@ -343,49 +343,50 @@ fn evaluateGrid(ctx: *Context, rY: Range, rX: Range) !void {
     }
 }
 
-fn routine(gpa: Allocator, ctx: *Context, rY: Range, rX: Range, rotate: bool) !void {
+fn routineSafe(gpa: Allocator, ctx: *Context, rY: Range, rX: Range, rotate: bool) void {
     var arena: std.heap.ArenaAllocator = .init(gpa);
     const arenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var tmpCtx = try ctx.clone(arenaAlloc);
+    var tmpCtx = ctx.clone(arenaAlloc) catch {return ;};
 
     if (rotate) tmpCtx.transposeGrid();
-    try fillCrossCheck(&tmpCtx);
-    try evaluateGrid(&tmpCtx, rY, rX);
+    fillCrossCheck(&tmpCtx) catch {};
+    evaluateGrid(&tmpCtx, rY, rX) catch {};
 
     ctx.mutex.lock();
     defer ctx.mutex.unlock();
 
     tmpCtx.matchVec.allocator = ctx.alloc;
-    const tmpRes = try tmpCtx.matchVec.clone();
-    try ctx.matchVec.appendSlice(tmpRes.items[0..]);
+    const tmpRes = tmpCtx.matchVec.clone() catch {return ;};
+    ctx.matchVec.appendSlice(tmpRes.items[0..]) catch {};
 }
 
 fn solveSingleThread(ctx: *Context, gpa: Allocator) !void {
     var startTime = try std.time.Timer.start();
 
-    var t1 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{0, 4}, .{0, GRID_SIZE}, false});
-    var t2 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{4, 8}, .{0, GRID_SIZE}, false});
-    var t3 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{8, 12}, .{0, GRID_SIZE}, false});
-    var t4 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{12, GRID_SIZE}, .{0, GRID_SIZE}, false});
+    const nbWorker = 8;
+    var pool: std.Thread.Pool = undefined;
+    try pool.init(.{
+        .allocator = gpa,
+        .n_jobs = nbWorker,
+    });
+    defer pool.deinit();
 
-    var t5 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{0, 4}, .{0, GRID_SIZE}, true});
-    var t6 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{4, 8}, .{0, GRID_SIZE}, true});
-    var t7 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{8, 12}, .{0, GRID_SIZE}, true});
-    var t8 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{12, GRID_SIZE}, .{0, GRID_SIZE}, true});
+    var waitGroup = std.Thread.WaitGroup{};
+    waitGroup.reset();
 
-    //NOTE: Clean code 101
-    t1.join();
-    t2.join();
-    t3.join();
-    t4.join();
+    for (0..nbWorker) |i| {
+        const unit = GRID_SIZE / (nbWorker / 2) + 1;
+        const idx = @mod(i, nbWorker / 2);
+        const from: u4 = @intCast(unit * idx);
+        const to: u4 = if (unit * (idx + 1) > 15) 15 else @intCast(unit * (idx + 1));
+        const flag = i >= nbWorker / 2;
 
-    t5.join();
-    t6.join();
-    t7.join();
-    t8.join();
+        pool.spawnWg(&waitGroup, routineSafe, .{gpa, ctx, .{from, to}, .{0, GRID_SIZE}, flag});
+    }
 
+    pool.waitAndWork(&waitGroup);
     sortMatchVec(ctx.matchVec);
 
     // const format = 

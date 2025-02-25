@@ -1,7 +1,7 @@
 const std                   = @import("std");
 const Grid                  = @import("Grid.zig").Grid;
 
-const dictContent           = @embedFile("generate/ODS8.txt");
+const dictContent           = @embedFile("dict/FR/ODS8.txt");
 
 const generator             = @import("generate/generate.zig");
 const OrderedMap            = generator.OrderedMap;
