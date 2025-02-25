@@ -362,7 +362,33 @@ fn routineSafe(gpa: Allocator, ctx: *Context, rY: Range, rX: Range, rotate: bool
     ctx.matchVec.appendSlice(tmpRes.items[0..]) catch {};
 }
 
+
 fn solveSingleThread(ctx: *Context, gpa: Allocator) !void {
+    _ = gpa;
+    var startTime = try std.time.Timer.start();
+
+    try fillCrossCheck(ctx);
+    try evaluateGrid(ctx, .{0, GRID_SIZE}, .{0, GRID_SIZE});
+
+    ctx.transposeGrid();
+
+    try fillCrossCheck(ctx);
+    try evaluateGrid(ctx, .{0, GRID_SIZE}, .{0, GRID_SIZE});
+
+    sortMatchVec(ctx.matchVec);
+
+    const recordFormated = std.fmt.fmtDuration(totalRecord);
+    std.debug.print("Total recorded: {}\n", .{recordFormated});
+    for (ctx.matchVec.items, 0..) |match, i| {
+        std.log.info("[{d}]: {s} -> {d} | WC: {s}", .{i, match.word, match.score, match.jokers});
+    }
+
+    const elapsed = std.time.Timer.read(&startTime);
+    const elapsedFormated = std.fmt.fmtDuration(elapsed);
+    print("Elapsed: {}\n", .{elapsedFormated});
+}
+
+fn solveMultiThread(ctx: *Context, gpa: Allocator) !void {
     var startTime = try std.time.Timer.start();
 
     const nbWorker = 8;
@@ -434,7 +460,8 @@ pub fn main() !void {
     defer arena.deinit();
 
     var ctx = try Context.init(arenaAlloc, "grid04.txt", "SALOP??");
-    try solveSingleThread(&ctx, gpaAlloc);
+    // try solveSingleThread(&ctx, gpaAlloc);
+    try solveMultiThread(&ctx, gpaAlloc);
 }
 
 test "simple test" {}
