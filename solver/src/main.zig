@@ -343,53 +343,49 @@ fn evaluateGrid(ctx: *Context, rY: Range, rX: Range) !void {
     }
 }
 
+fn routine(gpa: Allocator, ctx: *Context, rY: Range, rX: Range, rotate: bool) !void {
+    var arena: std.heap.ArenaAllocator = .init(gpa);
+    const arenaAlloc = arena.allocator();
+    defer arena.deinit();
+
+    var tmpCtx = try ctx.clone(arenaAlloc);
+
+    if (rotate) tmpCtx.transposeGrid();
+    try fillCrossCheck(&tmpCtx);
+    try evaluateGrid(&tmpCtx, rY, rX);
+
+    ctx.mutex.lock();
+    defer ctx.mutex.unlock();
+
+    tmpCtx.matchVec.allocator = ctx.alloc;
+    const tmpRes = try tmpCtx.matchVec.clone();
+    try ctx.matchVec.appendSlice(tmpRes.items[0..]);
+}
+
 fn solveSingleThread(ctx: *Context, gpa: Allocator) !void {
     var startTime = try std.time.Timer.start();
 
-    var a1: std.heap.ArenaAllocator = .init(gpa);
-    const a1Alloc = a1.allocator();
-    defer a1.deinit();
+    var t1 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{0, 4}, .{0, GRID_SIZE}, false});
+    var t2 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{4, 8}, .{0, GRID_SIZE}, false});
+    var t3 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{8, 12}, .{0, GRID_SIZE}, false});
+    var t4 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{12, GRID_SIZE}, .{0, GRID_SIZE}, false});
 
-    var a2: std.heap.ArenaAllocator = .init(gpa);
-    const a2Alloc = a2.allocator();
-    defer a2.deinit();
+    var t5 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{0, 4}, .{0, GRID_SIZE}, true});
+    var t6 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{4, 8}, .{0, GRID_SIZE}, true});
+    var t7 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{8, 12}, .{0, GRID_SIZE}, true});
+    var t8 = try std.Thread.spawn(.{}, routine, .{gpa, ctx, .{12, GRID_SIZE}, .{0, GRID_SIZE}, true});
 
-    var a3: std.heap.ArenaAllocator = .init(gpa);
-    const a3Alloc = a3.allocator();
-    defer a3.deinit();
-
-    var a4: std.heap.ArenaAllocator = .init(gpa);
-    const a4Alloc = a4.allocator();
-    defer a4.deinit();
-    
-    var ctx1 = try ctx.clone(a1Alloc);
-    var ctx2 = try ctx.clone(a2Alloc);
-    var ctx3 = try ctx.clone(a3Alloc);
-    var ctx4 = try ctx.clone(a4Alloc);
-
-    try fillCrossCheck(&ctx1);
-    try fillCrossCheck(&ctx2);
-
-    const t1 = try std.Thread.spawn(.{}, evaluateGrid, .{&ctx1, .{0,7}, .{0, GRID_SIZE}});
-    const t2 = try std.Thread.spawn(.{}, evaluateGrid, .{&ctx2, .{7,GRID_SIZE}, .{0, GRID_SIZE}});
-
-    ctx3.transposeGrid();
-    ctx4.transposeGrid();
-    try fillCrossCheck(&ctx3);
-    try fillCrossCheck(&ctx4);
-
-    const t3 = try std.Thread.spawn(.{}, evaluateGrid, .{&ctx3, .{0,7}, .{0, GRID_SIZE}});
-    const t4 = try std.Thread.spawn(.{}, evaluateGrid, .{&ctx4, .{7,GRID_SIZE}, .{0, GRID_SIZE}});
-
+    //NOTE: Clean code 101
     t1.join();
     t2.join();
     t3.join();
     t4.join();
 
-    try ctx.matchVec.appendSlice(ctx1.matchVec.items[0..]);
-    try ctx.matchVec.appendSlice(ctx2.matchVec.items[0..]);
-    try ctx.matchVec.appendSlice(ctx3.matchVec.items[0..]);
-    try ctx.matchVec.appendSlice(ctx4.matchVec.items[0..]);
+    t5.join();
+    t6.join();
+    t7.join();
+    t8.join();
+
     sortMatchVec(ctx.matchVec);
 
     // const format = 
@@ -422,7 +418,7 @@ fn solveSingleThread(ctx: *Context, gpa: Allocator) !void {
 
 const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
     .thread_safe = true,
-    .safety = true,
+    // .safety = true,
     // .retain_metadata = true,
     // .stack_trace_frames = 50,
 };
