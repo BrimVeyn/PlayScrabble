@@ -183,10 +183,7 @@ pub const Context = struct {
         try self.grid.loadGridState(gridState);
     }
 
-    pub fn clone(self: Context, gpa: Allocator) !Context {
-        var arena = std.heap.ArenaAllocator.init(gpa);
-        const alloc = arena.allocator();
-
+    pub fn clone(self: Context, alloc: Allocator) !Context {
         var rack = String.init(alloc);
         try rack.appendSlice(self.rack.items[0..]);
 

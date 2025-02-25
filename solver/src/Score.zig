@@ -20,15 +20,16 @@ pub fn computeScorePar(ctx: *const Context, currMatch: *const Match, ghostedPos:
         const currPoint = Point{@intCast(x), currMatch.perpCoord};
         const letterScore = LetterScore[currMatch.word[x - currMatch.range[0]] - 'A'];
 
-        if (ctx.grid.isEmpty(currPoint)) {
-            wordMultiplier *= ctx.grid.getWordModifier(&currPoint);
-            const isJoker = (ghostedPos[0] != null and x - currMatch.range[0] == ghostedPos[0].? or
-                             ghostedPos[1] != null and x - currMatch.range[0] == ghostedPos[1].?);
-            if (!isJoker)
-                wordScore += (letterScore * ctx.grid.getLetterModifier(&currPoint));
-        } else {
+        if (!ctx.grid.isEmpty(currPoint)) {
             wordScore += letterScore;
+            continue;
         }
+
+        wordMultiplier *= ctx.grid.getWordModifier(&currPoint);
+        const isJoker = (ghostedPos[0] != null and x - currMatch.range[0] == ghostedPos[0].? or
+                         ghostedPos[1] != null and x - currMatch.range[0] == ghostedPos[1].?);
+        if (!isJoker) 
+            wordScore += (letterScore * ctx.grid.getLetterModifier(&currPoint));
     }
     return (wordScore * wordMultiplier);
 }

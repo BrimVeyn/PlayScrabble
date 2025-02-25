@@ -158,6 +158,7 @@ fn computeMatchs(
         const word = kv[0];
         const jokers = kv[1];
         var currMatch = Match.init(word, jokers, cell, ctx.state);
+        const wordRange = (currMatch.range[1] - currMatch.range[0]) + 1;
 
         if (jokers[0] != 0) {
             // std.log.info("--------------------------", .{});
@@ -168,21 +169,21 @@ fn computeMatchs(
             for (jokerArrangement.items) |jokerPoses| {
                 currMatch.score = 0;
 
-                for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
-                    const currPoint = Point{@intCast(x), currMatch.perpCoord};
+                for (0..wordRange) |idx| {
+                    const currPoint = Point{@intCast(idx + currMatch.range[0]), currMatch.perpCoord};
                     //Not yet a letter and has perpendicular neighbor.s
-                    const isJoker = (x - currMatch.range[0] == jokerPoses[0].? or
-                                    jokerPoses[1] != null and x - currMatch.range[0] == jokerPoses[1].?);
+                    const isJoker = (idx == jokerPoses[0].? or
+                                    jokerPoses[1] != null and idx == jokerPoses[1].?);
 
                     if (ctx.grid.isEmpty(currPoint) and ctx.grid.isAlphaPerp(currPoint)) {
-                        if (!ctx.crossChecks[currPoint[1]][currPoint[0]].isSet(currMatch.word[x - currMatch.range[0]] - 'A')) {
+                        if (!ctx.crossChecks[currPoint[1]][currPoint[0]].isSet(currMatch.word[idx] - 'A')) {
                             continue:outer;
                         }
                         currMatch.score += 
                             if (isJoker) 
                                 ctx.crossChecksScore[currPoint[1]][currPoint[0]][26] 
                             else 
-                                ctx.crossChecksScore[currPoint[1]][currPoint[0]][currMatch.word[x - currMatch.range[0]] - 'A'];
+                                ctx.crossChecksScore[currPoint[1]][currPoint[0]][currMatch.word[idx] - 'A'];
                     }
                 }
                 currMatch.score += computeScorePar(ctx, &currMatch, jokerPoses);
@@ -196,13 +197,13 @@ fn computeMatchs(
                 }
             }
         } else {
-            for (currMatch.range[0]..currMatch.range[1] + 1) |x| {
-                const currPoint = Point{@intCast(x), currMatch.perpCoord};
+            for (0..wordRange) |idx| {
+                const currPoint = Point{@intCast(idx + currMatch.range[0]), currMatch.perpCoord};
                 if (ctx.grid.isEmpty(currPoint) and ctx.grid.isAlphaPerp(currPoint)) {
-                    if (!ctx.crossChecks[currPoint[1]][currPoint[0]].isSet(currMatch.word[x - currMatch.range[0]] - 'A')) {
+                    if (!ctx.crossChecks[currPoint[1]][currPoint[0]].isSet(currMatch.word[idx] - 'A')) {
                         continue:outer;
                     }
-                    currMatch.score += ctx.crossChecksScore[currPoint[1]][currPoint[0]][currMatch.word[x - currMatch.range[0]] - 'A'];
+                    currMatch.score += ctx.crossChecksScore[currPoint[1]][currPoint[0]][currMatch.word[idx] - 'A'];
                 }
             }
             currMatch.score += computeScorePar(ctx, &currMatch, .{null, null});
@@ -250,21 +251,6 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
     }
 }
 
-fn evaluateGrid(ctx: *Context) !void {
-    for (0..GRID_SIZE) |y| {
-        for (0..GRID_SIZE) |x| {
-            // if (y == 14 and x == 0) {
-                var cell = Point{@intCast(x), @intCast(y)};
-                var cellConst = Constraints.getCellConstraints(ctx, cell) catch continue;
-                if (cellConst.places.items.len == 0)
-                    continue;
-                // std.log.info("Y:{d},X:{d}\n", .{y, x});
-                // std.log.info("{}", .{cellConst});
-                evaluateCell(ctx, &cellConst, &cell) catch continue;
-            // }
-        }
-    }
-}
 
 const MatchVec              = ArrayList(Match);
 
@@ -325,34 +311,86 @@ fn fillCrossCheck(ctx: *Context) !void {
             const wordModifier = ctx.grid.getWordModifier(&currPoint);
 
             for ('A'..'[' + 1) |ch| {
+                const idx: usize = (ch - 'A');
                 if (ch == '[') {
-                    ctx.crossChecks[y][x].set(ch - 'A');
-                    ctx.crossChecksScore[y][x][ch - 'A'] = (dummyScore * wordModifier);
+                    ctx.crossChecks[y][x].set(idx);
+                    ctx.crossChecksScore[y][x][idx] = (dummyScore * wordModifier);
                     break;
                 }
                 buffer[dotPos] = @as(u8, @intCast(ch));
                 if (ctx.dict.contains(buffer[0..wordLen])) {
-                    ctx.crossChecks[y][x].set(ch - 'A');
-                    ctx.crossChecksScore[y][x][ch - 'A'] = (dummyScore + (LetterScore[ch - 'A'] * letterModifier)) * wordModifier;
+                    ctx.crossChecks[y][x].set(idx);
+                    ctx.crossChecksScore[y][x][idx] = (dummyScore + (LetterScore[idx] * letterModifier)) * wordModifier;
                 }
             }
         }
     }
 }
 
-fn solveSingleThread(ctx: *Context) !void {
+fn evaluateGrid(ctx: *Context, rY: Range, rX: Range) !void {
+    for (rY[0]..rY[1]) |y| {
+        for (rX[0]..rX[1]) |x| {
+            // if (y == 14 and x == 0) {
+                var cell = Point{@intCast(x), @intCast(y)};
+                var cellConst = Constraints.getCellConstraints(ctx, cell) catch continue;
+                if (cellConst.places.items.len == 0)
+                    continue;
+                // std.log.info("Y:{d},X:{d}\n", .{y, x});
+                // std.log.info("{}", .{cellConst});
+                evaluateCell(ctx, &cellConst, &cell) catch continue;
+            // }
+        }
+    }
+}
+
+fn solveSingleThread(ctx: *Context, gpa: Allocator) !void {
     var startTime = try std.time.Timer.start();
 
-    try fillCrossCheck(ctx);
-    try evaluateGrid(ctx);
+    var a1: std.heap.ArenaAllocator = .init(gpa);
+    const a1Alloc = a1.allocator();
+    defer a1.deinit();
 
-    ctx.transposeGrid();
+    var a2: std.heap.ArenaAllocator = .init(gpa);
+    const a2Alloc = a2.allocator();
+    defer a2.deinit();
 
-    try fillCrossCheck(ctx);
-    try evaluateGrid(ctx);
+    var a3: std.heap.ArenaAllocator = .init(gpa);
+    const a3Alloc = a3.allocator();
+    defer a3.deinit();
 
+    var a4: std.heap.ArenaAllocator = .init(gpa);
+    const a4Alloc = a4.allocator();
+    defer a4.deinit();
+    
+    var ctx1 = try ctx.clone(a1Alloc);
+    var ctx2 = try ctx.clone(a2Alloc);
+    var ctx3 = try ctx.clone(a3Alloc);
+    var ctx4 = try ctx.clone(a4Alloc);
+
+    try fillCrossCheck(&ctx1);
+    try fillCrossCheck(&ctx2);
+
+    const t1 = try std.Thread.spawn(.{}, evaluateGrid, .{&ctx1, .{0,7}, .{0, GRID_SIZE}});
+    const t2 = try std.Thread.spawn(.{}, evaluateGrid, .{&ctx2, .{7,GRID_SIZE}, .{0, GRID_SIZE}});
+
+    ctx3.transposeGrid();
+    ctx4.transposeGrid();
+    try fillCrossCheck(&ctx3);
+    try fillCrossCheck(&ctx4);
+
+    const t3 = try std.Thread.spawn(.{}, evaluateGrid, .{&ctx3, .{0,7}, .{0, GRID_SIZE}});
+    const t4 = try std.Thread.spawn(.{}, evaluateGrid, .{&ctx4, .{7,GRID_SIZE}, .{0, GRID_SIZE}});
+
+    t1.join();
+    t2.join();
+    t3.join();
+    t4.join();
+
+    try ctx.matchVec.appendSlice(ctx1.matchVec.items[0..]);
+    try ctx.matchVec.appendSlice(ctx2.matchVec.items[0..]);
+    try ctx.matchVec.appendSlice(ctx3.matchVec.items[0..]);
+    try ctx.matchVec.appendSlice(ctx4.matchVec.items[0..]);
     sortMatchVec(ctx.matchVec);
-
 
     // const format = 
     //     \\[{d}] = [
@@ -399,7 +437,7 @@ pub fn main() !void {
     defer arena.deinit();
 
     var ctx = try Context.init(arenaAlloc, "grid04.txt", "SALOP??");
-    try solveSingleThread(&ctx);
+    try solveSingleThread(&ctx, gpaAlloc);
 }
 
 test "simple test" {}

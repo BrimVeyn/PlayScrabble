@@ -62,7 +62,7 @@ pub const Grid = struct {
 
     pub fn clone(self: Grid) Grid {
         var cells: [GRID_SIZE * GRID_SIZE]GridCell = undefined;
-        std.mem.copyForwards(GridCell, cells[0..], self.cells);
+        std.mem.copyForwards(GridCell, cells[0..], self.cells[0..]);
         return Grid{
             .cells = cells,
         };
