@@ -264,11 +264,14 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
         }
 
         for (cellPerms.keys()) |*permutation| {
-            var newPermutation = try String.initCapacity(ctx.alloc, (mandatoryLen + permutation.len) - mandatoryIt);
+            var newPermutation = try StringUnmanaged.initCapacity(ctx.alloc, (mandatoryLen + permutation.len) - mandatoryIt);
             newPermutation.appendSliceAssumeCapacity(permutation.*);
 
-            for (cellConst.places.items[it].c[mandatoryIt..mandatoryLen]) |ch|
-                insertSortedAssumeCapacity(&newPermutation, ch);
+            for (cellConst.places.items[it].c[mandatoryIt..mandatoryLen]) |ch| {
+                var i: usize = 0;
+                while (i < newPermutation.items.len and newPermutation.items[i] <= ch) : (i += 1) {}
+                newPermutation.insertAssumeCapacity(i, ch);
+            }
 
             permutation.* = newPermutation.items[0..];
         }
