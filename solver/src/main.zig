@@ -46,7 +46,7 @@ fn getFilteredWordList(ctx: *Context, perms: *const PermSet, cellPlacement: *con
     var permIt = perms.iterator();
     while (permIt.next()) |kv| {
         ctx.mutex.lock();
-        const permWords = ctx.orderedMap.data.get(kv.key_ptr.*) orelse {
+        const permWords = ctx.permInfos.orderedMap.data.get(kv.key_ptr.*) orelse {
             ctx.mutex.unlock();
             continue;
         };
@@ -69,7 +69,7 @@ fn getBaseFilteredWordList(ctx: *Context, perms: *const PermSet, range: *const R
     var it = perms.iterator();
     while (it.next()) |kv| {
         ctx.mutex.lock();
-        const permWords = ctx.orderedMap.data.get(kv.key_ptr.*) orelse {
+        const permWords = ctx.permInfos.orderedMap.data.get(kv.key_ptr.*) orelse {
             ctx.mutex.unlock();
             continue;
         };
@@ -107,6 +107,34 @@ pub const Match = struct {
             .perpCoord = cell[1],
             .score = 0,
         };
+    }
+
+    pub fn jsonStringify(self: @This(), jws: anytype) !void {
+        try jws.beginObject();
+
+        try jws.objectField("word");
+        const len = std.mem.indexOfSentinel(u8, 0, self.word[0..]);
+        try jws.write(self.word[0..len]);
+        
+        try jws.objectField("score");
+        try jws.write(self.score);
+
+        try jws.objectField("range");
+        try jws.write(self.range);
+
+        try jws.objectField("dir");
+        try jws.write(if (self.dir == .Vertical) "VERTICAL" else "HORIZONTAL");
+
+        try jws.objectField("perpCoord");
+        try jws.write(self.perpCoord);
+
+        try jws.objectField("jokers");
+        try jws.write(.{@as(u64, self.jokers[0]), @as(u64, self.jokers[1])});
+
+        try jws.objectField("jokersPoses");
+        try jws.write(self.jokerPoses);
+
+        try jws.endObject();
     }
 };
 
@@ -251,7 +279,6 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
     }
 }
 
-
 const MatchVec              = ArrayList(Match);
 
 fn lessThanMatch(_: void, a: Match, b: Match) bool {
@@ -318,10 +345,12 @@ fn fillCrossCheck(ctx: *Context) !void {
                     break;
                 }
                 buffer[dotPos] = @as(u8, @intCast(ch));
-                if (ctx.dict.contains(buffer[0..wordLen])) {
+                ctx.mutex.lock();
+                if (ctx.permInfos.dict.contains(buffer[0..wordLen])) {
                     ctx.crossChecks[y][x].set(idx);
                     ctx.crossChecksScore[y][x][idx] = (dummyScore + (LetterScore[idx] * letterModifier)) * wordModifier;
                 }
+                ctx.mutex.unlock();
             }
         }
     }
@@ -377,11 +406,11 @@ fn solveSingleThread(ctx: *Context, gpa: Allocator) !void {
 
     sortMatchVec(ctx.matchVec);
 
-    const recordFormated = std.fmt.fmtDuration(totalRecord);
-    std.debug.print("Total recorded: {}\n", .{recordFormated});
-    for (ctx.matchVec.items, 0..) |match, i| {
-        std.log.info("[{d}]: {s} -> {d} | WC: {s}", .{i, match.word, match.score, match.jokers});
-    }
+    // const recordFormated = std.fmt.fmtDuration(totalRecord);
+    // std.debug.print("Total recorded: {}\n", .{recordFormated});
+    // for (ctx.matchVec.items, 0..) |match, i| {
+    //     std.log.info("[{d}]: {s} -> {d} | WC: {s}", .{i, match.word, match.score, match.jokers});
+    // }
 
     const elapsed = std.time.Timer.read(&startTime);
     const elapsedFormated = std.fmt.fmtDuration(elapsed);
@@ -432,11 +461,11 @@ fn solveMultiThread(ctx: *Context, gpa: Allocator) !void {
     //     print(format, .{i, match.word, match.range, match.perpCoord, @tagName(match.dir), match.score, 
     //         match.jokers, match.jokerPoses});
     // }
-    const recordFormated = std.fmt.fmtDuration(totalRecord);
-    std.debug.print("Total recorded: {}\n", .{recordFormated});
-    for (ctx.matchVec.items, 0..) |match, i| {
-        std.log.info("[{d}]: {s} -> {d} | WC: {s}", .{i, match.word, match.score, match.jokers});
-    }
+    // const recordFormated = std.fmt.fmtDuration(totalRecord);
+    // std.debug.print("Total recorded: {}\n", .{recordFormated});
+    // for (ctx.matchVec.items, 0..) |match, i| {
+    //     std.log.info("[{d}]: {s} -> {d} | WC: {s}", .{i, match.word, match.score, match.jokers});
+    // }
 
     const elapsed = std.time.Timer.read(&startTime);
     const elapsedFormated = std.fmt.fmtDuration(elapsed);
@@ -445,23 +474,68 @@ fn solveMultiThread(ctx: *Context, gpa: Allocator) !void {
 
 const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
     .thread_safe = true,
-    // .safety = true,
-    // .retain_metadata = true,
-    // .stack_trace_frames = 50,
+    .safety = true,
+    .retain_metadata = true,
 };
+
+const httpz = @import("httpz");
+const PORT  = 8081;
+const log   = std.log;
+
+pub const App = struct {
+    permInfos: *Context.CtxPerm,
+    gpa: *Allocator,
+};
+
+pub const std_options = std.Options {
+    .log_level = .info,
+};
+
+fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
+    const maybeConfig = req.json(Context.CtxConfig) catch |e| {
+        log.err("solver: /solver: {!}", .{e});
+        res.status = 500;
+        res.body = "Internal server error";
+        return ;
+    };
+
+    if (maybeConfig) |config| {
+        const ctx = try app.ctx.loadConfig(config);
+        try solveMultiThread(ctx, app.gpa.*);
+        try res.json(app.ctx.matchVec.items[0..], .{});
+    } else {
+        res.status = 500;
+        res.body = "Internal server error";
+    }
+}
 
 pub fn main() !void {
     var gpa: std.heap.GeneralPurposeAllocator(gpaConfig) = .init;
-    const gpaAlloc = gpa.allocator();
+    var gpaAlloc = gpa.allocator();
     defer _ = gpa.deinit();
 
     var arena: std.heap.ArenaAllocator = .init(gpaAlloc);
     const arenaAlloc = arena.allocator();
     defer arena.deinit();
 
-    var ctx = try Context.init(arenaAlloc, "grid04.txt", "SALOP??");
+    var ctx = try Context.init(arenaAlloc);
+    var app: App = .{.permInfos = &ctx, .gpa = &gpaAlloc};
+
+    var server = try httpz.Server(*App).init(gpaAlloc, .{
+        .port = PORT,
+        .address = "0.0.0.0",
+    }, &app);
+    defer server.deinit();
+
+    var router = server.router(.{});
+    router.get("/solve", solve, .{});
+
+    log.info("Solver listening http://{s}:{d}/", .{"0.0.0.0", PORT});
+
+    try server.listen();
+
     // try solveSingleThread(&ctx, gpaAlloc);
-    try solveMultiThread(&ctx, gpaAlloc);
+    // try solveMultiThread(app.ctx, gpaAlloc);
 }
 
 test "simple test" {}

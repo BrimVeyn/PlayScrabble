@@ -112,20 +112,70 @@ pub fn populateMap(alloc: Allocator) !Map {
 
 pub const Context = struct {
     alloc: Allocator,
-    grid: Grid,
-    rack: String,
-    basePerm: PermSet,
-    orderedMap: Map,
-    dict: ScrabbleDict,
-    matchVec: MatchVec,
+    grid: Grid = undefined,
+    rack: String = undefined,
+    basePerm: PermSet = undefined,
+    permInfos: CtxPerm = undefined,
+    matchVec: MatchVec = undefined,
     state: Direction = .Horizontal,
     jokers: u32 = 0,
     crossChecks: [GRID_SIZE][GRID_SIZE]std.StaticBitSet(27) = undefined,
     crossChecksScore: [GRID_SIZE][GRID_SIZE][27]u8 = undefined,
     mutex: std.Thread.Mutex = .{}, //INFO: used to lock access to orderedMap and dict
+    lang: []const u8 = undefined, //TODO: multi lang support
+    
+    pub const CtxConfig = struct {
+        lang: []const u8,
+        grid: [15][15] u8,
+        rack: []const u8,
+    };
+
+    pub const CtxPerm = struct {
+        dict: ScrabbleDict,
+        orderedMap: Map,
+
+        pub fn loadConfig(self: *CtxPerm, alloc: Allocator, config: CtxConfig) !Context {
+            var grid = Grid.init();
+            try grid.loadGridStateFromSlice(config.grid);
+
+            var rack = String.init(alloc);
+            try rack.appendSlice(config.rack[0..]);
+            std.mem.sort(u8, rack.items[0..], {}, lessThanU8);
+
+            self.jokers += if (self.rack.items[0] == '?') 1 else 0;
+            self.jokers += if (self.rack.items[1] == '?') 1 else 0;
+
+            var buffer = String.init(self.alloc);
+            self.basePerm = PermSet.init(self.alloc);
+            try permutations(self.alloc, &self.basePerm, &self.rack, &buffer, self.jokers);
+
+            switch (self.jokers) {
+                0 => {},
+                1 => try jokerOne(self.alloc, &self.basePerm),
+                2 => try jokerTwo(self.alloc, &self.basePerm),
+                else => {},
+            }
+
+            self.matchVec = MatchVec.init(self.alloc);
+        }
+    };
+
+    pub fn init(alloc: Allocator) !CtxPerm {
+        var dict = ScrabbleDict.init(alloc);
+        var lineIt = std.mem.tokenizeScalar(u8, dictContent, '\n');
+        while (lineIt.next()) |word| {
+            try dict.put(word, true);
+        }
+        const orderedMap = try populateMap(alloc);
 
 
-    pub fn init(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
+        return .{
+            .dict = dict,
+            .orderedMap = orderedMap,
+        };
+    }
+
+    pub fn initTest(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
         var grid = Grid.init();
         try grid.loadGridState(gridState);
 
@@ -146,7 +196,7 @@ pub const Context = struct {
             0 => {},
             1 => try jokerOne(alloc, &perms),
             2 => try jokerTwo(alloc, &perms),
-            else => return error.TooManyWildcards,
+            else => {},
         }
 
         var dict = ScrabbleDict.init(alloc);
@@ -189,8 +239,7 @@ pub const Context = struct {
 
         return Context{
             .alloc = alloc,
-            .orderedMap = self.orderedMap, //NOTE: Needs mutex
-            .dict = self.dict, //NOTE: Needs mutex
+            .permInfos = self.permInfos,
             .rack = rack,
             .basePerm = try self.basePerm.cloneWithAllocator(alloc),
             .matchVec = MatchVec.init(alloc),

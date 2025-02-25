@@ -68,6 +68,18 @@ pub const Grid = struct {
         };
     }
 
+    pub fn loadGridStateFromSlice(self: *Grid, grid: [15][15]u8) !void {
+        for (grid, 0..) |line, y| {
+            for (0..line.len) |x| {
+                if (line[x] < 'A' or line[x] > 'Z') {
+                    self.cells[y * GRID_SIZE + x].letter = @as(u5, 0);
+                } else {
+                    self.cells[y * GRID_SIZE + x].letter = @as(u5, @intCast(line[x] - 'A' + 1));
+                }
+            }
+        }
+    }
+
     pub fn loadGridState(self: *Grid, path: []const u8) !void {
         var pathBuffer: [MAX_PATH:0]u8 = .{0} ** MAX_PATH;
         std.mem.copyForwards(u8, pathBuffer[0..], gridRootPath);

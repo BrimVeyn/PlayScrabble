@@ -10,6 +10,11 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const httpz = b.dependency("httpz", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     const generator = b.createModule(.{
         .root_source_file = b.path("src/generate/generate.zig"),
         .target = target,
@@ -21,11 +26,13 @@ pub fn build(b: *std.Build) void {
         .root_module = solver,
     });
 
+
     const generator_exe = b.addExecutable(.{
         .name = "generator",
         .root_module = generator,
     });
 
+    solver_exe.root_module.addImport("httpz", httpz.module("httpz"));
     b.installArtifact(solver_exe);
     b.installArtifact(generator_exe);
 

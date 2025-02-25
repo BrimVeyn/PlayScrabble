@@ -5,6 +5,7 @@ const jwt           = @import("jwt");
 
 //---------------- Models ----------------//
 const User          = @import("User.zig");
+const Solver        = @import("Solver.zig");
 //----------------------------------------//
 
 const Allocator     = std.mem.Allocator;
@@ -28,7 +29,6 @@ pub const std_options = std.Options {
 pub fn main() !u8 {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-
 
     // SIGINT or SIGTERM are received
     std.posix.sigaction(std.posix.SIG.INT, &.{
@@ -96,6 +96,8 @@ pub fn main() !u8 {
     //-------------------------------GET--------------------------------
     router.get("/api/getUser:name", User.getUser, .{});
     router.get("/api/getUsers", User.getUsers, .{});
+    router.get("/api/me", User.me, .{});
+    router.get("/api/solver/solve", Solver.solve, .{});
     //------------------------------------------------------------------
 
     //-------------------------------POST-------------------------------

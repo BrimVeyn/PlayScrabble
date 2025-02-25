@@ -6,7 +6,6 @@ pub const std_options = .{
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
-
     const optimize = b.standardOptimizeOption(.{});
 
     const httpz = b.dependency("httpz", .{

@@ -28,6 +28,34 @@ pub fn getUser(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
     _ = app;
 }
 
+pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
+    const maybeRefresh = req.cookies().get("Refesh-Token");
+    if (maybeRefresh) |refreshToken| {
+        var maybeRow = app.db.rowOpts(
+            \\SELECT *
+            \\FROM USERS
+            \\WHERE refresh = $1
+        , .{refreshToken}, .{.column_names = true}) catch |e| {
+            log.err("me: PG: {!}", .{e});
+            res.status = 500;
+            res.body = "Internal server error";
+            return ;
+        };
+        if (maybeRow) |*row| {
+            defer row.deinit() catch {};
+            const userInfo = try row.to(UserFields, .{});
+            log.info("me: OK", .{});
+            try res.json(userInfo, .{});
+        } else {
+            res.status = 404;
+            res.body = "Not logged in";
+        }
+    } else {
+        res.status = 404;
+        res.body = "Not logged in";
+    }
+}
+
 pub fn getUsers(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
     errdefer |e| {
         res.status = 500;
