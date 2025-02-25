@@ -134,7 +134,7 @@ pub const Context = struct {
         dict: ScrabbleDict,
         orderedMap: Map,
 
-        pub fn loadConfig(self: *CtxPerm, alloc: Allocator, config: CtxConfig) !Context {
+        pub fn loadConfig(self: CtxPerm, alloc: Allocator, config: CtxConfig) !Context {
             var grid = Grid.init();
             try grid.loadGridStateFromSlice(config.grid);
 
@@ -142,21 +142,30 @@ pub const Context = struct {
             try rack.appendSlice(config.rack[0..]);
             std.mem.sort(u8, rack.items[0..], {}, lessThanU8);
 
-            self.jokers += if (self.rack.items[0] == '?') 1 else 0;
-            self.jokers += if (self.rack.items[1] == '?') 1 else 0;
+            var jokers: u32 = 0;
+            jokers += if (rack.items[0] == '?') 1 else 0;
+            jokers += if (rack.items[1] == '?') 1 else 0;
 
-            var buffer = String.init(self.alloc);
-            self.basePerm = PermSet.init(self.alloc);
-            try permutations(self.alloc, &self.basePerm, &self.rack, &buffer, self.jokers);
+            var buffer = String.init(alloc);
+            var basePerm = PermSet.init(alloc);
+            try permutations(alloc, &basePerm, &rack, &buffer, jokers);
 
-            switch (self.jokers) {
+            switch (jokers) {
                 0 => {},
-                1 => try jokerOne(self.alloc, &self.basePerm),
-                2 => try jokerTwo(self.alloc, &self.basePerm),
+                1 => try jokerOne(alloc, &basePerm),
+                2 => try jokerTwo(alloc, &basePerm),
                 else => {},
             }
 
-            self.matchVec = MatchVec.init(self.alloc);
+            return .{
+                .alloc = alloc,
+                .permInfos = self,
+                .grid = grid,
+                .rack = rack,
+                .jokers = jokers,
+                .basePerm = basePerm,
+                .matchVec = MatchVec.init(alloc),
+            };
         }
     };
 

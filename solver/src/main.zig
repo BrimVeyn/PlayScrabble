@@ -123,7 +123,7 @@ pub const Match = struct {
         try jws.write(self.range);
 
         try jws.objectField("dir");
-        try jws.write(if (self.dir == .Vertical) "VERTICAL" else "HORIZONTAL");
+        try jws.write(if (self.dir == .Vertical) "V" else "H");
 
         try jws.objectField("perpCoord");
         try jws.write(self.perpCoord);
@@ -500,9 +500,9 @@ fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     };
 
     if (maybeConfig) |config| {
-        const ctx = try app.ctx.loadConfig(config);
-        try solveMultiThread(ctx, app.gpa.*);
-        try res.json(app.ctx.matchVec.items[0..], .{});
+        var ctx = try app.permInfos.loadConfig(res.arena, config);
+        try solveMultiThread(&ctx, app.gpa.*);
+        try res.json(ctx.matchVec.items[0..], .{});
     } else {
         res.status = 500;
         res.body = "Internal server error";
