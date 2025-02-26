@@ -110,31 +110,24 @@ pub const Match = struct {
     }
 
     pub fn jsonStringify(self: @This(), jws: anytype) !void {
-        try jws.beginObject();
+        try jws.beginArray();
 
-        try jws.objectField("word");
         const len = std.mem.indexOfSentinel(u8, 0, self.word[0..]);
         try jws.write(self.word[0..len]);
-        
-        try jws.objectField("score");
         try jws.write(self.score);
+        try jws.write(@intFromEnum(self.dir));
 
-        try jws.objectField("range");
         try jws.write(self.range);
-
-        try jws.objectField("dir");
-        try jws.write(if (self.dir == .Vertical) "V" else "H");
-
-        try jws.objectField("perpCoord");
         try jws.write(self.perpCoord);
 
-        try jws.objectField("jokers");
-        try jws.write(.{@as(u64, self.jokers[0]), @as(u64, self.jokers[1])});
-
-        try jws.objectField("jokersPoses");
-        try jws.write(self.jokerPoses);
-
-        try jws.endObject();
+        if (self.jokers[0] != 0) {
+            try jws.write(.{@as(u64, self.jokers[0]), @as(u64, self.jokers[1])});
+            try jws.write(.{
+                @as(i5, if (self.jokerPoses[0] == null) -1 else self.jokerPoses[0].?),
+                @as(i5, if (self.jokerPoses[1] == null) -1 else self.jokerPoses[1].?),
+            });
+        }
+        try jws.endArray();
     }
 };
 
@@ -151,10 +144,11 @@ fn getJokerPoses(ctx: *Context, word: []const u8, jokers: [2]u8, cellPlaces: *co
     var posSecond = ArrayList(u4).init(ctx.alloc);
 
     for (0..word.len) |i| {
-        if (word[i] == jokers[0] and !isMandatory(word[i], @as(u4, @intCast(i)) + 1, cellPlaces)) {
+        const mandatory = isMandatory(word[i], @as(u4, @intCast(i)) + 1, cellPlaces);
+        if (word[i] == jokers[0] and !mandatory) {
             try posFirst.append(@intCast(i));
         }
-        if (word[i] == jokers[1] and !isMandatory(word[i], @as(u4, @intCast(i)) + 1, cellPlaces)) {
+        if (word[i] == jokers[1] and !mandatory) {
             try posSecond.append(@intCast(i));
         }
     }
@@ -166,12 +160,14 @@ fn getJokerPoses(ctx: *Context, word: []const u8, jokers: [2]u8, cellPlaces: *co
             try posFinal.append(.{pos1, null});
             continue;
         }
-        //NOTE: Not optimal as if the two jokers are identical on this try it'll duplicate possibilities
-        //ex: .{3, 6}, .{6, 3}
         for (posSecond.items) |pos2| {
-            if (pos1 != pos2) try posFinal.append(.{pos1, pos2});
+            if (pos1 != pos2) {
+                try posFinal.append(.{ @min(pos1, pos2), @max(pos1, pos2) });
+            }
         }
     }
+
+    // if (jokers[0] == jokers[1]) print("{any}\n", .{posFinal.items});
     return posFinal;
 }
 
@@ -471,6 +467,7 @@ fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         var ctx = try app.permInfos.loadConfig(res.arena, config);
         try solveMultiThread(&ctx, app.gpa.*);
         try res.json(ctx.matchVec.items[0..], .{});
+        std.log.info("Matches found: {d}", .{ctx.matchVec.items.len});
     } else {
         res.status = 500;
         res.body = "Internal server error";
