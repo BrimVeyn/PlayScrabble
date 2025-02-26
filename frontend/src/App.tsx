@@ -5,7 +5,6 @@ import Rack from "./solver/Rack.tsx";
 
 import "./App.css"
 
-
 function App() {
 	return (
 		<>
@@ -21,4 +20,3 @@ function App() {
 }
 
 export default App
-

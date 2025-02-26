@@ -1,10 +1,8 @@
-import { useState } from 'react';
+import { useGrid } from './GridContext';
 
-interface GridProps {
-	grid: Array<string> | null;
-}
 
-export default function SolverButton({grid}: GridProps) {
+export default function SolverButton() {
+	const {grid} = useGrid();
 
 	const callSolver = (grid: Array<string> | null) => {
 		if (!grid) return;
