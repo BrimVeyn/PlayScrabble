@@ -26,7 +26,6 @@
 	border-radius: 4px;
 }
 
-
 .s-grid-tile-modifier {
 	position: absolute;
 	top: 0.80;
@@ -98,7 +97,7 @@
 .selected {
 	position: absolute;
 	z-index: 2;
-	border: 4px solid #9CD9E7;
+	border: 4px solid hsla(191 61% 75.9% / 0.50); 
 	border-radius: 15px;
 
 	width: 120%;

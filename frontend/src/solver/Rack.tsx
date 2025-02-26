@@ -1,12 +1,20 @@
-import { useState } from 'react';
+import { useGrid } from "./GridContext";
+import "./Rack.css"
 
-interface RackProps {
-	rack: string
-	setRack: React.Dispatch<React.SetStateAction<string>>;
-}
+export default function Rack() {
+	const {rack, setRack} = useGrid();
 
-export default function Rack({rack, setRack}: RackProps) {
 	return (
-		<h1> Rack lol </h1>
+		<>
+			<div className="rackContainer">
+				{rack.split('').map((letter, idx) => (
+					<div key={letter + idx} className='rack-cell'>
+						<p key={idx} className='rack-cell'> 
+							{letter}
+						</p>
+					</div>
+				))}
+			</div>
+		</>
 	);
 }

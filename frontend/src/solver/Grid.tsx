@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useGrid } from './GridContext'
 import "./Grid.css"
 
 //NOTE: modifier Values: 
@@ -28,39 +29,33 @@ const gridModifiers: Array<Array<number>> = [
 
 const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
-interface GridProps {
-	grid: Array<string> | null;
-	setGrid: React.Dispatch<React.SetStateAction<Array<string> | null>>;
-}
 
-export default function Grid({grid, setGrid}: GridProps) {
-
-	const [cursor, setCursor] = useState<[number, number] | null>(null);
+function Grid() {
 	const [direction, setDirection] = useState<string>("right");
+	const [pendingUpdate, setPendingUpdate] = useState<{ cell: [number, number], key: string } | null>(null);
+
+	const {grid, setGrid, cursor, setCursor} = useGrid();
 
 	useEffect(() => {
-		console.log("Direction changed to:", direction);
-	}, [direction]);
-
-	const updateCell = (cell: [number, number], key: string) => {
-		if (grid) {
+		if (pendingUpdate && grid) {
+			const { cell, key } = pendingUpdate;
 			const newGrid = [...grid];
 			newGrid[cell[0]] = newGrid[cell[0]].substring(0, cell[1]) + key.toUpperCase() + newGrid[cell[0]].substring(cell[1] + 1);
 			setGrid(newGrid);
+			setPendingUpdate(null);
 		}
-	}
+	}, [pendingUpdate, grid, setGrid]);
 
 	const handleKeyDown = (e: KeyboardEvent) => {
-		//console.log(e.key, e.detail);
-		//console.log(direction);
 		if (grid && cursor) {
-			const [row, col] = cursor;
+			const [row, col] = cursor.cell;
 
 			if (letters.includes(e.key)) {
 				setCursor((prev) => {
-					updateCell([row, col], e.key);
-					if (direction == "right" && col < grid[row].length - 1) return [row, col + 1];
-					else if (direction == "down" && row < grid.length - 1) return [row + 1, col];
+					if (!prev || prev.ctx === "rack") return prev;
+					setPendingUpdate({cell: [row, col], key: e.key});
+					if (direction == "right" && col < grid[row].length - 1) return {ctx: "grid", cell: [row, col + 1]};
+					else if (direction == "down" && row < grid.length - 1) return {ctx: "grid", cell: [row + 1, col]};
 					return prev;
 				})
 				return ;
@@ -69,24 +64,25 @@ export default function Grid({grid, setGrid}: GridProps) {
 				case 'ArrowDown': {
 					setDirection((prev) => {
 						if (prev == "right") return "down";
-						if (row < grid.length - 1) setCursor([row + 1, col]);
+						if (row < grid.length - 1) setCursor({ctx: "grid", cell: [row + 1, col]});
 						return prev;
 					}); break;
 				}
 				case 'ArrowRight': {
 					setDirection((prev) => {
 						if (prev == "down") return "right";
-						if (col < grid[row].length - 1) setCursor([row, col + 1]);
+						if (col < grid[row].length - 1) setCursor({ctx: "grid", cell: [row, col + 1]});
 						return prev;
 					}); break;
 				}
-				case 'ArrowLeft': if (col > 0) setCursor([row, col - 1]); break;
-				case 'ArrowUp': if (row > 0) setCursor([row - 1, col]); break;
+				case 'ArrowLeft': if (col > 0) setCursor({ctx: "grid", cell: [row, col - 1]}); break;
+				case 'ArrowUp': if (row > 0) setCursor({ctx: "grid", cell: [row - 1, col]}); break;
 				case 'Backspace':
-					updateCell(cursor, '.');
+					setPendingUpdate({cell: [row, col], key: '.'});
 					setCursor((prev) => {
-						if (direction == "right" && col > 0) return [row, col - 1];
-							else if (direction == "down" && row > 0) return [row - 1, col];
+						if (!prev || prev.ctx == "rack") return prev;
+						if (direction == "right" && col > 0) return {ctx: "grid", cell: [row, col - 1]};
+							else if (direction == "down" && row > 0) return {ctx: "grid", cell: [row - 1, col]};
 						return prev;
 					})
 					break;
@@ -111,7 +107,7 @@ export default function Grid({grid, setGrid}: GridProps) {
 						{grid.map((item, index) => (
 							<li className="s-grid-row" key={index}>
 								{item.split('').map((letter, letterIndex) => {
-									const isSelected:boolean = (cursor && (cursor[0] == index && cursor[1] == letterIndex)) ? true : false;
+									const isSelected:boolean = (cursor && (cursor.cell[0] == index && cursor.cell[1] == letterIndex)) ? true : false;
 									const fClass:string = (letter == '.') ? "empty" : "full";
 									const modClass: string = (() => {
 										switch (gridModifiers[index][letterIndex]) {
@@ -124,7 +120,7 @@ export default function Grid({grid, setGrid}: GridProps) {
 									})();									
 									return (
 										<div className="s-grid-cell" key={letterIndex}
-											onClick={() => setCursor([index, letterIndex])}
+											onClick={() => setCursor({ctx: "grid", cell: [index, letterIndex]})}
 										> 
 											<p key={index * letterIndex} className={`s-grid-tile-modifier ${modClass}`}>
 											</p>
@@ -152,3 +148,6 @@ export default function Grid({grid, setGrid}: GridProps) {
 		</>
 	)
 }
+
+
+export default Grid;
