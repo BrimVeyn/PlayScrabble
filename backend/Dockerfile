@@ -43,7 +43,9 @@ WORKDIR /app
 
 COPY --from=zig-master /app/zig-out/bin/backend /app/backend
 
+RUN rm -rf .zig-cache/
 RUN zig build
+
 EXPOSE 8080
 
 CMD ["./watch.sh"]

@@ -1,37 +1,49 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import Grid from "./solver/Grid.tsx"
+import SolverButton from './solver/SolverButton.tsx';
+import Rack from "./solver/Rack.tsx";
 
-function postUser(name: string, age: number) {
-	fetch("http://localhost:8080/api/addUser", {
-		method: "POST",
-		body: JSON.stringify({ name, age }),
-	})
-		.then((response) => {
-			if (!response.ok) {
-				throw new Error(`HTTP error! Status: ${response.status}`);
-			}
-			return response.json();
-		})
-		.then((data) => console.log("User added successfully:", data))
-		.catch((error) => console.error("Error adding user:", error));
-}
+import "./App.css"
+
+const emptyGrid: Array<string> = [
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...........A...",
+	"...........K...",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+];
 
 function App() {
-  const [data, setData] = useState<string | null>(null);
+	const [grid, setGrid] = useState<Array<string> | null>(emptyGrid);
+	const [rack, setRack] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch('http://localhost:8080/api/getUsers')
-      .then(response => response.json())
-      .then(data => setData(data.message))
-      .catch(error => console.error('Error fetching data:', error));
-  }, []);
-
-  return (
-    <>
-      <h1>Vite + React</h1>
-      <p>Backend response: {data || "Loading..."}</p>
-	  <button onClick={() => postUser("Nathan", 12)}> Test </button>
-    </>
-  )
+	return (
+		<>
+			<div className="contextContainer">
+				<Grid
+					grid={grid}
+					setGrid={setGrid}
+				/>
+				<Rack
+					rack={rack}
+					setRack={setRack}
+				/>
+			</div>
+			<SolverButton
+				grid={grid}
+			/>
+		</>
+	)
 }
 
 export default App
