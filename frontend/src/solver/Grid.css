@@ -106,7 +106,8 @@
 .selected {
 	position: absolute;
 	z-index: 2;
-	border: 4px solid hsla(191 61% 75.9% / 0.50); 
+	/*border: 4px solid hsla(191 61% 75.9% / 0.50); */
+	border: 4px solid #85589e;
 	border-radius: 15px;
 
 	width: 120%;
@@ -119,7 +120,8 @@
 	z-index: 3;
 	width: 100%;
 	height: 100%;
-	background: hsla(191 61% 75.9% / 0.50);
+	background: #85589e;
+	background: rgba(133, 88, 158, 0.7);
 	clip-path: polygon(38.00% 50%, 0% 100%, 0% 0%);
 }
 
@@ -129,7 +131,7 @@
 	z-index: 3;
 	width: 100%;
 	height: 100%;
-	background: hsla(191 61% 75.9% / 0.50);
+	background: rgba(133, 88, 158, 0.7);
 	clip-path: polygon(38.00% 50%, 0% 100%, 0% 0%);
 	rotate: 90deg;
 }
