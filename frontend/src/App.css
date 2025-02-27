@@ -18,7 +18,7 @@
 
 .resultContainer {
 	display: flex;
+	align-items: start;
 	width: 33.33%;
-
 	padding: 2rem;
 }

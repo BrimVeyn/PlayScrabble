@@ -102,6 +102,8 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 			if (cursor.ctx !== "rack") return;
 			const jokerCount = rack.split("?").length - 1;
 			if (jokerCount == 2) return ;
+			setLastResults(null);
+			setGhostGrid(emptyGrid);
 			setCursor((prev) => {
 				if (!prev) return null;
 				setRack(() => {

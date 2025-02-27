@@ -10,6 +10,7 @@
 .resTable {
 	display: flex;
 	flex-direction: column;
+	border-radius: 10px;
 	background-color: #f9f6f0;
 	color: #0b0904;
 	border-collapse: collapse;
@@ -18,23 +19,32 @@
 
 .resBody {
 	display: flex;
-	flex-direction: column;
-	min-height: 300px;
-	max-height: 300px;
+	min-height: 500px;
+	max-height: 500px;
 	overflow-y: auto;
+	border-radius: 10px;
 }
 
 .resHead {
 	display: flex;
 	flex-direction: row;
+	align-items: center;
+	height: 3rem;
+	font-weight: bold;
+	border-bottom: 2px solid black;
 }
 .resHead>p {
 	width: 50%;
 	padding-left: 10px;
 }
 
+.resHead>p:hover {
+	background-color: #845ec2;
+}
+
 .resRow {
 	display: flex;
+	align-items: center;
 	width: 100%;
 	border: 1px solid #e8ddc0;
 }

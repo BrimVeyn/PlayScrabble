@@ -1,15 +1,29 @@
 import SolverButton from "./SolverButton";
 import { useGrid, emptyGrid } from "./GridContext";
+import { FixedSizeList as List } from "react-window";
 
 import "./Results.css"
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function Results() {
-	const {setGhostGrid, lastResults} = useGrid();
+	const {setGhostGrid, lastResults, setLastResults} = useGrid();
+	const [sortWay, setSortWay] = useState<"word" | "score" | null>(null);
 
 	useEffect(() => {
 		console.log("Results in result button:", lastResults);
 	}, [lastResults])
+
+	useEffect(() => {
+		if (!lastResults || !sortWay) return ;
+		switch (sortWay) {
+			case "score":
+				setLastResults([...lastResults].sort((a, b) => b.score - a.score));
+				break;
+			case "word":
+				setLastResults([...lastResults].sort((a, b) => a.word.localeCompare(b.word)));
+				break;
+		}
+	}, [sortWay])
 
 	const showGhostWord = (idx: number) => {
 		if (!lastResults) return ;
@@ -43,27 +57,41 @@ function Results() {
 		}
 	}
 
+	const rowHeight = 50; // Hauteur d'une ligne (à ajuster)
+
 	return (
 		<>
 			<div className="resContainer">
 				<div className="resTable">
 					<div className="resHead">
-						<p>Word</p>
-						<p>Score</p>
+						<p onClick={() => setSortWay("word")}>Word</p>
+						<p onClick={() => setSortWay("score")}>Score</p>
+						<p>Orientation</p>
 					</div>
-					<div className="resBody">
+					<div className="resBody" onMouseLeave={() => setGhostGrid(emptyGrid)}>
 						{lastResults ? (
-							lastResults.map((match, idx) => (
-								<div 
-									key={idx} 
-									className="resRow" 
-									onMouseEnter={() => showGhostWord(idx)} 
-									onMouseLeave={() => setGhostGrid(emptyGrid)}
-								> 
-									<p> {match.word} </p>
-									<p> {match.score} </p>
-								</div>
-							))
+							<List
+								height={500} 
+								itemCount={lastResults.length}
+								itemSize={rowHeight}
+								width={"100%"} 
+							>
+								{({ index, style }) => {
+									const match = lastResults[index];
+									return (
+										<div 
+											key={index} 
+											style={style} 
+											className="resRow"
+											onMouseEnter={() => showGhostWord(index)}
+										> 
+											<p> {match.word} </p>
+											<p> {match.score} </p>
+											<p> {match.dir == 0 ? "Vertical" : "Horizontal"} </p>
+										</div>
+									);
+								}}
+							</List>
 						) : 
 							<SolverButton/>
 						}
