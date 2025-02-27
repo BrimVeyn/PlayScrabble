@@ -44,7 +44,7 @@ function Grid() {
 					{grid.map((item, index) => (
 						<li className="s-grid-row" key={index}>
 							{item.split('').map((letter, letterIndex) => {
-								const isSelected:boolean = (cursor && (cursor.cell[0] == index && cursor.cell[1] == letterIndex)) ? true : false;
+								const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == index && cursor.cell[1] == letterIndex)) ? true : false;
 								const fClass:string = (letter == '.') ? "empty" : "full";
 								const modClass: string = (() => {
 									switch (gridModifiers[index][letterIndex]) {

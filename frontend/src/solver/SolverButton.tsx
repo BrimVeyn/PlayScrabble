@@ -2,12 +2,9 @@ import { useGrid } from './GridContext';
 
 
 export default function SolverButton() {
-	const {grid} = useGrid();
+	const {grid, rack} = useGrid();
 
-	const callSolver = (grid: Array<string> | null) => {
-		if (!grid) return;
-
-		const pseudoRack = "SALOPE";
+	const callSolver = (grid: Array<string>) => {
 		const lang = "FR";
 
 		// Convert grid to Array<number>
@@ -19,7 +16,7 @@ export default function SolverButton() {
 		const payload = {
 			lang: lang,
 			grid: gridNumbers,
-			rack: pseudoRack,
+			rack: rack,
 		};
 
 		console.log(payload);

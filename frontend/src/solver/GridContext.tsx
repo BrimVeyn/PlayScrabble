@@ -30,8 +30,6 @@ interface GridContextType {
 	setCursor: (cursor: {ctx: string, cell: [number, number]} | null) => void;
 	direction: string;
 	setDirection: (direction: string) => void;
-	active: string;
-	setActive: (focus: string) => void;
 	handleKeyDown: (e: KeyboardEvent) => void;
 }
 
@@ -53,7 +51,6 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 	const [rack, setRack] = useState<string>("......A");
 	const [cursor, setCursor] = useState<{ctx: string, cell: [number, number]} | null>(null);
 	const [direction, setDirection] = useState<string>("right");
-	const [active, setActive] = useState<string>("grid");
 
     const handleKeyDown = (e: KeyboardEvent) => {
         if (!grid || !cursor) return;
@@ -72,9 +69,13 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 					const newRack = rack.substring(0, col) + e.key.toUpperCase() + rack.substring(col + 1);
 					return newRack;
 				});
-				if (prev.ctx === "rack" && col < rack.length - 1) return { ctx: prev.ctx, cell: [row, col + 1] };
-				else if (direction === "right" && col < grid[row].length - 1) return { ctx: prev.ctx, cell: [row, col + 1] };
-				else if (direction === "down" && row < grid.length - 1) return { ctx: prev.ctx, cell: [row + 1, col] };
+				if (prev.ctx === "rack" && col < rack.length - 1) {
+					return { ctx: prev.ctx, cell: [row, col + 1] };
+				} else if (prev.ctx === "grid" && direction === "right" && col < grid[row].length - 1) {
+					return { ctx: prev.ctx, cell: [row, col + 1] };
+				} else if (prev.ctx === "grid" && direction === "down" && row < grid.length - 1) {
+					return { ctx: prev.ctx, cell: [row + 1, col] };
+				}
 				return prev;
 			});
             return;
@@ -94,9 +95,15 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
             case "ArrowRight":
                 setDirection((prev) => {
                     if (prev === "down") return "right";
-                    if (col < grid[row].length - 1) setCursor((prev) => {
-						if (!prev) return prev;
-						return { ctx: prev.ctx, cell: [row, col + 1] };
+					if (cursor.ctx == "rack") {
+						setCursor((prevC) => {
+							if (!prevC) return prevC;
+							if (col < rack.length - 1) return { ctx: prevC.ctx, cell: [0, col + 1]};
+							return prevC;
+						});
+					} else if (col < grid[row].length - 1) setCursor((prevC) => {
+						if (!prevC) return prevC;
+						return { ctx: prevC.ctx, cell: [row, col + 1] };
 					});
                     return prev;
                 });
@@ -106,12 +113,14 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 					if (!prev) return prev;
 					return { ctx: prev.ctx, cell: [row, col - 1] }
 				});
+				setDirection("right");
                 break;
             case "ArrowUp":
                 if (row > 0) setCursor((prev) => {
 					if (!prev) return prev;
 					return { ctx: prev.ctx, cell: [row - 1, col] }
 				});
+				setDirection("down");
                 break;
             case "Backspace":
 				setCursor((prev) => {
@@ -145,8 +154,6 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 			setCursor,
 			direction,
 			setDirection,
-			active,
-			setActive,
 			handleKeyDown
 		}}>
 			{children}
