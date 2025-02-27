@@ -158,7 +158,7 @@ pub const Context = struct {
 
             var jokers: u32 = 0;
             jokers += if (rack.items[0] == '?') 1 else 0;
-            jokers += if (rack.items[1] == '?') 1 else 0;
+            jokers += if (rack.items.len >= 2 and rack.items[1] == '?') 1 else 0;
 
             var buffer = String.init(alloc);
             var basePerm = PermSet.init(alloc);

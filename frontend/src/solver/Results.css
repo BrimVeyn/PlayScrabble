@@ -1,0 +1,54 @@
+.resContainer {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+
+	width: 100%;
+	gap: 1rem;
+}
+
+.resTable {
+	display: flex;
+	flex-direction: column;
+	background-color: #f9f6f0;
+	color: #0b0904;
+	border-collapse: collapse;
+	box-shadow:	0px 0px 10px 0px #AD9CAF;
+}
+
+.resBody {
+	display: flex;
+	flex-direction: column;
+	min-height: 300px;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.resHead {
+	display: flex;
+	flex-direction: row;
+}
+.resHead>p {
+	width: 50%;
+	padding-left: 10px;
+}
+
+.resRow {
+	display: flex;
+	width: 100%;
+	border: 1px solid #e8ddc0;
+}
+
+.resRow:hover {
+	background-color: #6ebd72;
+}
+
+.resRow>p {
+	width: 50%;
+	padding-left: 10px;
+	border-right: 2px solid #e8ddc0;
+}
+
+.resRow>p:last-child {
+	border-right: none;
+}

@@ -28,7 +28,7 @@ const gridModifiers: Array<Array<number>> = [
 ]
 
 function Grid() {
-	const {grid, cursor, setCursor, direction, handleKeyDown} = useGrid();
+	const {grid, cursor, ghostGrid, setCursor, direction, handleKeyDown} = useGrid();
 
 	useEffect(() => {
 		window.addEventListener('keydown', handleKeyDown);
@@ -46,6 +46,8 @@ function Grid() {
 							{item.split('').map((letter, letterIndex) => {
 								const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == index && cursor.cell[1] == letterIndex)) ? true : false;
 								const fClass:string = (letter == '.') ? "empty" : "full";
+								const gLetter:string = ghostGrid[index][letterIndex];
+								const gClass:string = (gLetter !== '.') ? "ghost" : "";
 								const modClass: string = (() => {
 									switch (gridModifiers[index][letterIndex]) {
 										case 1: return "dword";
@@ -56,13 +58,14 @@ function Grid() {
 									}
 								})();									
 								return (
-									<div className="s-grid-cell" key={letterIndex}
+									<div 
+										className="s-grid-cell" 
+										key={letterIndex}
 										onClick={() => setCursor({ctx: "grid", cell: [index, letterIndex]})}
 									> 
-										<p key={index * letterIndex} className={`s-grid-tile-modifier ${modClass}`}>
-										</p>
-										<p className={`s-grid-tile ${fClass}`}>
-											{(letter == '.') ? ' ' : letter} 
+										<p key={index * letterIndex} className={`s-grid-tile-modifier ${modClass}`}></p>
+										<p className={`s-grid-tile ${fClass} ${gClass}`}>
+											{(letter == '.') ? (gLetter == '.') ? '' : gLetter : letter} 
 										</p>
 										{ isSelected && 
 											<>

@@ -4,7 +4,7 @@ import "./Rack.css"
 import "./Grid.css"
 
 export default function Rack() {
-	const {rack, cursor, setCursor, handleKeyDown} = useGrid();
+	const {rack, cursor, setCursor, setDirection, handleKeyDown} = useGrid();
 
 	useEffect(() => {
 		window.addEventListener('keydown', handleKeyDown);
@@ -22,16 +22,15 @@ export default function Rack() {
 
 					return (
 						<div className="s-grid-cell" key={idx}
-							onClick={() => setCursor({ctx: "rack", cell: [0, idx]})}
+							onClick={() => {
+								setCursor({ctx: "rack", cell: [0, idx]});
+								setDirection("right");
+							}}
 						> 
 							<p key={idx} className={`s-grid-tile ${fClass}`}> 
 								{letter}
 							</p>
-							{ isSelected && 
-								<>
-									<p className="selected"></p>
-								</>
-							}
+							{ isSelected && <p className="selected"></p> }
 						</div>
 					)
 				})}

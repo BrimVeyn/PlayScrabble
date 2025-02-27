@@ -94,6 +94,15 @@
 	color: #0b0904;
 }
 
+.ghost {
+	background-color: #6ebd72;
+
+	border: 2px solid black;
+	border-radius: 10px;
+
+	color: #0b0904;
+}
+
 .selected {
 	position: absolute;
 	z-index: 2;

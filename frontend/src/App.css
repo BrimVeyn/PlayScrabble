@@ -13,11 +13,12 @@
 	align-items: center;
 	justify-content: space-evenly;
 	gap: 50px;
+	padding: 2rem;
 }
 
 .resultContainer {
 	display: flex;
 	width: 33.33%;
 
-	background-color: magenta;
+	padding: 2rem;
 }

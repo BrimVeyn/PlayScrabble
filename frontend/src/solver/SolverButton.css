@@ -1,0 +1,16 @@
+.solverButtonContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+}
+
+
+.solverButtonContainer>button {
+	width: 66.66%;
+	height: 15%;
+	font-weight: bold;
+	background-color: #f3eada;
+	border: 3px solid darkgray;
+}
