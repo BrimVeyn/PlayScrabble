@@ -8,7 +8,7 @@
 	display: flex;
 	flex-direction: column;
 	flex-wrap: wrap;
-	width: 66.66%;
+	width: 55%;
 
 	align-items: center;
 	justify-content: space-evenly;
@@ -18,7 +18,13 @@
 
 .resultContainer {
 	display: flex;
+	flex-direction: column;
 	align-items: start;
+	gap: 2rem;
 	width: 33.33%;
 	padding: 2rem;
+}
+
+.resultContainer>div {
+	width: 100%;
 }

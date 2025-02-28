@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useGrid } from './GridContext'
+import { useGrid, letterScore } from './GridContext'
 import "./Grid.css"
 
 //NOTE: modifier Values: 
@@ -27,6 +27,7 @@ const gridModifiers: Array<Array<number>> = [
     [2, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 2]
 ]
 
+
 function Grid() {
 	const {grid, cursor, ghostGrid, setCursor, direction, handleKeyDown} = useGrid();
 
@@ -45,8 +46,9 @@ function Grid() {
 						<li className="s-grid-row" key={index}>
 							{item.split('').map((letter, letterIndex) => {
 								const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == index && cursor.cell[1] == letterIndex)) ? true : false;
-								const fClass:string = (letter == '.') ? "empty" : "full";
+								const fClass:string = (letter !== '.') ? "full" : "empty";
 								const gLetter:string = ghostGrid[index][letterIndex];
+								const hasScore:boolean = (letter !== '.' || gLetter !== '.');
 								const gClass:string = (gLetter !== '.') ? "ghost" : "";
 								const modClass: string = (() => {
 									switch (gridModifiers[index][letterIndex]) {
@@ -56,7 +58,7 @@ function Grid() {
 										case 4: return "tletter";
 										default: return ""; // Provide a default return value
 									}
-								})();									
+								})();
 								return (
 									<div 
 										className="s-grid-cell" 
@@ -67,6 +69,13 @@ function Grid() {
 										<p className={`s-grid-tile ${fClass} ${gClass}`}>
 											{(letter == '.') ? (gLetter == '.') ? '' : gLetter : letter} 
 										</p>
+										
+										{ hasScore && 
+											<p className="score"> 
+												{letterScore[letter.charCodeAt(0) - 65] || 
+												letterScore[gLetter.charCodeAt(0) - 65]}
+											</p>
+										}
 										{ isSelected && 
 											<>
 												<p className="selected"></p>

@@ -65,6 +65,7 @@ function Results() {
 					<p onClick={() => setSortWay("word")}>Word</p>
 					<p onClick={() => setSortWay("score")}>Score</p>
 					<p>Orientation</p>
+					<p>Joker</p>
 				</div>
 				<div className="resBody" onMouseLeave={() => setGhostGrid(emptyGrid)}>
 					{lastResults ? (
@@ -76,6 +77,7 @@ function Results() {
 						>
 							{({ index, style }) => {
 								const match = lastResults[index];
+								console.log(match.joker);
 								return (
 									<div 
 										key={index} 
@@ -86,6 +88,10 @@ function Results() {
 										<p> {match.word} </p>
 										<p> {match.score} </p>
 										<p> {match.dir == 0 ? "Vertical" : "Horizontal"} </p>
+										<p> {match.joker ? 
+											match.joker.filter(n => n != 0).length
+											: 0 } 
+										</p>
 									</div>
 								);
 							}}

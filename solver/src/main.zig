@@ -277,7 +277,7 @@ fn evaluateCell(ctx: *Context, cellConst: *Constraints, cell: *Point) !void {
 const MatchVec              = ArrayList(Match);
 
 fn lessThanMatch(_: void, a: Match, b: Match) bool {
-    return (a.score < b.score);
+    return (b.score < a.score);
 }
 
 fn sortMatchVec(matchVec: MatchVec) void {

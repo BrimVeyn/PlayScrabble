@@ -36,6 +36,7 @@ export const testGrid: Array<string> = [
 ];
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+export const letterScore: Array<number> = [ 1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 10, 1, 2, 1, 1, 3, 8, 1, 1, 1, 1, 4, 10, 10, 10, 10 ];
 
 type Match = {
 	word: string;
@@ -43,6 +44,8 @@ type Match = {
 	dir: number;
 	pos: [number, number];
 	savedCoord: number;
+	joker: [number, number];
+	jokerPoses: [number, number];
 };
 
 

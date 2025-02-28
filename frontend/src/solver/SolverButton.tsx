@@ -17,8 +17,6 @@ export default function SolverButton() {
         const sentRack = rack.replace(/\./g, "");
         const payload = { lang: lang, grid: gridNumbers, rack: sentRack };
 
-		console.log(grid);
-
         try {
             const response = await fetch(`http://localhost:8081/solve`, {
                 method: 'POST',
@@ -29,12 +27,14 @@ export default function SolverButton() {
             if (!response.ok) throw new Error('Erreur serveur');
 
             const data = await response.json();
-            const formattedData = data.map((item) => ({
+            const formattedData = data.map((item: any) => ({
                 word: item[0],
                 score: item[1],
                 dir: item[2],
                 pos: item[3],
                 savedCoord: item[4],
+				joker: item[5],
+				jokerPoses: item[6],
             }));
             setLastResults(formattedData);
         } catch (error) {
