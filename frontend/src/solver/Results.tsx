@@ -77,7 +77,6 @@ function Results() {
 						>
 							{({ index, style }) => {
 								const match = lastResults[index];
-								console.log(match.joker);
 								return (
 									<div 
 										key={index} 

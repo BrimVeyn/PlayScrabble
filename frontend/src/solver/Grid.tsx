@@ -48,8 +48,8 @@ function Grid() {
 								const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == index && cursor.cell[1] == letterIndex)) ? true : false;
 								const fClass:string = (letter !== '.') ? "full" : "empty";
 								const gLetter:string = ghostGrid[index][letterIndex];
+								const gClass:string = (gLetter !== '.' && letter === '.') ? "ghost" : "";
 								const hasScore:boolean = (letter !== '.' || gLetter !== '.');
-								const gClass:string = (gLetter !== '.') ? "ghost" : "";
 								const modClass: string = (() => {
 									switch (gridModifiers[index][letterIndex]) {
 										case 1: return "dword";

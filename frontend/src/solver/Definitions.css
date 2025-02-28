@@ -12,7 +12,7 @@
 	justify-content: center;
 	border-top-left-radius: inherit;
 	border-top-right-radius: inherit;
-	background-color: yellow;
+	/*background-color: yellow;*/
 	border-bottom: 2px solid black;
 	align-items: center;
 	font-weight: bold;
@@ -27,7 +27,7 @@
 	border-bottom-right-radius: inherit;
 	justify-content: center;
 	align-items: center;
-	background-color: magenta;
+	/*background-color: magenta;*/
 	color: black;
 }
 

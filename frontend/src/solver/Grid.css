@@ -92,12 +92,15 @@
 
 .ghost {
 	background-color: #6ebd72;
-
 	border: 2px solid black;
 	border-radius: 5px;
 
 	color: #0b0904;
 }
+
+/*.blend {*/
+/*	background-color:#38a87f; */
+/*}*/
 
 .selected {
 	position: absolute;

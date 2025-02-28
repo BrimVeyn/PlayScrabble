@@ -7,7 +7,7 @@ export default function SolverButton() {
     const [loading, setLoading] = useState(false);
 
     const callSolver = async () => {
-        if (![...rack].some(char => letters.includes(char))) return;
+        if (![...rack].some(char => (letters.includes(char) || char == '?'))) return;
         setLoading(true);
 
         const lang = "FR";
