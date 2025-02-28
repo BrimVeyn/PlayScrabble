@@ -17,11 +17,6 @@ pub const App = struct {
     gpa: *Allocator,
 };
 
-const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
-    .thread_safe = true,
-    .safety = true,
-    .retain_metadata = true,
-};
 
 var server_instance: ?*httpz.Server(*App) = null;
 
@@ -68,6 +63,12 @@ fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     }
 }
 
+const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
+    .thread_safe = true,
+    .safety = true,
+    .retain_metadata = true,
+    .stack_trace_frames = 10,
+};
 
 pub fn start() !void {
     var gpa: std.heap.GeneralPurposeAllocator(gpaConfig) = .init;

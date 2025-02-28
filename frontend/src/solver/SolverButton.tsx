@@ -1,63 +1,55 @@
-import { useGrid } from './GridContext';
-import './SolverButton.css'
-
-const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+import { useState } from 'react';
+import { useGrid, letters } from './GridContext';
+import './SolverButton.css';
 
 export default function SolverButton() {
-	const {grid, rack, setLastResults} = useGrid();
+    const { grid, rack, setLastResults } = useGrid();
+    const [loading, setLoading] = useState(false);
 
-	const callSolver = (grid: Array<string>) => {
-		if (![...rack].some(char => letters.includes(char))) 
-			return ;
+    const callSolver = async () => {
+        if (![...rack].some(char => letters.includes(char))) return;
+        setLoading(true);
 
-		const lang = "FR";
-		// Convert grid to Array<number>
-		const gridNumbers = grid.map(row =>
-			row.split('').map(char => (char === '.' ? 0 : char.charCodeAt(0)))
-		);
+        const lang = "FR";
+        const gridNumbers = grid.map(row =>
+            row.split('').map(char => (char === '.' ? 0 : char.charCodeAt(0)))
+        );
+        const sentRack = rack.replace(/\./g, "");
+        const payload = { lang: lang, grid: gridNumbers, rack: sentRack };
 
-		const sentRack = rack.replace(/\./g, "");
-		console.log("BEFORE:", rack, sentRack);
+		console.log(grid);
 
-		const payload = {
-			lang: lang,
-			grid: gridNumbers,
-			rack: sentRack,
-		};
+        try {
+            const response = await fetch(`http://localhost:8081/solve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
 
-		console.log(payload);
+            if (!response.ok) throw new Error('Erreur serveur');
 
-		fetch(`http://localhost:8081/solve`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(payload),
-		})
-		.then(response => response.json())
-		.then(data => {
-			console.log("Response:", data);
-			data = data.map((item) =>({
-				word: item[0],
-				score: item[1],
-				dir: item[2],
-				pos: item[3],
-				savedCoord: item[4],
-			}));
-			setLastResults(data);
-		})
-		.catch(error => console.error('Error calling solver:', error));
-	};
+            const data = await response.json();
+            const formattedData = data.map((item) => ({
+                word: item[0],
+                score: item[1],
+                dir: item[2],
+                pos: item[3],
+                savedCoord: item[4],
+            }));
+            setLastResults(formattedData);
+        } catch (error) {
+            console.error('Error calling solver:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-	return (
-		<>
-			<div className="solverButtonContainer">
-				<button 
-					onClick={() => callSolver(grid)}
-				>
-					Trouver les solutions 
-				</button>
-			</div>
-		</>
-	);
+    return (
+        <div className="solverButtonContainer">
+            <button onClick={callSolver} disabled={loading}>
+                {loading ? "Chargement..." : "Trouver les solutions"}
+            </button>
+        </div>
+    );
 }
+

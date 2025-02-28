@@ -17,6 +17,23 @@ export const emptyGrid: Array<string> = [
 	"...............",
 	"...............",
 ];
+export const testGrid: Array<string> = [
+  ".......D...H...",
+  "....VOTENT.U...",
+  ".....RECU..M...",
+  ".......H...I...",
+  ".......U...DORT",
+  ".....E.ET.DE...",
+  ".E...M..R.E....",
+  "ENFILERAI.P....",
+  "P.L..R..A.EN...",
+  "ANALOGUE..CI...",
+  "I.I..E....H...E",
+  "S.R..SALOPERIES",
+  "S.E.......R...T",
+  "E.........A...E",
+  "..........I...R"
+];
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
@@ -60,7 +77,7 @@ export const useGrid = () => {
 
 // Context provider component
 export const GridProvider = ({ children }: { children: ReactNode }) => {
-	const [grid, setGrid] = useState<Array<string>>(emptyGrid);
+	const [grid, setGrid] = useState<Array<string>>(testGrid);
 	const [ghostGrid, setGhostGrid] = useState<Array<string>>(emptyGrid);
 	const [rack, setRack] = useState<string>(".......");
 	const [cursor, setCursor] = useState<{ctx: string, cell: [number, number]} | null>(null);
@@ -73,7 +90,6 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 		const [row, col] = cursor.cell;
 
 		if (letters.includes(e.key)) {
-			setLastResults(null);
 			setGhostGrid(emptyGrid);
 			setCursor((prev) => {
 				if (!prev) return prev;
@@ -100,9 +116,10 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 		
 		if (e.code == "Space") {
 			if (cursor.ctx !== "rack") return;
+
 			const jokerCount = rack.split("?").length - 1;
-			if (jokerCount == 2) return ;
-			setLastResults(null);
+			if (jokerCount >= 2) return ;
+
 			setGhostGrid(emptyGrid);
 			setCursor((prev) => {
 				if (!prev) return null;
@@ -115,20 +132,21 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 				}
 				return prev;
 			});
+			return ;
 		}
 
 		switch (e.key) {
 			case "Backspace":
-				setLastResults(null);
-				setGhostGrid(emptyGrid);
 				setCursor((prev) => {
 					if (!prev) return prev;
-					(prev.ctx === "grid") && setGrid((prevGrid) => {
+					(prev.ctx === "grid" && grid[row][col] !== '.') && setGrid((prevGrid) => {
+						setGhostGrid(emptyGrid);
 						const newGrid = [...prevGrid];
 						newGrid[row] = newGrid[row].substring(0, col) + "." + newGrid[row].substring(col + 1);
 						return newGrid;
 					});
-					(prev.ctx === "rack") && setRack(() => {
+					(prev.ctx === "rack" && rack[0][col] !== '.') && setRack(() => {
+						setGhostGrid(emptyGrid);
 						const newRack = rack.substring(0, col) + "." + rack.substring(col + 1);
 						return newRack;
 					});
