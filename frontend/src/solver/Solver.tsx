@@ -6,21 +6,25 @@ import Definitions from "./Definitions.tsx";
 import ResetButton from "./ResetButton.tsx";
 
 import "./Solver.css"
+import Navbar from "../navbar/Navbar.tsx";
 
 function Solver() {
 	return (
-		<div className="solverContainer">
-			<GridProvider>
-				<div className="contextContainer">
-					<Grid/>
-					<Rack/>
-					<ResetButton/>
-				</div>
-				<div className="resultContainer">
-					<Results/>
-					<Definitions/>
-				</div>
-			</GridProvider>
+		<div className="solverPage">
+			<Navbar/>
+			<div className="solverContainer">
+				<GridProvider>
+					<div className="contextContainer">
+						<Grid/>
+						<Rack/>
+						<ResetButton/>
+					</div>
+					<div className="resultContainer">
+						<Results/>
+						<Definitions/>
+					</div>
+				</GridProvider>
+			</div>
 		</div>
 	)
 }

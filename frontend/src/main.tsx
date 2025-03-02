@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from 'react-router'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 
 import NotFound from './404/NotFound.tsx'
 import Solver from './solver/Solver.tsx'
@@ -12,7 +12,10 @@ createRoot(document.getElementById('root')!).render(
 		<BrowserRouter>
 			<Routes>
 				<Route path="/" element={<Solver />} />
-				<Route path="*" element={<NotFound />} />
+				<Route path="/404" element={<NotFound />} />
+				<Route path="*" element={<Navigate to="/404" />} />
+			</Routes>
+			<Routes>
 			</Routes>
 		</BrowserRouter>
   </StrictMode>,

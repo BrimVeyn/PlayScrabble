@@ -1,0 +1,32 @@
+.navbarContainer {
+	display: flex;
+	flex-direction: row;
+	width: 100vw;
+	height: 5%;
+	background-color: red;
+	padding-inline: 10px;
+}
+
+.logo {
+	width: 20%;
+	height: 100%;
+	display: flex;
+	justify-content: start;
+	align-items: center;
+}
+
+.logo > * {
+	padding-left: 20px;
+}
+
+.links {
+	width: 80%;
+	height: 100%;
+	display: flex;
+	justify-content: end;
+	align-items: center;
+}
+
+.links > * {
+	padding-right: 20px;
+}
