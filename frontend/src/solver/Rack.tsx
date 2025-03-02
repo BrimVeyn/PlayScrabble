@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useGrid, letterScore } from "./GridContext";
-import "./Rack.css"
-import "./Grid.css"
+import "./styles/Rack.css"
+import "./styles/Grid.css"
 
 export default function Rack() {
 	const {rack, cursor, setCursor, setDirection, handleKeyDown} = useGrid();

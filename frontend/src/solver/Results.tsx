@@ -1,9 +1,12 @@
 import SolverButton from "./SolverButton";
-import { useGrid, emptyGrid } from "./GridContext";
 import { FixedSizeList as List } from "react-window";
-
-import "./Results.css"
+import { useGrid, emptyGrid } from "./GridContext";
 import { useEffect, useState } from "react";
+import { FaSortAlphaDown, FaSortNumericDownAlt } from "react-icons/fa";
+import { GrDirections } from "react-icons/gr";
+import { MdOutlineQuestionMark } from "react-icons/md";
+
+import "./styles/Results.css"
 
 function Results() {
 	const {rack, grid, setGhostGrid, lastResults, setLastResults} = useGrid();
@@ -62,10 +65,10 @@ function Results() {
 		<div className="resContainer">
 			<div className="resTable">
 				<div className="resHead">
-					<p onClick={() => setSortWay("word")}>Word</p>
-					<p onClick={() => setSortWay("score")}>Score</p>
-					<p>Orientation</p>
-					<p>Joker</p>
+					<p onClick={() => setSortWay("word")}>Word<FaSortAlphaDown /></p>
+					<p onClick={() => setSortWay("score")}>Score<FaSortNumericDownAlt/></p>
+					<p>Orientation<GrDirections/></p>
+					<p>Joker<MdOutlineQuestionMark/></p>
 				</div>
 				<div className="resBody" onMouseLeave={() => setGhostGrid(emptyGrid)}>
 					{lastResults ? (

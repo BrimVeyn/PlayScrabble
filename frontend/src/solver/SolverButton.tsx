@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGrid, letters } from './GridContext';
-import './SolverButton.css';
+import './styles/SolverButton.css';
 
 export default function SolverButton() {
     const { grid, rack, setLastResults } = useGrid();

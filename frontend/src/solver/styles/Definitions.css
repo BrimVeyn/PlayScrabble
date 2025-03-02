@@ -2,7 +2,7 @@
 	background-color: #f9f6f0;
 	border-radius: 10px;
 	height: 200px;
-	box-shadow:	0px 0px 10px 0px #a1aea5;
+	box-shadow:	var(--container-shadow)
 }
 
 .defHeader {
@@ -13,10 +13,10 @@
 	border-top-left-radius: inherit;
 	border-top-right-radius: inherit;
 	/*background-color: yellow;*/
-	border-bottom: 2px solid black;
+	border-bottom: 2px solid var(--app-black);
 	align-items: center;
 	font-weight: bold;
-	color: black;
+	color: var(--app-black);
 }
 
 .defContent {
@@ -27,7 +27,6 @@
 	border-bottom-right-radius: inherit;
 	justify-content: center;
 	align-items: center;
-	/*background-color: magenta;*/
-	color: black;
+	color: var(--app-black);
 }
 

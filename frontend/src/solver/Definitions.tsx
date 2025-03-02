@@ -1,4 +1,4 @@
-import './Definitions.css'
+import './styles/Definitions.css'
 
 export default function Definitions() {
 	return (

@@ -1,4 +1,4 @@
-import "./ResetButton.css"
+import "./styles/ResetButton.css"
 import { emptyGrid, useGrid } from "./GridContext"
 
 export default function ResetButton() {

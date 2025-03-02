@@ -1,16 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+	line-height: 1.5;
+	font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #2f4858; 
+	color-scheme: light dark;
+	color: rgba(255, 255, 255, 0.87);
+	background-color: #2f4858; 
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+
+
+	--row-background: #f9f6f0;
+	--container-shadow: 0px 0px 10px 0px #a1aea5;
+	--container-bg-color: #f9f6f0;
+	--ghost-color: #6ebd72;
+	--result-violet: #845ec2;
+	--grid-border-color: #e8ddc0;
+	--tile-full-bg: #2F9C95;
+	--app-black: #0b0904;
 }

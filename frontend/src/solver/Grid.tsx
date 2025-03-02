@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useGrid, letterScore } from './GridContext'
-import "./Grid.css"
+import "./styles/Grid.css"
 
 //NOTE: modifier Values: 
 // 0 None
@@ -59,13 +59,24 @@ function Grid() {
 										default: return ""; // Provide a default return value
 									}
 								})();
+								const modText: string = (() => {
+									switch(gridModifiers[index][letterIndex]) {
+										case 1: return "MD";
+										case 2: return "MT";
+										case 3: return "LT";
+										case 4: return "LD";
+										default: return "";
+									}
+								})();
 								return (
 									<div 
 										className="s-grid-cell" 
 										key={letterIndex}
 										onClick={() => setCursor({ctx: "grid", cell: [index, letterIndex]})}
 									> 
-										<p key={index * letterIndex} className={`s-grid-tile-modifier ${modClass}`}></p>
+										<p key={index * letterIndex} className={`s-grid-tile-modifier ${modClass}`}>
+											<p className="s-grid-tile-modifier-text"> {modText} </p>
+										</p>
 										<p className={`s-grid-tile ${fClass} ${gClass}`}>
 											{(letter == '.') ? (gLetter == '.') ? '' : gLetter : letter} 
 										</p>

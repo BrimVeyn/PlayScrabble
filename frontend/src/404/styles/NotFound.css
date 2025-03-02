@@ -1,0 +1,28 @@
+.notFoundContainer {
+	display: flex;
+	flex-direction: column;
+	width: 100vw;
+	min-height: 100vh;
+	padding: 4rem;
+	gap: 15px;
+	justify-content: start;
+	align-items: center;
+}
+
+.notFoundContainer .s-grid-cell {
+	width: 80px;
+	height: 80px;
+	border-width: 3px;
+}
+
+.notFoundContainer .full {
+	font-size: 50px;
+}
+
+.notFoundContainer .score {
+	font-size: 23px;
+}
+
+.notFoundContainer .full {
+	background-color: #EE7B30;
+}

@@ -5,7 +5,7 @@
 	display: flex;
 	flex-flow: row no-wrap;
 	background-color: #f9f6f0;
-	box-shadow:	0px 0px 10px 0px #a1aea5;
+	box-shadow:	var(--container-shadow)
 }
 
 .rackContainer .s-grid-cell {
