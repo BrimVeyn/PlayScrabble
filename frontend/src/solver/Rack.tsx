@@ -1,10 +1,12 @@
 import { useEffect } from "react";
-import { useGrid, letterScore } from "./GridContext";
+import { useGrid } from "./GridContext";
 import "./styles/Rack.css"
 import "./styles/Grid.css"
+import { useTranslation } from "react-i18next";
 
 export default function Rack() {
 	const {rack, cursor, setCursor, setDirection, handleKeyDown} = useGrid();
+	const {t} = useTranslation("letterScore");
 
 	useEffect(() => {
 		window.addEventListener('keydown', handleKeyDown);
@@ -33,7 +35,7 @@ export default function Rack() {
 						{ isSelected && <p className="selected"></p> }
 						{ hasScore && 
 							<p className="score">
-								{letterScore[letter.charCodeAt(0) - 65]}
+								{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}
 							</p>
 						}
 					</div>

@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { useGrid, letters } from './GridContext';
 import './styles/SolverButton.css';
+import { useTranslation } from 'react-i18next';
 
 export default function SolverButton() {
     const { grid, rack, setLastResults } = useGrid();
+	const {t} = useTranslation("solver");
     const [loading, setLoading] = useState(false);
 
     const callSolver = async () => {
         if (![...rack].some(char => (letters.includes(char) || char == '?'))) return;
         setLoading(true);
 
-        const lang = "FR";
+        const lang = "FR"; //TODO: dynamically get locale
         const gridNumbers = grid.map(row =>
             row.split('').map(char => (char === '.' ? 0 : char.charCodeAt(0)))
         );
@@ -47,7 +49,7 @@ export default function SolverButton() {
     return (
         <div className="solverButtonContainer">
             <button onClick={callSolver} disabled={loading}>
-                {loading ? "Chargement..." : "Trouver les solutions"}
+                {loading ? t("resButtonLoading") : t("resButtonText")}
             </button>
         </div>
     );

@@ -8,6 +8,7 @@ import { MdOutlineQuestionMark } from "react-icons/md";
 import { TiSortAlphabetically, TiSortNumerically } from "react-icons/ti";
 
 import "./styles/Results.css"
+import { useTranslation } from "react-i18next";
 
 function toggleAscii(sortWay: string | null, setSortWay: (value: any) => void) {
     if (sortWay === "ascii-asc") setSortWay("ascii-des");
@@ -21,6 +22,7 @@ function toggleScore(sortWay: string | null, setSortWay: (value: any) => void) {
 
 function Results() {
 	const {rack, grid, setGhostGrid, lastResults, setLastResults} = useGrid();
+	const {t} = useTranslation("solver");
 	const [sortWay, setSortWay] = useState<"ascii-asc" |"ascii-des" | "score-asc" | "score-des" | null>(null);
 
 	useEffect(() => {
@@ -75,23 +77,23 @@ function Results() {
 			<div className="resTable">
 				<div className="resHead">
 					<div className="resHeadItem" onClick={() => toggleAscii(sortWay, setSortWay)}>
-						<p>Mot</p>
+						<p>{t("resTableWord")}</p>
 						{ sortWay === "ascii-asc" && <FaSortAlphaDown />
 						|| sortWay === "ascii-des" && <FaSortAlphaUpAlt />
 						|| <TiSortAlphabetically/>}
 					</div>
 					<div className="resHeadItem" onClick={() => toggleScore(sortWay, setSortWay)}>
-						<p>Score</p>
+						<p>{t("resTableScore")}</p>
 						{ sortWay === "score-asc" && <FaSortNumericDown />
 						|| sortWay === "score-des" && <FaSortNumericUpAlt />
 						|| <TiSortNumerically/>}
 					</div>
 					<div className="resHeadItem">
-						<p>Direction</p>
+						<p>{t("resTableDir")}</p>
 						<GrDirections/>
 					</div>
 					<div className="resHeadItem">
-						<p>Joker</p>
+						<p>{t("resTableJoker")}</p>
 						<MdOutlineQuestionMark/>
 					</div>
 				</div>
@@ -114,7 +116,7 @@ function Results() {
 									> 
 										<p> {match.word} </p>
 										<p> {match.score} </p>
-										<p> {match.dir == 0 ? "Verticale" : "Horizontale"} </p>
+										<p> {match.dir == 0 ? t("resRowVert") : t("resRowHor")} </p>
 										<p> {match.joker ? 
 											match.joker.filter(n => n != 0).length
 											: 0 } 

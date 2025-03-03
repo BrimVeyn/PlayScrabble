@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./Navbar.css"
+import { useTranslation } from "react-i18next";
 
 function loginButton () {
 	const [loginShown, setLoginShown] = useState<boolean>(false);
@@ -19,15 +20,17 @@ function loginButton () {
 }
 
 function Navbar() {
+	const { t } = useTranslation("navbar");
+
 	return (
 		<div className="navbarContainer">
 			<div className="logo">
 				<h1>Logo</h1>
 			</div>
 			<div className="links">
-				<p>Page d'acceuil</p>
-				<p>Classement</p>
-				<p>Se connecter</p>
+				<p>{t("home")}</p>
+				<p>{t("leaderboard")}</p>
+				<p>{t("login")}</p>
 			</div>
 		</div>
 	);

@@ -1,9 +1,5 @@
 .s-grid {
-	max-width: 100%;
-	max-height: 100%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+	display: grid;
 	box-shadow:	var(--container-shadow)
 }
 
@@ -30,6 +26,7 @@
 }
 
 .s-grid-tile-modifier-text {
+	z-index: 1;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -52,14 +49,14 @@
 	border-radius: 10px;
 }
 
-.dletter {
+.tletter {
 	background-color: #49516F;
 	width: 80%;
 	height: 80%;
 	border-radius: 10px;
 }
 
-.tletter {
+.dletter {
 	background-color: #8093C6;
 	width: 80%;
 	height: 80%;

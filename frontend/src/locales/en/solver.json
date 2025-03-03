@@ -1,0 +1,16 @@
+{
+	"tword": "TW",
+	"dword": "DW",
+	"dletter": "DL",
+	"tletter": "TL",
+	"resTableWord": "Word",
+	"resTableScore": "Score",
+	"resTableDir": "Direction",
+	"resTableJoker": "Joker",
+	"resButtonText": "Find solutions",
+	"resRowVert": "Vertical",
+	"resRowHor": "Horizontal",
+	"resButtonLoading": "Loading...",
+	"defTableHead": "Definition",
+	"defTableEmpty": "Nothing to show yet"
+}

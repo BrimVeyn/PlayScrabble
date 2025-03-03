@@ -1,13 +1,14 @@
 import "../solver/styles/Grid.css"
 import "./styles/NotFound.css"
-import { letterScore } from "../solver/GridContext"
+import { useTranslation } from "react-i18next"
 
-function Text({index, letter}) {
+function Text({index, letter}: any) {
+	const {t} = useTranslation("letterScore");
 	return (
-		<div className="s-grid-cell">
+		<div key={index * letter.charCodeAt(0)} className="s-grid-cell">
 			<p className="s-grid-tile full s-grid-row" key={index}> {letter} </p>
 			<p className="score"> 
-				{letterScore[letter.charCodeAt(0) - 65]} 
+				{t("letterScore").split(",")[letter.charCodeAt(0) - 65]} 
 			</p>
 		</div>
 	)

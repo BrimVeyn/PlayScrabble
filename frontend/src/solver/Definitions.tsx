@@ -1,13 +1,16 @@
+import { useTranslation } from 'react-i18next';
 import './styles/Definitions.css'
 
 export default function Definitions() {
+	const {t} = useTranslation("solver");
+
 	return (
 		<div className="defContainer">
 			<div className="defHeader">
-				<p> Definition </p>
+				<p>{t("defTableHead")}</p>
 			</div>
 			<div className="defContent">
-				<p> Pas de definition a afficher </p>
+				<p>{t("defTableEmpty")}</p>
 			</div>
 		</div>
 	);

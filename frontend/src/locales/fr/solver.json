@@ -1,0 +1,16 @@
+{
+	"tword": "MT",
+	"dword": "MD",
+	"dletter": "LD",
+	"tletter": "LT",
+	"resTableWord": "Mot",
+	"resTableScore": "Score",
+	"resTableDir": "Direction",
+	"resTableJoker": "Joker",
+	"resRowVert": "Verticale",
+	"resRowHor": "Horizontale",
+	"resButtonText": "Trouver les solutions",
+	"resButtonLoading": "Chargement...",
+	"defTableHead": "Definition",
+	"defTableEmpty": "Pas de definition a afficher"
+}
