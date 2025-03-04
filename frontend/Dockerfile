@@ -2,34 +2,43 @@
 FROM node:20 AS build
 WORKDIR /app
 
-RUN npm install -g pnpm
+# Copy package.json and package-lock.json before installing dependencies
+COPY package.json package-lock.json ./
 
-COPY package.json pnpm-lock.yaml ./
+RUN npm ci
 
-RUN pnpm install
+# Copy the entire app and build
 COPY . .
-RUN pnpm build
 #------------------------------------------------------------------
 
 #------------------------------------------------------------------
-FROM build AS dev
+FROM node:20 AS dev
+WORKDIR /app
 
-EXPOSE 4430
+# Use cached dependencies from the build stage
+COPY --from=build /app/node_modules ./node_modules
+COPY . .
 
-CMD ["pnpm", "dev", "--host"]
+EXPOSE 5173
+
+CMD ["npm", "run", "dev"]
 #------------------------------------------------------------------
 
 #------------------------------------------------------------------
 FROM nginx:latest AS prod
+
+RUN npm run build
 
 WORKDIR /usr/share/nginx/html
 
 RUN rm -rf ./*
 COPY --from=build /app/build .
 
+# Copy Nginx config
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 4430
 
 CMD ["nginx", "-g", "daemon off;"]
 #------------------------------------------------------------------
+

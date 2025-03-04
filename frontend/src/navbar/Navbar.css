@@ -3,7 +3,7 @@
 	flex-direction: row;
 	width: 100vw;
 	height: 5%;
-	background-color: red;
+	background-color: var(--color-navbar-background);
 	padding-inline: 10px;
 }
 

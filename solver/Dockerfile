@@ -29,22 +29,10 @@ COPY . .
 FROM zig-master AS prod
 WORKDIR /app
 
-COPY --from=zig-master /app/zig-out/bin/backend /app/backend
+COPY --from=zig-master /app/zig-out/bin/solver /app/solver
 RUN zig build -Doptimize=ReleaseFast
 
-EXPOSE 8080
+EXPOSE 8081
 
-CMD ["/app/backend"]
-#------------------------------------------------------------------
-
-#------------------------------------------------------------------
-FROM zig-master AS dev
-WORKDIR /app
-
-RUN rm -rf .zig-cache/
-RUN zig build
-
-EXPOSE 8080
-
-CMD ["./watch.sh"]
+CMD ["./zig-out/bin/solver"]
 #------------------------------------------------------------------

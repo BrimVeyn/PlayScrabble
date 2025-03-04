@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15
@@ -15,6 +13,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     networks:
       - app_network
+      - proxy
 
   backend:
     build: 
@@ -27,11 +26,23 @@ services:
     environment:
       DATABASE_URL: postgresql://test:test@postgres:5432/db
       JWT_SECRET: p0jrMzCSas7yxiE8vu5BQ92TVk5ucEdQjF1kXfzdYl5XXe6JMDUIxeoWLuegKiiAcAYvoekGIFdzATZnNT_A0Q
-
     ports:
       - "8080:8080"
     networks:
       - app_network
+      - proxy
+
+  solver:
+    build:
+      context: ./solver
+      target: prod
+    container_name: zig_solver
+    restart: always
+    ports:
+      - "8081:8081"
+    networks:
+        - app_network
+        - proxy
 
   frontend:
     build: 
@@ -42,9 +53,18 @@ services:
     depends_on:
       - backend
     ports:
-      - "4430:4430"
+      - "5173:5173"
     networks:
-      - app_network
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vite.rule=Host(`scrabble.brimveyn.dev`)"
+      - "traefik.http.services.vite.loadbalancer.server.port=5173"
+      - "traefik.http.routers.vite.entrypoints=http"
+      - "traefik.http.routers.vite-secure.entrypoints=https"
+      - "traefik.http.routers.vite-secure.rule=Host(`scrabble.brimveyn.dev`)"
+      - "traefik.http.routers.vite-secure.tls=true"
+      - "traefik.http.routers.vite-secure.tls.certresolver=cloudflare"
 
 volumes:
   pgdata:
@@ -52,4 +72,6 @@ volumes:
 networks:
   app_network:
     driver: bridge
+  proxy:
+    external: true
 

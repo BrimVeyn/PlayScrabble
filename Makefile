@@ -1,5 +1,7 @@
 dev:
-	docker-compose -f docker-compose.yml -f docker-compose-dev.yml up --build
+	sudo docker compose -f docker-compose.yml -f docker-compose-dev.yml up --build
+dev-daemon:
+	sudo docker compose -f docker-compose.yml -f docker-compose-dev.yml up --build -d
 dev-no-cache:
 	docker-compose -f docker-compose.yml -f docker-compose-dev.yml up --build --no-cache
 prod:

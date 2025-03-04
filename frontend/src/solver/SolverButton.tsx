@@ -20,7 +20,7 @@ export default function SolverButton() {
         const payload = { lang: lang, grid: gridNumbers, rack: sentRack };
 
         try {
-            const response = await fetch(`http://localhost:8081/solve`, {
+            const response = await fetch(`https://scrabble.brimveyn.dev/solver/solve`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

@@ -1,18 +1,19 @@
 import { defineConfig } from 'vite'
-import tailwindcss	from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
 	plugins: [
 		react(),
-		tailwindcss()
 	],
 	build: {
 		outDir: "build",
 	},
 	server: {
-		port: 4430,
+		host: "0.0.0.0", // Allows access from Docker
+		port: 5173,
+		strictPort: true,
+		allowedHosts: ["scrabble.brimveyn.dev"],
 		headers: {
 			'Access-Control-Allow-Origin': '*',
 			'Access-Control-Allow-Methods': '*',
@@ -20,9 +21,12 @@ export default defineConfig({
 		},
 		proxy: {
 			'/api': {
-				target: 'http://localhost:8080', // Backend server
-				changeOrigin: true,
-				rewrite: path => path.replace(/^\/api/, ''), // Optional URL rewrite
+				target: 'http://zig_backend:8080', // Backend server
+				//changeOrigin: true,
+			},
+			'/solver': {
+				target: 'http://zig_solver:8081', // Backend server
+				//changeOrigin: true,
 			},
 		},
 	},

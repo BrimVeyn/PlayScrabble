@@ -70,6 +70,10 @@ const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
     .stack_trace_frames = 10,
 };
 
+pub const std_options = std.Options {
+    .log_level = .info,
+};
+
 pub fn start() !void {
     var gpa: std.heap.GeneralPurposeAllocator(gpaConfig) = .init;
     var gpaAlloc = gpa.allocator();
@@ -99,7 +103,7 @@ pub fn start() !void {
     });
 
     var router = server.router(.{.middlewares = &.{cors}});
-    router.post("/solve", solve, .{});
+    router.post("/solver/solve", solve, .{});
 
     log.info("Solver listening http://{s}:{d}/", .{"0.0.0.0", PORT});
 
