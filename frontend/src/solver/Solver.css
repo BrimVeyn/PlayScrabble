@@ -1,7 +1,6 @@
 .solverPage {
 	height: 100vh;
 	width: 100vw;
-	overflow: hidden;
 }
 
 .solverContainer {
@@ -33,7 +32,13 @@
 	width: 100%;
 }
 
-@media(max-width: 1000px) {
+.rackOuterContainer {
+	display: flex;
+	flex-direction: row;
+	gap: 50px;
+}
+
+@media(max-width: 768px) {
 	
 	.solverPage {
 		overflow: initial;
@@ -47,6 +52,8 @@
 
 	.contextContainer {
 		width: 100%;
+		padding: 0;
+		padding-top: 2rem;
 	}
 
 	.resultContainer {

@@ -1,35 +1,6 @@
-//import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 import "./Navbar.css"
-
-const TestButton = () => {
-  const handleClick = async () => {
-    try {
-      const response = await fetch('https://scrabble.brimveyn.dev/api/getUsers', {
-        method: 'GET', // or 'POST' depending on your backend setup
-        headers: {
-          'Content-Type': 'application/json',
-          // Add any other headers you might need (e.g., Authorization)
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-      console.log('Response from backend:', data);
-      alert('Backend is connected!');
-    } catch (error) {
-      console.error('There was a problem with the fetch operation:', error);
-      alert('Error connecting to the backend!');
-    }
-  };
-
-  return (
-    <button onClick={handleClick}>Test Backend Connection</button>
-  );
-};
 
 //function loginButton () {
 //	const [loginShown, setLoginShown] = useState<boolean>(false);
@@ -48,22 +19,51 @@ const TestButton = () => {
 //	)
 //}
 
+
+const languages: { [id: string] : string; } = {
+	fr: "🇫🇷",
+	en: "🇬🇧",
+};
+
 function Navbar() {
-	const { t } = useTranslation("navbar");
+	const { t, i18n } = useTranslation("navbar");
+	const [isOpen, setIsOpen] = useState<boolean>(false);
+	
+	const langKeys = Object.keys(languages);
 
 	return (
+		<>
 		<div className="navbarContainer">
 			<div className="logo">
 				<h1>Logo</h1>
-				<TestButton/>
 			</div>
 			<div className="links">
 				<p>{t("home")}</p>
 				<p>{t("leaderboard")}</p>
 				<p>{t("login")}</p>
+				<button
+					className="flag"
+					onClick={() => setIsOpen((prev) => !prev)}
+				>{t("flagEmoji", {ns: "misc"})}</button>
 			</div>
 		</div>
+		{ isOpen && (
+			<div className="langDropContainer">
+				<div className="langDropItems">
+				{ langKeys.map((lang: string) => (
+					<p 
+						key={lang}
+						onClick={() => i18n.changeLanguage(lang)}
+					> 
+						{lang.toUpperCase()} - {languages[lang]}
+					</p>
+				))}
+				</div>
+			</div>
+		)}
+		</>
 	);
+
 }
 
 export default Navbar;

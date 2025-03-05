@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
 export const emptyGrid: Array<string> = [
 	"...............",
@@ -47,28 +47,28 @@ type Match = {
 	jokerPoses: [number, number];
 };
 
+type Cursor = {
+	ctx: "grid" | "rack";
+	cell: [number, number];
+	direction: "right" | "down";
+};
 
-// Define the context type
 interface GridContextType {
 	grid: Array<string>;
-	setGrid: (grid: Array<string>) => void;
+	setGrid: React.Dispatch<React.SetStateAction<Array<string>>>;
 	ghostGrid: Array<string>;
-	setGhostGrid: (ghostGrid: Array<string>) => void;
+	setGhostGrid: React.Dispatch<React.SetStateAction<Array<string>>>;
 	rack: string;
-	setRack: (rack: string) => void;
-	cursor: {ctx: string, cell: [number, number]} | null;
-	setCursor: (cursor: {ctx: string, cell: [number, number]} | null) => void;
-	direction: string;
-	setDirection: (direction: string) => void;
+	setRack: React.Dispatch<React.SetStateAction<string>>;
+	cursor: Cursor | null;
+	setCursor: React.Dispatch<React.SetStateAction<Cursor | null>>;
 	lastResults: Array<Match> | null
-	setLastResults: (results: Array<Match> | null) => void;
+	setLastResults: React.Dispatch<React.SetStateAction<Array<Match> | null>>;
 	handleKeyDown: (e: KeyboardEvent) => void;
 }
 
-// Create the context with default values (to avoid errors before provider mounts)
 const GridContext = createContext<GridContextType | undefined>(undefined);
 
-// Custom hook to use the context
 export const useGrid = () => {
 	const context = useContext(GridContext);
 	if (!context) {
@@ -82,8 +82,7 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 	const [grid, setGrid] = useState<Array<string>>(testGrid);
 	const [ghostGrid, setGhostGrid] = useState<Array<string>>(emptyGrid);
 	const [rack, setRack] = useState<string>(".......");
-	const [cursor, setCursor] = useState<{ctx: string, cell: [number, number]} | null>(null);
-	const [direction, setDirection] = useState<string>("right");
+	const [cursor, setCursor] = useState<Cursor | null>(null);
 	const [lastResults, setLastResults] = useState<Array<Match> | null>(null);
 
 	const handleKeyDown = (e: KeyboardEvent) => {
@@ -105,11 +104,11 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 					return newRack;
 				});
 				if (prev.ctx === "rack" && col < rack.length - 1) {
-					return { ctx: prev.ctx, cell: [row, col + 1] };
-				} else if (prev.ctx === "grid" && direction === "right" && col < grid[row].length - 1) {
-					return { ctx: prev.ctx, cell: [row, col + 1] };
-				} else if (prev.ctx === "grid" && direction === "down" && row < grid.length - 1) {
-					return { ctx: prev.ctx, cell: [row + 1, col] };
+					return { ...prev, cell: [row, col + 1] };
+				} else if (prev.ctx === "grid" && prev.direction === "right" && col < grid[row].length - 1) {
+					return { ...prev, cell: [row, col + 1] };
+				} else if (prev.ctx === "grid" && prev.direction === "down" && row < grid.length - 1) {
+					return { ...prev, cell: [row + 1, col] };
 				}
 				return prev;
 			});
@@ -130,7 +129,7 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 					return newRack;
 				});
 				if (prev.ctx === "rack" && col < rack.length - 1) {
-					return { ctx: prev.ctx, cell: [row, col + 1] };
+					return { ...prev, cell: [row, col + 1] };
 				}
 				return prev;
 			});
@@ -152,50 +151,46 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 						const newRack = rack.substring(0, col) + "." + rack.substring(col + 1);
 						return newRack;
 					});
-					if (direction === "right" && col > 0) return { ctx: prev.ctx, cell: [row, col - 1] };
-					else if (direction === "down" && row > 0) return { ctx: prev.ctx, cell: [row - 1, col] };
+					if (prev.direction === "right" && col > 0) return { ...prev, cell: [row, col - 1] };
+					else if (prev.direction === "down" && row > 0) return { ...prev, cell: [row - 1, col] };
 					return prev;
 				});
 				break;
 			case "ArrowDown":
-				(cursor.ctx === "grid") && setDirection((prev) => {
-					if (prev === "right") return "down";
-					if (row < grid.length - 1) setCursor((prev) => {
-						if (!prev) return prev;
-						return { ctx: prev.ctx, cell: [row + 1, col] };
-					});
+				e.preventDefault();
+				setCursor((prev) => {
+					if (!prev) return prev;
+					if (prev.ctx === "grid") {
+						if (prev.direction === "right") return {...prev, direction: "down"};
+						if (row < grid.length - 1) return { ...prev, cell: [row + 1, col] };
+					}
 					return prev;
 				});
 				break;
 			case "ArrowRight":
-				setDirection((prev) => {
-					if (prev === "down") return "right";
-					if (cursor.ctx == "rack") {
-						setCursor((prevC) => {
-							if (!prevC) return prevC;
-							if (col < rack.length - 1) return { ctx: prevC.ctx, cell: [0, col + 1]};
-							return prevC;
-						});
-					} else if (col < grid[row].length - 1) setCursor((prevC) => {
-						if (!prevC) return prevC;
-						return { ctx: prevC.ctx, cell: [row, col + 1] };
-					});
+				setCursor((prev) => {
+					if (!prev)  return prev;
+					if (prev.direction === "down") return {...prev, direction: "right"};
+					if (col < grid.length - 1) return {...prev, cell: [row, col + 1] };
 					return prev;
 				});
 				break;
 			case "ArrowLeft":
-				if (col > 0) setCursor((prev) => {
+				setCursor((prev) => {
 					if (!prev) return prev;
-					return { ctx: prev.ctx, cell: [row, col - 1] }
+					if (prev.cell[1] > 0)
+						return { ...prev, cell: [row, col - 1], direction: "right" }
+					return { ...prev, direction: "right" }
 				});
-				setDirection("right");
 				break;
 			case "ArrowUp":
-				if (row > 0) setCursor((prev) => {
+				e.preventDefault();
+				setCursor((prev) => {
 					if (!prev) return prev;
-					return { ctx: prev.ctx, cell: [row - 1, col] }
+					if (prev.cell[0] > 0)
+						return { ...prev, cell: [row - 1, col], direction: "down" }
+					return {...prev, direction: "down"};
 				});
-				setDirection("down");
 				break;
 			default: break;
 		}
@@ -209,8 +204,6 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 			setRack,
 			cursor,
 			setCursor,
-			direction,
-			setDirection,
 			lastResults,
 			ghostGrid,
 			setGhostGrid,

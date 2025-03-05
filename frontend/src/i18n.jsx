@@ -5,10 +5,12 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import navbarEn from "./locales/en/navbar.json"
 import solverEn from "./locales/en/solver.json"
 import letterEn from "./locales/en/letterScore.json"
+import miscEn from "./locales/en/misc.json"
 
 import navbarFr from "./locales/fr/navbar.json"
 import solverFr from "./locales/fr/solver.json"
 import letterFr from "./locales/fr/letterScore.json"
+import miscFr from "./locales/fr/misc.json"
 
 i18n
 	.use(initReactI18next) 
@@ -18,12 +20,14 @@ i18n
 			en: {
 				navbar: navbarEn,
 				solver: solverEn,
-				letterScore: letterEn
+				letterScore: letterEn,
+				misc: miscEn
 			},
 			fr: {
 				navbar: navbarFr,
 				solver: solverFr,
-				letterScore: letterFr
+				letterScore: letterFr,
+				misc: miscFr
 			},
 		},
 		detection: {

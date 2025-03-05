@@ -7,10 +7,12 @@
 	"resTableScore": "Score",
 	"resTableDir": "Direction",
 	"resTableJoker": "Joker",
+	"resButtonText": "Trouver les solutions",
 	"resRowVert": "Verticale",
 	"resRowHor": "Horizontale",
-	"resButtonText": "Trouver les solutions",
 	"resButtonLoading": "Chargement...",
 	"defTableHead": "Definition",
-	"defTableEmpty": "Pas de definition a afficher"
+	"defTableEmpty": "Pas de definition a afficher",
+	"rackErrorMessage": "⚠️  Votre main ne peut contenir que 7 lettres.",
+	"resetButtonTooltip": "Effacer la grille"
 }

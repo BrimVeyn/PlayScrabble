@@ -12,5 +12,7 @@
 	"resRowHor": "Horizontal",
 	"resButtonLoading": "Loading...",
 	"defTableHead": "Definition",
-	"defTableEmpty": "Nothing to show yet"
+	"defTableEmpty": "Nothing to show yet",
+	"rackErrorMessage": "⚠️  Your rack can not contain more than 7 letters.",
+	"resetButtonTooltip": "Reset grid"
 }

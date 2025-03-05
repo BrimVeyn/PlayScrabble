@@ -5,24 +5,31 @@
 
 .s-grid-row {
 	display: flex;
-	background-color: var(--row-background)
+	background-color: var(--row-background);
+	width: 40vw;
+	height: calc(40vw / 15);
 }
 
 .s-grid-cell {
 	position: relative;
-	width: 50px;
-	height: 50px;
+	width: calc(100% / 15);
+	height: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border: 1px solid #e8ddc0;
-	border-radius: 4px;
+	border: var(--grid-tile-border);
+	border-radius: 3px;
 }
 
 .s-grid-tile-modifier {
 	position: absolute;
 	top: 0.80;
 	left: 0.80;
+	user-select: none;
+	-ms-user-select: none;
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
 }
 
 .s-grid-tile-modifier-text {
@@ -142,9 +149,26 @@
 	color: var(--app-black);
 }
 
-@media(max-width: 1000px) {
+@media(max-width: 768px) {
+	.s-grid-row {
+		width: 100vw;
+		height: calc(100vw / 15);
+	}
+
 	.s-grid-cell {
-		width: calc(100vw / 20);
-		height: calc(100vw / 20);
+		width: calc(100% / 15);
+		height: 100%;
+	}
+
+	.tword, .dword, .dletter, .tletter {
+		border-radius: 0.8vw;
+	}
+
+	.full {
+		border-width: 0.3vw;
+	}
+
+	.selected {
+		border-radius: 2.4vw;
 	}
 }

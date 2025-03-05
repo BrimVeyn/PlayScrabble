@@ -16,6 +16,7 @@
 
 
 	--color-navbar-background: #748c88;
+	--grid-tile-border: 1px solid #e8ddc0;
 	--row-background: #f9f6f0;
 	--container-shadow: 0px 0px 10px 0px #a1aea5;
 	--container-bg-color: #f9f6f0;
@@ -24,4 +25,5 @@
 	--grid-border-color: #e8ddc0;
 	--tile-full-bg: #2F9C95;
 	--app-black: #0b0904;
+	--app-grey: #A0A0A0;
 }

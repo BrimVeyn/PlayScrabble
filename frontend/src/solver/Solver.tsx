@@ -16,8 +16,10 @@ function Solver() {
 				<GridProvider>
 					<div className="contextContainer">
 						<Grid/>
-						<Rack/>
-						<ResetButton/>
+						<div className="rackOuterContainer">
+							<Rack/>
+							<ResetButton/>
+						</div>
 					</div>
 					<div className="resultContainer">
 						<Results/>

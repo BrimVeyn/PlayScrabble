@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
 
@@ -31,7 +31,7 @@ const gridModifiers: Array<Array<number>> = [
 
 
 function Grid() {
-	const {grid, cursor, ghostGrid, setCursor, direction, handleKeyDown} = useGrid();
+	const {grid, cursor, ghostGrid, setCursor, handleKeyDown} = useGrid();
 	const {t} = useTranslation(["solver", "letterScore"]);
 
 	useEffect(() => {
@@ -40,6 +40,15 @@ function Grid() {
 			window.removeEventListener('keydown', handleKeyDown);
 		};
 	}, [handleKeyDown]);
+
+	const updateCursor = (row: number, col: number) => {
+		setCursor((prev) => {
+			if (prev && prev.ctx === "grid" && prev.cell[0] == row && prev.cell[1] == col) {
+				return { ...prev, cell: [row, col], direction: (prev.direction === "right" ? "down" : "right")};
+			}
+			return { ctx: "grid", cell: [row, col], direction: "right"};
+		});
+	};
 
 	const letterScores = t("letterScore", {ns: "letterScore"}).split(",");
 
@@ -66,7 +75,7 @@ function Grid() {
 							<div 
 								className="s-grid-cell" 
 								key={letterIndex}
-								onClick={() => setCursor({ctx: "grid", cell: [index, letterIndex]})}
+								onClick={() => updateCursor(index, letterIndex)}
 							> 
 								<p key={index * letterIndex} className={`s-grid-tile-modifier ${modClass}`}/>
 								<p className="s-grid-tile-modifier-text">{modText}</p>
@@ -83,7 +92,7 @@ function Grid() {
 								{ isSelected && 
 									<>
 										<p className="selected"></p>
-										<p className={direction}></p>
+										<p className={cursor?.direction}></p>
 									</>
 								}
 							</div>
