@@ -32,6 +32,7 @@
 	align-items: center;
 	height: 100%;
 	width: 100%;
+	font-size: min(2vw, 18px);
 }
 
 
@@ -71,7 +72,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 23px;
+	font-size: min(2.4vw, 23px);
 	font-weight: bold;
 	user-select: none;
 	-ms-user-select: none;
@@ -136,7 +137,14 @@
 	height: 100%;
 	justify-content: end;
 	align-items: end;
-	padding-right: 7px;
-	font-size: 14px;
+	padding-right: 20%;
+	font-size: min(1.5vw, 14px);
 	color: var(--app-black);
+}
+
+@media(max-width: 1000px) {
+	.s-grid-cell {
+		width: calc(100vw / 20);
+		height: calc(100vw / 20);
+	}
 }

@@ -16,3 +16,15 @@
 .rackContainer .s-grid-tile {
 	font-size: 45px;
 }
+
+@media(max-width: 1000px) {
+	.rackContainer {
+		width: calc(100vw / 20 * 7 * 1.5);
+		height: calc(100vw / 20 * 1.5);
+	}
+
+	.rackContainer .s-grid-cell {
+		width: calc(100vw / 20 * 1.5);
+		height: calc(100vw / 20 * 1.5);
+	}
+}

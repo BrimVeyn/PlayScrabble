@@ -32,3 +32,24 @@
 .resultContainer>div {
 	width: 100%;
 }
+
+@media(max-width: 1000px) {
+	
+	.solverPage {
+		overflow: initial;
+	}
+
+	.solverContainer {
+		display: flex;
+		flex-direction: column;
+		flex-wrap: wrap;
+	}
+
+	.contextContainer {
+		width: 100%;
+	}
+
+	.resultContainer {
+		width: 100%;
+	}
+}
