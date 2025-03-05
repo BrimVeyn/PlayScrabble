@@ -20,3 +20,9 @@
 .resetButton button:hover {
 	color: var(--app-black);
 }
+
+@media(max-width: 768px) {
+	.resetButton {
+		height: calc(90vw / 7);
+	}
+}
