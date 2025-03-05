@@ -89,11 +89,12 @@ pub const Match = struct {
     dir: Direction,
     range: Range,
     perpCoord: u4,
+    placedLetters: u4 = 0,
     score: u32,
     jokers: [2]u8 = .{0, 0},
     jokerPoses: [2]?u4 = .{null, null},
 
-    pub fn init(currWord: []const u8, jokers: [2]u8, cell: *const Point, ctxState: Direction) Match {
+    pub fn init(currWord: []const u8, jokers: [2]u8, cell: *const Point, ctxState: Direction, placedLetters: u4) Match {
         var word: [GRID_SIZE:0]u8 = .{0} ** GRID_SIZE;
         std.mem.copyForwards(u8, word[0..], currWord);
         return .{
@@ -106,6 +107,7 @@ pub const Match = struct {
             },
             .perpCoord = cell[1],
             .score = 0,
+            .placedLetters = placedLetters,
         };
     }
 
@@ -119,6 +121,7 @@ pub const Match = struct {
 
         try jws.write(self.range);
         try jws.write(self.perpCoord);
+        try jws.write(self.placedLetters);
 
         if (self.jokers[0] != 0) {
             try jws.write(.{@as(u64, self.jokers[0]), @as(u64, self.jokers[1])});
@@ -179,7 +182,7 @@ fn computeMatchs(
     outer: for (wordVec.items) |kv| {
         const word = kv[0];
         const jokers = kv[1];
-        var currMatch = Match.init(word, jokers, cell, ctx.state);
+        var currMatch = Match.init(word, jokers, cell, ctx.state, @as(u4, @intCast(word.len - mandatoryLen)));
         const wordRange = (currMatch.range[1] - currMatch.range[0]) + 1;
 
         if (jokers[0] != 0) {
