@@ -3,8 +3,6 @@ import { FixedSizeList as List } from "react-window";
 import { useGrid, emptyGrid } from "./GridContext";
 import { useEffect, useState } from "react";
 import { FaSortAlphaDown, FaSortAlphaUpAlt, FaSortNumericDown, FaSortNumericUpAlt } from "react-icons/fa";
-import { GrDirections } from "react-icons/gr";
-import { MdOutlineQuestionMark } from "react-icons/md";
 import { TiSortAlphabetically, TiSortNumerically } from "react-icons/ti";
 
 import "./styles/Results.css"
@@ -88,13 +86,14 @@ function Results() {
 						|| sortWay === "score-des" && <FaSortNumericUpAlt />
 						|| <TiSortNumerically/>}
 					</div>
-					<div className="resHeadItem">
-						<p>{t("resTableDir")}</p>
-						<GrDirections/>
+					<div className="resHeadItem p10">
+						<p>{t("resTableLetter")}</p>
 					</div>
-					<div className="resHeadItem">
+					<div className="resHeadItem p10">
+						<p>{t("resTableDir")}</p>
+					</div>
+					<div className="resHeadItem p10">
 						<p>{t("resTableJoker")}</p>
-						<MdOutlineQuestionMark/>
 					</div>
 				</div>
 				<div className="resBody" onMouseLeave={() => setGhostGrid(emptyGrid)}>
@@ -116,8 +115,9 @@ function Results() {
 									> 
 										<p> {match.word} </p>
 										<p> {match.score} </p>
-										<p> {match.dir == 0 ? t("resRowVert") : t("resRowHor")} </p>
-										<p> {match.joker ? 
+										<p className="p10"> {match.letterCount || 0} </p>
+										<p className="p10"> {match.dir == 0 ? t("resRowVert") : t("resRowHor")} </p>
+										<p className="p10"> {match.joker ? 
 											match.joker.filter(n => n != 0).length
 											: 0 } 
 										</p>

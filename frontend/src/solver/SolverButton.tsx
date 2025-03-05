@@ -35,8 +35,9 @@ export default function SolverButton() {
                 dir: item[2],
                 pos: item[3],
                 savedCoord: item[4],
-				joker: item[5],
-				jokerPoses: item[6],
+				letterCount: item[5],
+				joker: item[6],
+				jokerPoses: item[7],
             }));
             setLastResults(formattedData);
         } catch (error) {

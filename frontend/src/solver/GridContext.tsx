@@ -43,6 +43,7 @@ type Match = {
 	dir: number;
 	pos: [number, number];
 	savedCoord: number;
+	letterCount: number;
 	joker: [number, number];
 	jokerPoses: [number, number];
 };
@@ -77,7 +78,6 @@ export const useGrid = () => {
 	return context;
 };
 
-// Context provider component
 export const GridProvider = ({ children }: { children: ReactNode }) => {
 	const [grid, setGrid] = useState<Array<string>>(testGrid);
 	const [ghostGrid, setGhostGrid] = useState<Array<string>>(emptyGrid);
