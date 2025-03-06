@@ -48,8 +48,28 @@
 }
 
 .langDropItems {
-	background-color: var(--row-background);
-	width: 10vw;
+	background-color: #748c88;
+	width: 15vw;
 	height: auto;
 	color: var(--app-black);
+	border-left: 1px solid var(--app-black);
+	border-bottom: 1px solid var(--app-black);
+	display: flex;
+	flex-direction: column;
 }
+
+.langDropItem {
+	width: 100%;
+	height: 6vh;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	align-items: center;
+	border-bottom: 1px solid var(--app-black);
+	font-size: 3vh;
+}
+
+.langDropItems:last-child {
+	border-bottom: none;
+}
+
