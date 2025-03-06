@@ -6,6 +6,7 @@ const jwt           = @import("jwt");
 //---------------- Models ----------------//
 const User          = @import("User.zig");
 const Solver        = @import("Solver.zig");
+const Definition    = @import("Definitions.zig");
 //----------------------------------------//
 
 const Allocator     = std.mem.Allocator;
@@ -19,6 +20,7 @@ var server_instance: ?*httpz.Server(*App) = null;
 
 pub const App = struct {
     db: *pg.Pool,
+    dict: *pg.Pool,
     jwt_secret: []const u8,
 };
 
@@ -39,19 +41,37 @@ pub fn main() !u8 {
     }; 
     defer allocator.free(dbUrl);
 
+    const dictUrl = std.process.getEnvVarOwned(allocator, "DICT_URL") catch {
+        log.err("Encountered Fatal Error missing 'DICT_URL'", .{});
+        return 1;
+    }; 
+
     const dbUri = std.Uri.parse(dbUrl) catch |err| {
         log.err("Fatal error: {!}", .{err});
         return 1;
     };
 
-    var db = pg.Pool.initUri(allocator, dbUri, 1, 10_000) catch |err| {
+    const dictUri = std.Uri.parse(dictUrl) catch |err| {
         log.err("Fatal error: {!}", .{err});
+        return 1;
+    };
+
+    var db = pg.Pool.initUri(allocator, dbUri, 1, 10_000) catch |err| {
+        log.err("Fatal error connecting to main db: {!}", .{err});
         return 1;
     };
     defer db.deinit();
 
+    var dict = pg.Pool.initUri(allocator, dictUri, 1, 10_000) catch |err| {
+        log.err("uri: {any}", .{dictUri});
+        log.err("Fatal error connecting to dict: {!}", .{err});
+        return 1;
+    };
+    defer dict.deinit();
+
     var app = App {
         .db = db,
+        .dict = dict,
         .jwt_secret = std.process.getEnvVarOwned(allocator, "JWT_SECRET") catch {
             log.err("Encountered Fatal Error missing 'JWT_SECRET'", .{});
             return 1;
@@ -87,7 +107,7 @@ pub fn main() !u8 {
     router.get("/api/getUser:name", User.getUser, .{});
     router.get("/api/getUsers", User.getUsers, .{});
     router.get("/api/me", User.me, .{});
-    router.get("/api/solver/solve", Solver.solve, .{});
+    router.get("/api/getDefinition/:word", Definition.get, .{});
     //------------------------------------------------------------------
 
     //-------------------------------POST-------------------------------
