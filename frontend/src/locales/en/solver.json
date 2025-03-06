@@ -12,6 +12,7 @@
 	"resRowVert": "V",
 	"resRowHor": "H",
 	"resButtonLoading": "Loading...",
+	"resFooterWord": "Words found: ",
 	"defTableHead": "Definition",
 	"defTableEmpty": "Nothing to show yet",
 	"rackErrorMessage": "⚠️  Your rack can not contain more than 7 letters.",

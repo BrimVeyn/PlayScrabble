@@ -19,23 +19,36 @@
 
 @media(max-width: 768px) {
 	.rackContainer {
-		width: calc(90vw);
-		height: calc(90vw / 7);
+		width: calc(90vw / (9/7));
+		height: calc(90vw / 9);
 		color: var(--app-black);
 	}
 
 	.rackContainer .s-grid-cell {
-		width: calc(100vw / 20 * 1.5);
-		height: calc(100vw / 20 * 1.5);
+		width: calc(90vw / 9);
+		height: calc(90vw / 9);
 	}
 
 	.rackInput {
 		width: 100%;
-		font-size: calc(100vw / 20);
+		font-size: calc(90vw / 20);
+	}
+	
+	.inputContainer {
+		position: absolute;
+		width: calc(90vw / (9/7));
+		height: calc(90vw / 9);
 	}
 
-	.rackError > p {
-		color: red;
-		font-size: 4.5vw;
+	.mobileInpute {
+		z-index: -1;
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		caret-color: transparent;
+		color: transparent;
+		user-select: none;
 	}
 }

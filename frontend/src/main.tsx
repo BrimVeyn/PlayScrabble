@@ -15,8 +15,6 @@ createRoot(document.getElementById('root')!).render(
 				<Route path="/" element={<Solver />} />
 				<Route path="*" element={<NotFound />} />
 			</Routes>
-			<Routes>
-			</Routes>
 		</BrowserRouter>
   </StrictMode>,
 )

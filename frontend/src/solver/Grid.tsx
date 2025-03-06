@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
 
@@ -31,10 +31,13 @@ const gridModifiers: Array<Array<number>> = [
 
 
 function Grid() {
-	const {grid, cursor, ghostGrid, setCursor, handleKeyDown} = useGrid();
+	const {grid, cursor, ghostGrid, setCursor, handleKeyDown, handleKeyDownMobile} = useGrid();
 	const {t} = useTranslation(["solver", "letterScore"]);
+	const inputRef = useRef<HTMLInputElement | null>(null);
+	const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
 	useEffect(() => {
+		if (isMobile) return ;
 		window.addEventListener('keydown', handleKeyDown);
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown);
@@ -50,10 +53,37 @@ function Grid() {
 		});
 	};
 
+	const handleClickMobile = () => {
+		if (!isMobile) return;
+		if (inputRef.current) {
+			inputRef.current.focus();
+		}
+		console.log("clicked grid");
+	}
+
 	const letterScores = t("letterScore", {ns: "letterScore"}).split(",");
 
 	return (
-		<div className="s-grid">
+		<div 
+			onClick={handleClickMobile} 
+			className="s-grid"
+		>
+			{isMobile && 
+				<div className="inputContainer">
+					<input 
+						ref={inputRef}
+						className="mobileInput" 
+						type="text"
+						onChange={(e) => {
+							handleKeyDownMobile(e.currentTarget.value);
+							e.currentTarget.value = ""
+						}}
+						onKeyDown={(e) => {
+							if (e.key == "Backspace") handleKeyDown(e)
+						}}
+					/> 
+				</div>
+			}
 			{grid.map((item, index) => (
 				<div className="s-grid-row" key={index}>
 					{item.split('').map((letter, letterIndex) => {

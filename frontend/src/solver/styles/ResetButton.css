@@ -23,6 +23,7 @@
 
 @media(max-width: 768px) {
 	.resetButton {
-		height: calc(90vw / 7);
+		height: calc(90vw / 9);
+		width: calc(90vw / 9);
 	}
 }

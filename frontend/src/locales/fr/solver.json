@@ -12,8 +12,9 @@
 	"resRowVert": "V",
 	"resRowHor": "H",
 	"resButtonLoading": "Chargement...",
-	"defTableHead": "Definition",
-	"defTableEmpty": "Pas de definition a afficher",
+	"resFooterWord": "Nombre de mots trouvés: ",
+	"defTableHead": "Définition",
+	"defTableEmpty": "Pas de definition à afficher",
 	"rackErrorMessage": "⚠️  Votre main ne peut contenir que 7 lettres.",
 	"resetButtonTooltip": "Effacer la grille"
 }

@@ -1,8 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import './styles/Definitions.css'
 
-export default function Definitions() {
+interface DefinitionProps {
+	definition: { word: string; def: string } | null;
+}
+
+export default function Definitions({definition}: DefinitionProps) {
 	const {t} = useTranslation("solver");
+
+	console.log(definition?.def);
 
 	return (
 		<div className="defContainer">
@@ -10,7 +16,13 @@ export default function Definitions() {
 				<p>{t("defTableHead")}</p>
 			</div>
 			<div className="defContent">
-				<p>{t("defTableEmpty")}</p>
+				{definition ? (
+					definition.def.split("\n").map((line, idx) => (
+						<p className="defRow" key={idx}>{line}</p>
+					))
+				) : (
+					<p>{t("defTableEmpty")}</p>
+				)}
 			</div>
 		</div>
 	);

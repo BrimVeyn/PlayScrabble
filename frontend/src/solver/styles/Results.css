@@ -40,6 +40,11 @@
 	-webkit-user-select: none;
 }
 
+.resHeadItem p {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .p10 {
 	max-width: 10%;
 }
@@ -88,4 +93,10 @@
 
 .resRow>p:last-child {
 	border-right: none;
+}
+
+.resFooter {
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }

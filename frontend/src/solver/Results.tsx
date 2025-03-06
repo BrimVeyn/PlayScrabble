@@ -4,6 +4,7 @@ import { useGrid, emptyGrid } from "./GridContext";
 import { useEffect, useState } from "react";
 import { FaSortAlphaDown, FaSortAlphaUpAlt, FaSortNumericDown, FaSortNumericUpAlt } from "react-icons/fa";
 import { TiSortAlphabetically, TiSortNumerically } from "react-icons/ti";
+import Definitions from "./Definitions";
 
 import "./styles/Results.css"
 import { useTranslation } from "react-i18next";
@@ -22,6 +23,7 @@ function Results() {
 	const {rack, grid, setGhostGrid, lastResults, setLastResults} = useGrid();
 	const {t} = useTranslation("solver");
 	const [sortWay, setSortWay] = useState<"ascii-asc" |"ascii-des" | "score-asc" | "score-des" | null>(null);
+	const [shownDefinition, setShownDefinition] = useState<{word: string, def: string} | null>(null);
 
 	useEffect(() => {
 		if (!lastResults || !sortWay) return ;
@@ -70,7 +72,27 @@ function Results() {
 		}
 	}
 
+	const getDefinition = async (index: number) => {
+		if (!lastResults || (shownDefinition && shownDefinition.word === lastResults[index].word)) 
+			return ;
+		try {
+			const response = await fetch(`https://scrabble.brimveyn.dev/api/getDefinition/${lastResults[index].word}`, {
+				method: 'GET',
+				headers: { 'Content-Type': 'application/json' },
+			});
+			if (!response.ok) throw new Error('Erreur serveur');
+
+			const data = await response.text();
+			setShownDefinition({word:lastResults[index].word, def: data});
+			console.log(data);
+			
+		} catch (error) {
+			console.log('Error api/getDefinition', error);
+		}
+	}
+
 	return (
+		<>
 		<div className="resContainer">
 			<div className="resTable">
 				<div className="resHead">
@@ -86,15 +108,9 @@ function Results() {
 						|| sortWay === "score-des" && <FaSortNumericUpAlt />
 						|| <TiSortNumerically/>}
 					</div>
-					<div className="resHeadItem p10">
-						<p>{t("resTableLetter")}</p>
-					</div>
-					<div className="resHeadItem p10">
-						<p>{t("resTableDir")}</p>
-					</div>
-					<div className="resHeadItem p10">
-						<p>{t("resTableJoker")}</p>
-					</div>
+					<div className="resHeadItem p10"> <p>{t("resTableLetter")}</p> </div>
+					<div className="resHeadItem p10"> <p>{t("resTableDir")}</p> </div>
+					<div className="resHeadItem p10"> <p>{t("resTableJoker")}</p> </div>
 				</div>
 				<div className="resBody" onMouseLeave={() => setGhostGrid(emptyGrid)}>
 					{lastResults ? (
@@ -111,7 +127,10 @@ function Results() {
 										key={index} 
 										style={style} 
 										className="resRow"
-										onMouseEnter={() => showGhostWord(index)}
+										onMouseEnter={() => {
+											showGhostWord(index)
+											getDefinition(index)
+										}}
 									> 
 										<p> {match.word} </p>
 										<p> {match.score} </p>
@@ -129,8 +148,18 @@ function Results() {
 						<SolverButton/>
 					}
 				</div>
+				{
+					lastResults && 
+						<div className="resFooter">
+							{t("resFooterWord")}{!lastResults || lastResults.length}
+						</div>
+				}
 			</div>
 		</div>
+			<Definitions
+				definition={shownDefinition}
+			/>
+		</>
 	)
 }
 

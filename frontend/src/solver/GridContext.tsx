@@ -66,6 +66,7 @@ interface GridContextType {
 	lastResults: Array<Match> | null
 	setLastResults: React.Dispatch<React.SetStateAction<Array<Match> | null>>;
 	handleKeyDown: (e: KeyboardEvent) => void;
+	handleKeyDownMobile: (ch: string) => void;
 }
 
 const GridContext = createContext<GridContextType | undefined>(undefined);
@@ -84,6 +85,35 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 	const [rack, setRack] = useState<string>(".......");
 	const [cursor, setCursor] = useState<Cursor | null>(null);
 	const [lastResults, setLastResults] = useState<Array<Match> | null>(null);
+
+	const handleKeyDownMobile = (ch: string) => {
+		if (!grid || !cursor) return;
+		const [row, col] = cursor.cell;
+		if (letters.includes(ch)) {
+			setGhostGrid(emptyGrid);
+			setCursor((prev) => {
+				if (!prev) return prev;
+				(prev.ctx === "grid") && setGrid((prevGrid) => {
+					const newGrid = [...prevGrid];
+					newGrid[row] = newGrid[row].substring(0, col) + ch.toUpperCase() + newGrid[row].substring(col + 1);
+					return newGrid;
+				});
+				(prev.ctx === "rack") && setRack(() => {
+					const newRack = rack.substring(0, col) + ch.toUpperCase() + rack.substring(col + 1);
+					return newRack;
+				});
+				if (prev.ctx === "rack" && col < rack.length - 1) {
+					return { ...prev, cell: [row, col + 1] };
+				} else if (prev.ctx === "grid" && prev.direction === "right" && col < grid[row].length - 1) {
+					return { ...prev, cell: [row, col + 1] };
+				} else if (prev.ctx === "grid" && prev.direction === "down" && row < grid.length - 1) {
+					return { ...prev, cell: [row + 1, col] };
+				}
+				return prev;
+			});
+			return;
+		}
+	}
 
 	const handleKeyDown = (e: KeyboardEvent) => {
 		if (!grid || !cursor) return;
@@ -208,7 +238,8 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 			ghostGrid,
 			setGhostGrid,
 			setLastResults,
-			handleKeyDown
+			handleKeyDown,
+			handleKeyDownMobile
 		}}>
 			{children}
 		</GridContext.Provider>
