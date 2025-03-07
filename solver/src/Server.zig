@@ -58,7 +58,7 @@ fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         if (ctx.grid.isGridEmpty()) {
             try solveEmptyGrid(&ctx, res.arena);
         } else {
-            try solveMultiThread(&ctx, app.gpa.*);
+            try solveMultiThread(&ctx, app.gpa.*, 8); //NOTE: 8 threads by default, only use a multiple of 2
         }
         try res.json(ctx.matchVec.items[0..], .{});
         std.log.info("Matches found: {d}", .{ctx.matchVec.items.len});

@@ -440,10 +440,9 @@ pub fn solveSingleThread(ctx: *Context, _: Allocator) !void {
     std.log.info("Elapsed: {}", .{elapsedFormated});
 }
 
-pub fn solveMultiThread(ctx: *Context, gpa: Allocator) !void {
+pub fn solveMultiThread(ctx: *Context, gpa: Allocator, nbWorker: usize) !void {
     var startTime = try std.time.Timer.start();
 
-    const nbWorker = 8;
     var pool: std.Thread.Pool = undefined;
     try pool.init(.{
         .allocator = gpa,
@@ -458,7 +457,7 @@ pub fn solveMultiThread(ctx: *Context, gpa: Allocator) !void {
         const unit = GRID_SIZE / (nbWorker / 2) + 1;
         const idx = @mod(i, nbWorker / 2);
         const from: u4 = @intCast(unit * idx);
-        const to: u4 = if (unit * (idx + 1) > 15) 15 else @intCast(unit * (idx + 1));
+        const to: u4 = if (unit * (idx + 1) > GRID_SIZE) GRID_SIZE else @intCast(unit * (idx + 1));
         const flag = i >= nbWorker / 2;
 
         pool.spawnWg(&waitGroup, routineSafe, .{gpa, ctx, .{from, to}, .{0, GRID_SIZE}, flag});
