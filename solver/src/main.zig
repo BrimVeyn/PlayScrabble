@@ -402,9 +402,10 @@ pub fn solveEmptyGrid(ctx: *Context, _: Allocator) !void {
         const xu4: u4 = @intCast(x);
         var cell = Point{7 - xu4 - 1, 7};
         var cellConst = Constraints.init(ctx.alloc);
-        try cellConst.ranges.append(.{xu4 + 2, xu4 + 2});
+        try cellConst.ranges.append(.{xu4 + 2, @as(u4, @intCast(ctx.rack.items.len))});
         try cellConst.places.append(.{ .c =  .{0} ** 15, .pos = .{0} ** 15});
         try evaluateCell(ctx, &cellConst, &cell);
+        // print("{}\n", .{cellConst});
     }
 
     var cell = Point{7, 7};
@@ -412,6 +413,7 @@ pub fn solveEmptyGrid(ctx: *Context, _: Allocator) !void {
     try cellConst.places.append(.{ .c =  .{0} ** 15, .pos = .{0} ** 15});
     try cellConst.ranges.append(.{2, @as(u4, @intCast(ctx.rack.items.len))});
     try evaluateCell(ctx, &cellConst, &cell);
+    // print("{}\n", .{cellConst});
 
     sortMatchVec(ctx.matchVec);
 
@@ -535,7 +537,7 @@ pub fn main() !void {
 //
 //     sortMatchVec(ctx.matchVec);
 //
-//     for (ctx.matchVec.items) |item| {
-//         print("{}\n", .{item});
-//     }
+//     // for (ctx.matchVec.items) |item| {
+//     //     print("{}\n", .{item});
+//     // }
 // }
