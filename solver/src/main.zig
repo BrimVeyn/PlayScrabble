@@ -400,14 +400,14 @@ pub fn solveEmptyGrid(ctx: *Context, _: Allocator) !void {
 
     for (0..ctx.rack.items.len - 1) |x| {
         const xu4: u4 = @intCast(x);
-        var cell = Point{8, 8 - xu4 - 1};
+        var cell = Point{7 - xu4 - 1, 7};
         var cellConst = Constraints.init(ctx.alloc);
         try cellConst.ranges.append(.{xu4 + 2, xu4 + 2});
         try cellConst.places.append(.{ .c =  .{0} ** 15, .pos = .{0} ** 15});
         try evaluateCell(ctx, &cellConst, &cell);
     }
 
-    var cell = Point{8, 8};
+    var cell = Point{7, 7};
     var cellConst = Constraints.init(ctx.alloc);
     try cellConst.places.append(.{ .c =  .{0} ** 15, .pos = .{0} ** 15});
     try cellConst.ranges.append(.{2, @as(u4, @intCast(ctx.rack.items.len))});
