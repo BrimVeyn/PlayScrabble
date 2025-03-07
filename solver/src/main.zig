@@ -525,8 +525,13 @@ pub fn main() !void {
 //         .{ 
 //             .grid =  testGrid,
 //             .lang = "FR",
-//             .rack = "SALOPES"
+//             .rack = "??"
 //         });
+//
+//
+//     for (ctx.basePerm.keys()) |key| {
+//         print("key: {s}\n", .{key});
+//     }
 //
 //     if (ctx.grid.isGridEmpty()) {
 //         print("Do some shit\n", .{});
@@ -537,7 +542,7 @@ pub fn main() !void {
 //
 //     sortMatchVec(ctx.matchVec);
 //
-//     // for (ctx.matchVec.items) |item| {
-//     //     print("{}\n", .{item});
-//     // }
+//     for (ctx.matchVec.items) |item| {
+//         print("{}\n", .{item});
+//     }
 // }

@@ -162,7 +162,12 @@ pub const Context = struct {
 
             var buffer = String.init(alloc);
             var basePerm = PermSet.init(alloc);
-            try permutations(alloc, &basePerm, &rack, &buffer, jokers);
+            //NOTE: Add an empty set if the rack only had jokers
+            if (rack.items.len == jokers) {
+                try basePerm.put("", .{0, 0});
+            } else {
+                try permutations(alloc, &basePerm, &rack, &buffer, jokers);
+            }
 
             switch (jokers) {
                 0 => {},
@@ -170,6 +175,9 @@ pub const Context = struct {
                 2 => try jokerTwo(alloc, &basePerm),
                 else => {},
             }
+
+            //INFO: Remove empty set
+            if (rack.items.len == jokers) _ = basePerm.swapRemove("");
 
             return .{
                 .alloc = alloc,
