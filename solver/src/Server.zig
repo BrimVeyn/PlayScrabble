@@ -8,6 +8,7 @@ const log           = std.log;
 
 const rootModule        = @import("root");
 const solveMultiThread  = rootModule.solveMultiThread;
+const solveEmptyGrid  = rootModule.solveEmptyGrid;
 
 const ctxModule         = @import("Context.zig");
 const Context           = ctxModule.Context;
@@ -43,6 +44,7 @@ fn initSignals() void {
 
 pub const Server = @This();
 
+
 fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     const maybeConfig = req.json(Context.CtxConfig) catch |e| {
         log.err("solver: /solver: {!}", .{e});
@@ -53,7 +55,11 @@ fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
 
     if (maybeConfig) |config| {
         var ctx = try app.permInfos.loadConfig(res.arena, config);
-        try solveMultiThread(&ctx, app.gpa.*);
+        if (ctx.grid.isGridEmpty()) {
+            try solveEmptyGrid(&ctx, res.arena);
+        } else {
+            try solveMultiThread(&ctx, app.gpa.*);
+        }
         try res.json(ctx.matchVec.items[0..], .{});
         std.log.info("Matches found: {d}", .{ctx.matchVec.items.len});
     } else {

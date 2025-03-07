@@ -132,6 +132,16 @@ pub const Match = struct {
         }
         try jws.endArray();
     }
+
+    pub fn format(self: *const Match, comptime fmt: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        _ = fmt;
+        _ = try writer.write("---Match---\n");
+        try writer.print("Score: {d}\n", .{self.score});
+        try writer.print("{s}\n", .{self.word});
+        try writer.print("{d}\n", .{self.range});
+        try writer.print("{d}\n", .{self.perpCoord});
+        try writer.print("{any}\n", .{self.dir});
+    }
 };
 
 fn isMandatory(ch: u8, pos: u4, cellPlaces: *const Placement) bool {
@@ -365,6 +375,7 @@ fn evaluateGrid(ctx: *Context, rY: Range, rX: Range) !void {
     }
 }
 
+//HACK: Not safe at all
 fn routineSafe(gpa: Allocator, ctx: *Context, rY: Range, rX: Range, rotate: bool) void {
     var arena: std.heap.ArenaAllocator = .init(gpa);
     const arenaAlloc = arena.allocator();
@@ -384,6 +395,31 @@ fn routineSafe(gpa: Allocator, ctx: *Context, rY: Range, rX: Range, rotate: bool
     ctx.matchVec.appendSlice(tmpRes.items[0..]) catch {};
 }
 
+pub fn solveEmptyGrid(ctx: *Context, _: Allocator) !void {
+    var startTime = try std.time.Timer.start();
+
+    for (0..ctx.rack.items.len - 1) |x| {
+        const xu4: u4 = @intCast(x);
+        var cell = Point{8, 8 - xu4 - 1};
+        var cellConst = Constraints.init(ctx.alloc);
+        try cellConst.ranges.append(.{xu4 + 2, xu4 + 2});
+        try cellConst.places.append(.{ .c =  .{0} ** 15, .pos = .{0} ** 15});
+        try evaluateCell(ctx, &cellConst, &cell);
+    }
+
+    var cell = Point{8, 8};
+    var cellConst = Constraints.init(ctx.alloc);
+    try cellConst.places.append(.{ .c =  .{0} ** 15, .pos = .{0} ** 15});
+    try cellConst.ranges.append(.{2, @as(u4, @intCast(ctx.rack.items.len))});
+    try evaluateCell(ctx, &cellConst, &cell);
+
+    sortMatchVec(ctx.matchVec);
+
+    const elapsed = std.time.Timer.read(&startTime);
+    const elapsedFormated = std.fmt.fmtDuration(elapsed);
+    std.log.info("Elapsed: {}", .{elapsedFormated});
+}
+
 pub fn solveSingleThread(ctx: *Context, _: Allocator) !void {
     var startTime = try std.time.Timer.start();
 
@@ -399,7 +435,7 @@ pub fn solveSingleThread(ctx: *Context, _: Allocator) !void {
 
     const elapsed = std.time.Timer.read(&startTime);
     const elapsedFormated = std.fmt.fmtDuration(elapsed);
-    print("Elapsed: {}\n", .{elapsedFormated});
+    std.log.info("Elapsed: {}", .{elapsedFormated});
 }
 
 pub fn solveMultiThread(ctx: *Context, gpa: Allocator) !void {
@@ -446,3 +482,60 @@ pub const std_options = std.Options {
 pub fn main() !void {
     try Server.start();
 }
+
+// const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
+//     .thread_safe = true,
+//     .safety = true,
+//     .retain_metadata = true,
+//     .stack_trace_frames = 10,
+// };
+//
+// const testGrid = [15][15]u8 {
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+//     .{0} ** 15,
+// };
+//
+// pub fn main() !void {
+//     var gpa: std.heap.GeneralPurposeAllocator(gpaConfig) = .init;
+//     const gpaAlloc = gpa.allocator();
+//     defer _ = gpa.deinit();
+//
+//     var arena: std.heap.ArenaAllocator = .init(gpaAlloc);
+//     const arenaAlloc = arena.allocator();
+//     defer arena.deinit();
+//
+//     var permInfos = try Context.CtxPerm.init(arenaAlloc);
+//
+//     var ctx = try permInfos.loadConfig(arenaAlloc, 
+//         .{ 
+//             .grid =  testGrid,
+//             .lang = "FR",
+//             .rack = "SALOPES"
+//         });
+//
+//     if (ctx.grid.isGridEmpty()) {
+//         print("Do some shit\n", .{});
+//         try solveEmptyGrid(&ctx, arenaAlloc);
+//     } else {
+//         try solveSingleThread(&ctx, arenaAlloc);
+//     }
+//
+//     sortMatchVec(ctx.matchVec);
+//
+//     for (ctx.matchVec.items) |item| {
+//         print("{}\n", .{item});
+//     }
+// }

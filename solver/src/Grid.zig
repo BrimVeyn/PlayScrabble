@@ -113,13 +113,20 @@ pub const Grid = struct {
         };
     }
 
-    pub fn getWordModifier(self : Grid, cell: *const Point) u3 {
+    pub fn getWordModifier(self: Grid, cell: *const Point) u3 {
         const idx = @as(usize, @intCast(cell[1])) * GRID_SIZE + cell[0];
         return switch(self.cells[idx].modifier) {
             1 => 2,
             2 => 3,
             else => 1,
         };
+    }
+
+    pub fn isGridEmpty(self: Grid) bool {
+        for (self.cells) |cell| {
+            if (cell.letter != 0) return false;
+        }
+        return true;
     }
 
     pub fn isAlpha(grid: Grid, cell: Point) bool {
