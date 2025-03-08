@@ -301,7 +301,7 @@ pub fn getDummy(ctx: *Context, currPoint: Point, buffer: *[GRID_SIZE:0]u8) struc
     var start: u4 = currPoint[1];
     var end: u4 = currPoint[1];
 
-    // Expand start and end positions in one loop for cache efficiency
+    //NOTE: Expand start and end positions in one loop for cache efficiency
     var moved = true;
     while (moved) {
         moved = false;
