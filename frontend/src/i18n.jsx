@@ -6,11 +6,13 @@ import navbarEn from "./locales/en/navbar.json"
 import solverEn from "./locales/en/solver.json"
 import letterEn from "./locales/en/letterScore.json"
 import miscEn from "./locales/en/misc.json"
+import landingEn from "./locales/en/landing.json"
 
 import navbarFr from "./locales/fr/navbar.json"
 import solverFr from "./locales/fr/solver.json"
 import letterFr from "./locales/fr/letterScore.json"
 import miscFr from "./locales/fr/misc.json"
+import landingFr from "./locales/fr/landing.json"
 
 i18n
 	.use(initReactI18next) 
@@ -21,13 +23,15 @@ i18n
 				navbar: navbarEn,
 				solver: solverEn,
 				letterScore: letterEn,
-				misc: miscEn
+				misc: miscEn,
+				landing: landingEn
 			},
 			fr: {
 				navbar: navbarFr,
 				solver: solverFr,
 				letterScore: letterFr,
-				misc: miscFr
+				misc: miscFr,
+				landing: landingFr
 			},
 		},
 		detection: {

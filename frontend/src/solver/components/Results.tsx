@@ -6,7 +6,7 @@ import { FaSortAlphaDown, FaSortAlphaUpAlt, FaSortNumericDown, FaSortNumericUpAl
 import { TiSortAlphabetically, TiSortNumerically } from "react-icons/ti";
 import Definitions from "./Definitions";
 
-import "./styles/Results.css"
+import "../styles/Results.css"
 import { useTranslation } from "react-i18next";
 
 function toggleAscii(sortWay: string | null, setSortWay: (value: any) => void) {
@@ -84,7 +84,6 @@ function Results() {
 
 			const data = await response.text();
 			setShownDefinition({word:lastResults[index].word, def: data});
-			console.log(data);
 			
 		} catch (error) {
 			console.log('Error api/getDefinition', error);

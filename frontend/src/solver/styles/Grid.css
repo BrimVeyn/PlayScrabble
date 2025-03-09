@@ -1,13 +1,14 @@
 .s-grid {
-	display: grid;
+	width: 100%;
+	height: 80%;
 	box-shadow:	var(--container-shadow)
 }
 
 .s-grid-row {
 	display: flex;
 	background-color: var(--row-background);
-	width: 40vw;
-	height: calc(40vw / 15);
+	width: 100%;
+	height: calc(100% / 15);
 }
 
 .s-grid-cell {

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
 
-import "./styles/Grid.css"
+import "../styles/Grid.css"
 
 //NOTE: modifier Values: 
 // 0 None
@@ -58,7 +58,6 @@ function Grid() {
 		if (inputRef.current) {
 			inputRef.current.focus();
 		}
-		console.log("clicked grid");
 	}
 
 	const letterScores = t("letterScore", {ns: "letterScore"}).split(",");

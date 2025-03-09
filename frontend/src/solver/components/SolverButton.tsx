@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useGrid, letters } from './GridContext';
-import './styles/SolverButton.css';
 import { useTranslation } from 'react-i18next';
+
+import '../styles/SolverButton.css';
 
 export default function SolverButton() {
     const { grid, rack, setLastResults } = useGrid();
@@ -18,6 +19,7 @@ export default function SolverButton() {
         );
         const sentRack = rack.replace(/\./g, "");
         const payload = { lang: lang, grid: gridNumbers, rack: sentRack };
+		localStorage.setItem("solverGridState", grid.flat().toString());
 
         try {
             const response = await fetch(`https://scrabble.brimveyn.dev/solver/solve`, {

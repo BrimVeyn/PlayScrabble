@@ -1,0 +1,29 @@
+.landingContainer {
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.soloContainer, .multiContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 500px;
+	height: 500px;
+	border: 5px solid lightblue;
+}
+
+.navButton {
+	cursor: pointer;
+	width: 100%;
+	height: 100%;
+	font-size: 40px;
+}
+
+@media(max-width: 768px) {
+	.navButton { 
+		font-size: 25px;
+	}
+}

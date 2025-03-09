@@ -2,6 +2,7 @@
 	background-color: #f9f6f0;
 	border-radius: 10px;
 	height: 200px;
+	width: inherit;
 	box-shadow:	var(--container-shadow)
 }
 

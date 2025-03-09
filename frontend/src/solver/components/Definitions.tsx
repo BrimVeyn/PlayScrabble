@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import './styles/Definitions.css'
+import '../styles/Definitions.css'
 
 interface DefinitionProps {
 	definition: { word: string; def: string } | null;

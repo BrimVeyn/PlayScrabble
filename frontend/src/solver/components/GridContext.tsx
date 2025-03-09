@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { useEffect, createContext, useContext, useState, ReactNode } from "react";
 
 export const emptyGrid: Array<string> = [
 	"...............",
@@ -80,11 +80,16 @@ export const useGrid = () => {
 };
 
 export const GridProvider = ({ children }: { children: ReactNode }) => {
-	const [grid, setGrid] = useState<Array<string>>(testGrid);
+	const [grid, setGrid] = useState<Array<string>>(emptyGrid);
 	const [ghostGrid, setGhostGrid] = useState<Array<string>>(emptyGrid);
 	const [rack, setRack] = useState<string>(".......");
 	const [cursor, setCursor] = useState<Cursor | null>(null);
 	const [lastResults, setLastResults] = useState<Array<Match> | null>(null);
+
+	useEffect(() => {
+		const maybeGrid = localStorage.getItem("solverGridState");
+		if (maybeGrid !== null) setGrid(maybeGrid.split(","));
+	}, []);
 
 	const handleKeyDownMobile = (ch: string) => {
 		if (!grid || !cursor) return;

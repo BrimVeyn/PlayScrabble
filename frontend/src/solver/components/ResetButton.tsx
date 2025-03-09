@@ -1,6 +1,6 @@
 import { emptyGrid, useGrid } from "./GridContext"
-import "./styles/ResetButton.css"
-import "./styles/Grid.css"
+import "../styles/ResetButton.css"
+import "../styles/Grid.css"
 import { BsEraserFill } from "react-icons/bs";
 import { Tooltip } from "react-tooltip";
 import { useTranslation } from "react-i18next";

@@ -1,6 +1,6 @@
 import { useGrid } from "./GridContext";
-import "./styles/Rack.css"
-import "./styles/Grid.css"
+import "../styles/Rack.css"
+import "../styles/Grid.css"
 import { useTranslation } from "react-i18next";
 import { useRef } from "react";
 
@@ -11,7 +11,6 @@ export default function Rack () {
 	const inputRef = useRef<HTMLInputElement | null>(null);
 
 	const handleClickMobile = () => {
-		console.log("clicked rack");
 		if (!isMobile) return;
 		if (inputRef.current) {
 			inputRef.current.focus();
