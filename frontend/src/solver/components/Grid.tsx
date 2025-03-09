@@ -103,26 +103,25 @@ function Grid() {
 						return (
 							<div 
 								className="s-grid-cell" 
-								key={letterIndex}
+								key={index + letterIndex}
 								onClick={() => updateCursor(index, letterIndex)}
 							> 
-								<p key={index * letterIndex} className={`s-grid-tile-modifier ${modClass}`}/>
-								<p className="s-grid-tile-modifier-text">{modText}</p>
-								<p className={`s-grid-tile ${fClass} ${gClass}`}>
+								<span 
+									className={`s-grid-tile ${fClass} ${gClass}`}
+									data-score={hasScore && letterScores[letter.charCodeAt(0) - 65]
+										|| letterScores[gLetter.charCodeAt(0) - 65]}
+								>
 									{(letter == '.') ? (gLetter == '.') ? '' : gLetter : letter} 
-								</p>
-
-								{ hasScore && 
-									<p className="score"> 
-										{letterScores[letter.charCodeAt(0) - 65] || 
-										letterScores[gLetter.charCodeAt(0) - 65]}
-									</p>
-								}
+								</span>
+								<span 
+									className={`s-grid-tile-modifier ${modClass}`}
+									data-modifier-text={modText}
+								/>
 								{ isSelected && 
-									<>
-										<p className="selected"></p>
-										<p className={cursor?.direction}></p>
-									</>
+									<span 
+										className={`selected`}
+										data-direction={cursor?.direction}
+									/>
 								}
 							</div>
 						)
