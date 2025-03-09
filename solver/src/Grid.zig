@@ -19,7 +19,7 @@ pub const GridError = error {
 // 3 Double Letter
 // 4 Tripple letter
 
-const gridModifiers = [15][15]u3 {
+const gridModifiers = [GRID_SIZE][GRID_SIZE]u3 {
     [_]u3{2, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 2},
     [_]u3{0, 1, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 1, 0},
     [_]u3{0, 0, 1, 0, 0, 0, 3, 0, 3, 0, 0, 0, 1, 0, 0},

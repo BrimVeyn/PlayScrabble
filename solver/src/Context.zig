@@ -126,7 +126,7 @@ pub const Context = struct {
     
     pub const CtxConfig = struct {
         lang: []const u8,
-        grid: [15][15] u8,
+        grid: [GRID_SIZE][GRID_SIZE]u8,
         rack: []const u8,
     };
 
@@ -162,7 +162,7 @@ pub const Context = struct {
 
             var buffer = String.init(alloc);
             var basePerm = PermSet.init(alloc);
-            //NOTE: Add an empty set if the rack only had jokers
+            //NOTE: Add an empty set if the rack only has jokers
             if (rack.items.len == jokers) {
                 try basePerm.put("", .{0, 0});
             } else {
@@ -191,50 +191,7 @@ pub const Context = struct {
         }
     };
 
-
-    pub fn initTest(alloc: Allocator, gridState: []const u8, rackValue: []const u8) !Context {
-        var grid = Grid.init();
-        try grid.loadGridState(gridState);
-
-        var rack = String.init(alloc);
-        try rack.appendSlice(rackValue);
-        std.mem.sort(u8, rack.items[0..], {}, lessThanU8);
-
-        //NOTE: Since ? < [A-Z], if there's a wildcard its at 0 and 1
-        var jokers: u32 = 0;
-        jokers += if (rack.items[0] == '?') 1 else 0;
-        jokers += if (rack.items[1] == '?') 1 else 0;
-
-        var buffer = String.init(alloc);
-        var perms = PermSet.init(alloc);
-        try permutations(alloc, &perms, &rack, &buffer, jokers);
-
-        switch (jokers) {
-            0 => {},
-            1 => try jokerOne(alloc, &perms),
-            2 => try jokerTwo(alloc, &perms),
-            else => {},
-        }
-
-        var dict = ScrabbleDict.init(alloc);
-        var lineIt = std.mem.tokenizeScalar(u8, dictContent, '\n');
-        while (lineIt.next()) |word| {
-            try dict.put(word, true);
-        }
-
-        return .{
-            .alloc = alloc,
-            .grid = grid,
-            .rack = rack,
-            .jokers = jokers,
-            .basePerm = perms,
-            .orderedMap = try populateMap(alloc),
-            .dict = dict,
-            .matchVec = MatchVec.init(alloc),
-        };
-    }
-
-    pub fn transposeGrid(self: *Context) void {
+    pub fn transposeGrid(self: *Context) void { //TODO: Move this method to Grid for more coherence
         for (0..GRID_SIZE) |y| {
             for (y + 1..GRID_SIZE) |x| {
                 const tmp = self.grid.cells[(x * GRID_SIZE) + y];
