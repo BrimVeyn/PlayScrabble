@@ -15,6 +15,11 @@
 	border-width: 3px;
 }
 
+.notFoundRow {
+	display: flex;
+	flex-direction: row;
+}
+
 .notFoundContainer .full {
 	font-size: 50px;
 }
@@ -24,5 +29,5 @@
 }
 
 .notFoundContainer .full {
-	background-color: #EE7B30;
+	background-color: var(--result-violet);
 }

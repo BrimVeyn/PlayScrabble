@@ -1,5 +1,5 @@
 .defContainer {
-	background-color: #f9f6f0;
+	background-color: var(--row-background);
 	border-radius: 10px;
 	height: 200px;
 	width: inherit;
@@ -17,6 +17,15 @@
 	align-items: center;
 	font-weight: bold;
 	color: var(--app-black);
+}
+
+.defContent li:first-child {
+	list-style: none;
+	font-weight: bold;
+}
+
+li {
+	list-style: inside;
 }
 
 .defContent {

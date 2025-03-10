@@ -17,7 +17,7 @@ function Text({index, letter}: any) {
 export default function NotFound() {
 	return (
 		<div className="notFoundContainer">
-			<div className="s-grid-row">
+			<div className="notFoundRow">
 			{
 				"404".split("").map((letter, index) => (
 					<Text
@@ -27,7 +27,7 @@ export default function NotFound() {
 				))
 			}
 			</div>
-			<div className="s-grid-row">
+			<div className="notFoundRow">
 			{
 				"NOT FOUND".split("").map((letter, index) => (
 					<Text

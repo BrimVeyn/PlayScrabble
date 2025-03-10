@@ -46,28 +46,28 @@
 
 
 .tword {
-	background-color: #851E2E;
+	background-color: rgba(133, 31, 47, .6);
 	width: 80%;
 	height: 80%;
 	border-radius: 10px;
 }
 
 .dword {
-	background-color: #E05265;
+	background-color: rgba(255, 82, 101, .5);
 	width: 80%;
 	height: 80%;
 	border-radius: 10px;
 }
 
 .tletter {
-	background-color: #49516F;
+	background-color: rgba(73, 81, 111, .6);
 	width: 80%;
 	height: 80%;
 	border-radius: 10px;
 }
 
 .dletter {
-	background-color: #8093C6;
+	background-color: rgba(128, 147, 198, .6);
 	width: 80%;
 	height: 80%;
 	border-radius: 10px;
@@ -81,7 +81,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: min(2.4vw, 23px);
+	font-size: clamp(0.75rem, 0.4176rem + 1.0638vw, 1.375rem);
 	font-weight: bold;
 	user-select: none;
 	-ms-user-select: none;
@@ -139,7 +139,7 @@
 	z-index: 3;
 	width: 100%;
 	height: 100%;
-	background: rgba(133, 88, 158, 0.7);
+	background: var(--result-violet);
 	clip-path: polygon(38.00% 50%, 0% 100%, 0% 0%);
 }
 
@@ -150,7 +150,7 @@
 	z-index: 3;
 	width: 100%;
 	height: 100%;
-	background: rgba(133, 88, 158, 0.7);
+	background: var(--result-violet);
 	clip-path: polygon(38.00% 50%, 0% 100%, 0% 0%);
 	transform: rotate(90deg);
 }

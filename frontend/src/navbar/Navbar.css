@@ -5,6 +5,26 @@
 	height: 5%;
 	background-color: var(--color-navbar-background);
 	padding-inline: 10px;
+	height: 5vh;
+	border-bottom: 2px solid #676a8b;
+}
+
+.navbarButton {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: whitesmoke;
+	height: 80%;
+	padding: 10px;
+	border: 2px solid transparent;
+	margin-right: 10px;
+}
+
+.navbarButton:hover {
+	border: 2px solid lightblue;
+	background-color: #2f9c95;
+	border-radius: 5px;
+	cursor: pointer;
 }
 
 .logo {
@@ -15,10 +35,6 @@
 	align-items: center;
 }
 
-.logo > * {
-	padding-left: 20px;
-}
-
 .links {
 	width: 80%;
 	height: 100%;
@@ -27,12 +43,8 @@
 	align-items: center;
 }
 
-.links > * {
-	padding-right: 20px;
-}
-
 .flag {
-	font-size: 40px;
+	font-size: 20px;
 	user-select: none;
 }
 

@@ -107,7 +107,7 @@ function Results() {
 						|| sortWay === "score-des" && <FaSortNumericUpAlt />
 						|| <TiSortNumerically/>}
 					</div>
-					<div className="resHeadItem p10"> <p>{t("resTableLetter")}</p> </div>
+					<div className="resHeadItem p20"> <p>{t("resTableLetter")}</p> </div>
 					<div className="resHeadItem p10"> <p>{t("resTableDir")}</p> </div>
 					<div className="resHeadItem p10"> <p>{t("resTableJoker")}</p> </div>
 				</div>
@@ -133,7 +133,7 @@ function Results() {
 									> 
 										<p> {match.word} </p>
 										<p> {match.score} </p>
-										<p className="p10"> {match.letterCount || 0} </p>
+										<p className="p20"> {match.letterCount || 0} </p>
 										<p className="p10"> {match.dir == 0 ? t("resRowVert") : t("resRowHor")} </p>
 										<p className="p10"> {match.joker ? 
 											match.joker.filter(n => n != 0).length

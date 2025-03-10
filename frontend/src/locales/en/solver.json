@@ -13,7 +13,7 @@
 	"resRowHor": "H",
 	"resButtonLoading": "Loading...",
 	"resFooterWord": "Words found: ",
-	"defTableHead": "Definition",
+	"defTableHead": "Definition(s)",
 	"defTableEmpty": "Nothing to show yet",
 	"rackErrorMessage": "⚠️  Your rack can not contain more than 7 letters.",
 	"resetButtonTooltip": "Reset grid"

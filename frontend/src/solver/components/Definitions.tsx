@@ -16,13 +16,17 @@ export default function Definitions({definition}: DefinitionProps) {
 				<p>{t("defTableHead")}</p>
 			</div>
 			<div className="defContent">
+				<ul>
 				{definition ? (
 					definition.def.split("\n").map((line, idx) => (
-						<p className="defRow" key={idx}>{line}</p>
+						<li className="defRow" key={idx}>
+							{line}
+						</li>
 					))
 				) : (
 					<p>{t("defTableEmpty")}</p>
 				)}
+				</ul>
 			</div>
 		</div>
 	);

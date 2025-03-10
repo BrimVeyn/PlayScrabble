@@ -205,15 +205,17 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 			case "ArrowRight":
 				setCursor((prev) => {
 					if (!prev)  return prev;
-					if (prev.direction === "down") return {...prev, direction: "right"};
-					if (col < grid.length - 1) return {...prev, cell: [row, col + 1] };
+					if (prev.direction === "down") 
+						return {...prev, direction: "right"};
+					if ((prev.ctx === "grid" && col < grid.length - 1) || (col < 6))
+						return {...prev, cell: [row, col + 1] };
 					return prev;
 				});
 				break;
 			case "ArrowLeft":
 				setCursor((prev) => {
 					if (!prev) return prev;
-					if (prev.cell[1] > 0)
+					if (prev.cell[1] > 0) 
 						return { ...prev, cell: [row, col - 1], direction: "right" }
 					return { ...prev, direction: "right" }
 				});

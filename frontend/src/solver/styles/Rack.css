@@ -4,7 +4,7 @@
 
 	display: flex;
 	flex-flow: row no-wrap;
-	background-color: #f9f6f0;
+	background-color: var(--row-background);
 	box-shadow:	var(--container-shadow)
 }
 

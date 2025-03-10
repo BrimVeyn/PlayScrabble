@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import "./Navbar.css"
+import { useNavigate } from "react-router";
 
 const languages: { [id: string] : string; } = {
 	fr: "🇫🇷",
@@ -46,18 +47,34 @@ function LanguageDropdown() {
 function Navbar() {
 	const { t } = useTranslation("navbar");
 	const [isOpen, setIsOpen] = useState<boolean>(false);
+	const navigate = useNavigate();
 	
 
 	return (
 		<>
 		<div className="navbarContainer">
 			<div className="logo">
-				<h1>Logo</h1>
+				<button onClick={() => navigate("/")}>Logo</button>
 			</div>
 			<div className="links">
-				<p>{t("home")}</p>
-				<p>{t("leaderboard")}</p>
-				<p>{t("login")}</p>
+				<button 
+					onClick={() => navigate("/")}
+					className="navbarButton"
+				>
+					{t("home")}
+				</button>
+				<button 
+					onClick={() => navigate("/leaderboard")}
+					className="navbarButton"
+				>
+					{t("leaderboard")}
+				</button>
+				<button 
+					onClick={() => navigate("/login")}
+					className="navbarButton"
+				>
+					{t("login")}
+				</button>
 				<button
 					className="flag"
 					onClick={() => setIsOpen((prev) => !prev)}

@@ -12,7 +12,7 @@
 	border-radius: 10px;
 	color: var(--app-black);
 	border-collapse: collapse;
-	background-color: var(--container-bg-color);
+	background-color: var(--row-background);
 	box-shadow:	var(--container-shadow)
 }
 
@@ -47,6 +47,12 @@
 .p10 {
 	max-width: 10%;
 }
+
+.p20 {
+	max-width: 20%;
+}
+
+
 
 .resHead div {
 	width: 100%;
