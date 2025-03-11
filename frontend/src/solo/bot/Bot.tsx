@@ -5,7 +5,12 @@ export default function Bot () {
 	return (
 		<>
 			<Navbar/>
-			<h1> Nope </h1>
+			<div className="botPageContainer">
+				<div className="botGridContainer">
+				</div>
+				<div className="botResultContainer">
+				</div>
+			</div>
 		</>
 	);
 }

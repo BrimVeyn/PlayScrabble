@@ -12,7 +12,7 @@
 .notFoundContainer .s-grid-cell {
 	width: 80px;
 	height: 80px;
-	border-width: 3px;
+	border-width: 2px;
 }
 
 .notFoundRow {
@@ -30,4 +30,20 @@
 
 .notFoundContainer .full {
 	background-color: var(--result-violet);
+}
+
+@media(max-width: 768px) {
+	.notFoundContainer .s-grid-cell {
+		width: 40px;
+		height: 40px;
+		border-width: 1px;
+	}
+
+	.notFoundContainer .full {
+		font-size: 22px;
+	}
+
+	.notFoundContainer .score {
+		font-size: 10px;
+	}
 }
