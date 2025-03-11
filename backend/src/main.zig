@@ -113,6 +113,8 @@ pub fn main() !u8 {
     //-------------------------------POST-------------------------------
     router.post("/api/register", User.register, .{});
     router.post("/api/login", User.login, .{});
+    router.post("/api/loginGoogle", User.loginGoogle, .{});
+    router.post("/api/checkEmail", User.checkEmail, .{});
     //------------------------------------------------------------------
 
     log.info("listening http://{s}:{d}/", .{SERVER_ADDR, PORT});

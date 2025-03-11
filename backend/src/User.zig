@@ -2,6 +2,7 @@ const std = @import("std");
 const httpz = @import("httpz");
 const pg = @import("pg");
 const jwt = @import("jwt");
+const http = std.http;
 
 const mainModule = @import("main.zig");
 const App = mainModule.App;
@@ -26,6 +27,149 @@ pub const Error = struct {
 pub fn getUser(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
     _ = res;
     _ = app;
+}
+
+pub const LoginGoogleRequest = struct {
+    token: []const u8,   
+};
+
+pub const GoogleResponse = struct {
+  iss: []const u8,
+  azp: []const u8,
+  aud: []const u8,
+  sub: []const u8,
+  email: []const u8,
+  email_verified: []const u8,
+  nbf: []const u8,
+  name: []const u8,
+  picture: []const u8,
+  given_name: []const u8,
+  family_name: []const u8,
+  iat: []const u8,
+  exp: []const u8,
+  jti: []const u8,
+  alg: []const u8,
+  kid: []const u8,
+  typ: []const u8
+};
+
+pub fn loginGoogle(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
+    if (req.json(LoginGoogleRequest)) |reqBody| {
+        const url = try std.fmt.allocPrint(res.arena, "https://oauth2.googleapis.com/tokeninfo?id_token={s}", .{reqBody.?.token});
+        var client = http.Client{
+            .allocator = res.arena,
+        };
+        defer client.deinit();
+
+        var buffer = try std.ArrayList(u8).initCapacity(res.arena, 10_000);
+
+        const status = try client.fetch(.{
+            .method = .GET,
+            .location = .{ .url = url, },
+            .response_storage = .{ .dynamic = &buffer }
+        });
+
+        if (status.status != .ok) {
+            res.status = 498;
+            res.body = "Invalid token";
+            log.err("loginGoogle: Invalid Token", .{});
+            return ;
+        }
+        const responseBody = try std.json.parseFromSliceLeaky(GoogleResponse, res.arena, buffer.items, .{});
+        log.info("✅ Token valide\n", .{});
+        log.info("Email: {s}\n", .{responseBody.email});
+
+        var maybeUser = app.db.rowOpts(
+            \\SELECT id as id FROM users WHERE email = $1
+        , .{responseBody.email}, .{ .column_names = true }) catch |e| {
+            log.err("login: PG: {!}", .{e});
+            res.status = 500;
+            res.body = "Internal server error";
+            return ;
+        };
+
+        var id: i32 = undefined;
+        if (maybeUser == null) {
+            log.err("login: Password missmatch for {s}", .{responseBody.email});
+            res.status = 400;
+            try res.json(Error{.err = "Invalid credentials"}, .{});
+            return ;
+        } else {
+            id = maybeUser.?.getCol(i32, "id");
+            maybeUser.?.deinit() catch {};
+        }
+
+        const idStr = try std.fmt.allocPrint(res.arena, "{d}", .{id});
+        defer res.arena.free(idStr);
+
+        const accessToken = try generateJWT(app, res.arena, @intFromEnum(JWTDuration.@"7_days"), idStr);
+        try res.setCookie("Access-Token", accessToken, .{
+            .http_only = true,
+            .secure = true,
+            .same_site = .strict,
+            .max_age = @intFromEnum(JWTDuration.@"7_days"),
+        });
+
+        const refreshToken = try generateJWT(app, res.arena, @intFromEnum(JWTDuration.@"30_days"), idStr);
+        try res.setCookie("Refesh-Token", refreshToken, .{
+            .http_only = true,
+            .secure = true,
+            .same_site = .strict,
+            .max_age = @intFromEnum(JWTDuration.@"30_days"),
+        });
+
+        log.info("AccessToken generated: {s}", .{accessToken});
+        log.info("RefreshToken generated: {s}", .{refreshToken});
+
+        _ = app.db.exec(
+            \\UPDATE users
+            \\SET refresh = $1
+            \\WHERE id = $2
+        , .{refreshToken, idStr}) catch |e| {
+            log.err("login: Updating refresh token failed: {!}", .{e});
+            res.status = 500;
+            res.body = "Internal server error";
+            return ;
+        };
+
+        log.info("Successfully logged in as {s}", .{responseBody.email});
+        res.status = 200;
+
+    } else |e| {
+        log.err("emailCheck: req.json failed: {!}", .{e});
+        res.status = 400;
+        try res.json(Error{.err = "Missing fields"}, .{});
+    }
+}
+
+pub const EmailCheckReq = struct {
+    email: []const u8,
+};
+
+pub fn checkEmail(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
+    if (req.json(EmailCheckReq)) |body| {
+        //NOTE: Check if a user with same email already exist
+        var maybeUser = app.db.row(
+            \\SELECT email FROM users WHERE email = $1
+        , .{body.?.email}) catch |e| {
+            log.err("register: PG: {!}", .{e});
+            res.status = 500;
+            res.body = "Internal server error";
+            return ;
+        };
+        if (maybeUser) |_| {
+            defer maybeUser.?.deinit() catch {};
+            res.status = 409;
+            const message = try std.fmt.allocPrint(res.arena, "User with email {s} already exist", .{body.?.email});
+            defer res.arena.free(message);
+            try res.json(Error{.err = message}, .{});
+            return ;
+        }
+    } else |e| {
+        log.err("emailCheck: req.json failed: {!}", .{e});
+        res.status = 400;
+        try res.json(Error{.err = "Missing fields"}, .{});
+    }
 }
 
 pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
@@ -84,6 +228,7 @@ const RegisterRequest = struct {
 pub fn register(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     if (req.json(RegisterRequest)) |body| {
 
+        //NOTE: Check if a user with same username already exist
         var maybeUser = app.db.row(
             \\SELECT username FROM users WHERE username = $1
         , .{body.?.username}) catch |e| {
@@ -96,6 +241,24 @@ pub fn register(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
             defer maybeUser.?.deinit() catch {};
             res.status = 409;
             const message = try std.fmt.allocPrint(res.arena, "User with username {s} already exist", .{body.?.username});
+            defer res.arena.free(message);
+            try res.json(Error{.err = message}, .{});
+            return ;
+        }
+
+        //NOTE: Check if a user with same email already exist
+        maybeUser = app.db.row(
+            \\SELECT email FROM users WHERE email = $1
+        , .{body.?.email}) catch |e| {
+            log.err("register: PG: {!}", .{e});
+            res.status = 500;
+            res.body = "Internal server error";
+            return ;
+        };
+        if (maybeUser) |_| {
+            defer maybeUser.?.deinit() catch {};
+            res.status = 409;
+            const message = try std.fmt.allocPrint(res.arena, "User with email {s} already exist", .{body.?.email});
             defer res.arena.free(message);
             try res.json(Error{.err = message}, .{});
             return ;
@@ -144,50 +307,6 @@ const JWTDuration = enum(i32) {
 
 pub fn login(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     if (req.json(LoginRequest)) |body| {
-
-        if (req.cookies().get("Access-Token")) |token| {
-            var claims = jwt.decode(
-                res.arena, 
-                struct {sub: []const u8, exp: i32 }, 
-                token,
-                .{ .secret = app.jwt_secret }, 
-            .{}) catch |e| switch (e) {
-                error.TokenExpired => {
-                    log.err("Token expired !", .{});
-                    res.status = 400;
-                    return ;
-                },
-                else => {
-                    log.err("Error: {!}", .{e});
-                    return ;
-                },
-            };
-            defer claims.deinit();
-
-            res.status = 406;
-            try res.json(Error{.err = "Already logged in"}, .{});
-            return ;
-        }
-
-        if (req.cookies().get("Refesh-Token")) |token| {
-            var dbRow = app.db.rowOpts(
-                \\SELECT refresh FROM users
-                \\WHERE refresh = $1
-            , .{token}, .{ .column_names = true }) catch |e| {
-                log.err("login: PG: {!}", .{e});
-                res.status = 500;
-                res.body = "Internal server error";
-                return ;
-            };
-
-            if (dbRow) |_| {
-                defer dbRow.?.deinit() catch {};
-                try res.json(Error{.err = "Already logged in"}, .{});
-                res.status = 406;
-                return ;
-            }
-        }
-
 
         var maybeUser = app.db.rowOpts(
             \\SELECT id as id FROM users WHERE password = $1
@@ -250,3 +369,45 @@ pub fn login(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         res.status = 500;
     }
 }
+
+        // if (req.cookies().get("Access-Token")) |token| {
+        //     var claims = jwt.decode(
+        //         res.arena, 
+        //         struct {sub: []const u8, exp: i32 }, 
+        //         token,
+        //         .{ .secret = app.jwt_secret }, 
+        //     .{}) catch |e| switch (e) {
+        //         error.TokenExpired => {
+        //             log.err("Token expired !", .{});
+        //             res.status = 400;
+        //             return ;
+        //         },
+        //         else => {
+        //             log.err("Error: {!}", .{e});
+        //             return ;
+        //         },
+        //     };
+        //     defer claims.deinit();
+        //
+        //     res.status = 406;
+        //     try res.json(Error{.err = "Already logged in"}, .{});
+        //     return ;
+        // }
+// //        if (req.cookies().get("Refesh-Token")) |token| {
+//             var dbRow = app.db.rowOpts(
+//                 \\SELECT refresh FROM users
+//                 \\WHERE refresh = $1
+//             , .{token}, .{ .column_names = true }) catch |e| {
+//                 log.err("login: PG: {!}", .{e});
+//                 res.status = 500;
+//                 res.body = "Internal server error";
+//                 return ;
+//             };
+//
+//             if (dbRow) |_| {
+//                 defer dbRow.?.deinit() catch {};
+//                 try res.json(Error{.err = "Already logged in"}, .{});
+//                 res.status = 406;
+//                 return ;
+//             }
+//         }
