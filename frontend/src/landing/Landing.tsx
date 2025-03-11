@@ -12,16 +12,12 @@ export default function Landing() {
 		<>
 		<Navbar/>
 		<div className="landingContainer">
-			<div className="soloContainer">
-				<button className="navButton" onClick={() => navigate("/solo")}>
-					{t("solo")}
-				</button>
-			</div>
-			<div className="multiContainer">
-				<button className="navButton" onClick={() => navigate("/multi")}>
-					{t("multi")}
-				</button>
-			</div>
+			<button className="navButton" onClick={() => navigate("/solo")}>
+				{t("solo")}
+			</button>
+			<button className="navButton" onClick={() => navigate("/multi")}>
+				{t("multi")}
+			</button>
 		</div>
 		</>
 	);

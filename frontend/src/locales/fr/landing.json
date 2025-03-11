@@ -1,4 +1,6 @@
 {
 	"solo": "Solo",
-	"multi": "Multijoueur"
+	"multi": "Multijoueur",
+	"gridSolver": "Resolveur de grille",
+	"computer1v1": "1v1 contre l'ordinateur"
 }

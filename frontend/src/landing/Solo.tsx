@@ -1,15 +1,22 @@
 import { useNavigate } from "react-router";
 import Navbar from "../navbar/Navbar";
 
+import "./Solo.css"
+import { useTranslation } from "react-i18next";
+
 export default function Solo() {
 	const navigate = useNavigate();
+	const {t} = useTranslation("landing");
 
 	return (
 		<>
 		<Navbar/>
-		<div className="soloContainer">
-			<button onClick={() => navigate("/solo/solver")}>
-				Solver
+		<div className="soloPageContainer">
+			<button className="navButton" onClick={() => navigate("/solo/solver")}>
+				{t("gridSolver")}
+			</button>
+			<button className="navButton" onClick={() => navigate("/solo/bot")}>
+				{t("computer1v1")}
 			</button>
 		</div>
 		</>

@@ -2,10 +2,14 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router'
 
-import NotFound from './404/NotFound.tsx'
-import Solver from './solver/Solver.tsx'
 import Landing from './landing/Landing.tsx'
+
+import Solver from './solo/solver/Solver.tsx'
+import Bot from './solo/bot/Bot.tsx'
+
 import Solo from './landing/Solo.tsx'
+import NotFound from './404/NotFound.tsx'
+
 import Login from './login/login.tsx'
 
 import './index.css'
@@ -16,8 +20,9 @@ createRoot(document.getElementById('root')!).render(
 		<BrowserRouter>
 			<Routes>
 				<Route path="/" element={<Landing />} />
-				<Route path="/solo/solver" element={<Solver />} />
 				<Route path="/solo" element={<Solo />} />
+				<Route path="/solo/solver" element={<Solver />} />
+				<Route path="/solo/bot" element={<Bot/>} />
 				<Route path="/login" element={<Login/>} />
 				<Route path="*" element={<NotFound />} />
 			</Routes>

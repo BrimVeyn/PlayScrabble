@@ -1,4 +1,4 @@
-import "../solver/styles/Grid.css"
+import "../solo/solver/styles/Grid.css"
 import "./styles/NotFound.css"
 import { useTranslation } from "react-i18next"
 

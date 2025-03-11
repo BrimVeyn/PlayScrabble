@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./login.css"
 import { useNavigate } from "react-router";
 import Navbar from "../navbar/Navbar";
+import { FcGoogle } from "react-icons/fc";
 
 type Credentials = {
 	emailOrUsername: string,
@@ -69,10 +70,23 @@ export default function Login() {
 			/>
 			<div className="loginFooter">
 			<button 
-				className="loginButton"
+				className="l-button loginButton"
 				onClick={handleLogin}
 			>
 				Login
+			</button>
+			<button
+				className="l-button registerButton"
+				onClick={() => navigate("/register")}
+			>
+				Register
+			</button>
+			<button
+				className="l-button googleButton"
+				onClick={() => navigate("/register")}
+			>
+				<FcGoogle/>
+				<span> Sign in with Google </span>
 			</button>
 			{ error &&
 				<p>{error}</p>
