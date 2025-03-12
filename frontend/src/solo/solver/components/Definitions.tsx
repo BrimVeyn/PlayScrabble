@@ -9,7 +9,7 @@ export default function Definitions({definition}: DefinitionProps) {
 	const {t} = useTranslation("solver");
 
 	return (
-		<div className="defContainer">
+		<div className="defContainer glass">
 			<div className="defHeader">
 				<p>{t("defTableHead")}</p>
 			</div>

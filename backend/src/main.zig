@@ -100,6 +100,7 @@ pub fn main() !u8 {
         \\password TEXT NOT NULL,
         \\refresh TEXT NULL
         \\);
+        \\INSERT INTO users (username, email, password) VALUES ('bvan', 'test@gmail.com', 'pass');
     , .{});
 
     var router = server.router(.{.middlewares = &.{cors}});
@@ -116,6 +117,8 @@ pub fn main() !u8 {
     router.post("/api/loginGoogle", User.loginGoogle, .{});
     router.post("/api/checkEmail", User.checkEmail, .{});
     //------------------------------------------------------------------
+
+    router.delete("/api/logout", User.logout, .{});
 
     log.info("listening http://{s}:{d}/", .{SERVER_ADDR, PORT});
     log.info("process id (pid): {d}", .{std.c.getpid()});

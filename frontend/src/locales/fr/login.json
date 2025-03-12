@@ -1,0 +1,13 @@
+{
+	"login": "Se connecter",
+	"register": "S'inscrire",
+	"usernameInputText": "Nom d'utilisateur / Email",
+	"passwordInputText": "Mot de passe",
+	"usernameInputPlaceholder": "nom@mail.com",
+	"passwordInputPlaceholder": "motdepasse",
+	"modalConfirm": "Confirmer",
+	"modalPrompt": "Veuillez choisir un pseudo: ",
+	"modalTitle": "Completez votre profile",
+	"errorEmptyUsername": "Le peudo ne peux pas être vide.",
+	"usernameTooLong": "Pseudo trop long. (16 max.)"
+}

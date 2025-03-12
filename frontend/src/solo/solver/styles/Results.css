@@ -9,7 +9,6 @@
 .resTable {
 	display: flex;
 	flex-direction: column;
-	border-radius: 10px;
 	color: var(--app-black);
 	border-collapse: collapse;
 	background-color: var(--row-background);
@@ -21,7 +20,6 @@
 	min-height: 500px;
 	max-height: 500px;
 	overflow-y: auto;
-	border-radius: 10px;
 }
 
 .resHead {
@@ -32,6 +30,7 @@
 	font-weight: bold;
 	border-bottom: 2px solid var(--app-black);
 	cursor: pointer;
+
 	user-select: none;
 	-ms-user-select: none;
 	-moz-user-select: none;
@@ -53,7 +52,6 @@
 }
 
 
-
 .resHead div {
 	width: 100%;
 	height: 100%;
@@ -67,23 +65,19 @@
 	height: 20px;
 }
 
-.resHead>div:first-child {
-	border-top-left-radius: 10px;
-}
-
-.resHead>div:last-child {
-	border-top-right-radius: 10px;
+.resHead>div:first-child, .redHead>div:last-child {
+	border-top-left-radius: 5px;
 }
 
 .resHead>div:hover {
-	background-color: var(--result-violet);
+	background-color: var(--secondary);
+	transition: background-color .1s ease;
 }
 
 .resRow {
 	display: flex;
 	align-items: center;
 	width: 100%;
-	border: 2px solid var(--grid-border-color);
 }
 
 .resRow:hover {
@@ -93,7 +87,6 @@
 .resRow>p {
 	width: 50%;
 	padding-left: 10px;
-	border-right: 2px solid #e8ddc0;
 }
 
 .resRow>p:last-child {

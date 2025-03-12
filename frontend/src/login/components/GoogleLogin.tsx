@@ -2,23 +2,44 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import "../styles/GoogleLogin.css"
+import { useAuth } from '../../auth/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 interface UsernamePromptProps {
 	googleUser: any,
 };
 
+const googleLogin = async (credential: string) => {
+	const payload = { token: credential, };
+	try {
+		const response = await fetch("https://scrabble.brimveyn.dev/api/loginGoogle", {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json' },
+			body: JSON.stringify(payload),
+		});
+
+		if (!response.ok) throw new Error("Verification failed");
+		console.log("Authentification successfull, token validated !");
+		return true;
+	} catch (e) {
+		console.error(e);
+		return false;
+	}
+}
+
 function UsernamePrompt ({googleUser}: UsernamePromptProps) {
 	const [username, setUsername] = useState<string>("");
 	const [error, setError] = useState<string | null>(null);
+	const { setRefresh } = useAuth();
 	const navigate = useNavigate();
+	const { t } = useTranslation("login");
 
 	const checkUsernameTaken = async () => {
 		const payload = {
-			email: googleUser.email,
+			email: googleUser.user.email,
 			username: username,
 			password: "",
 		};
-
 		try {
 			const response = await fetch(`https://scrabble.brimveyn.dev/api/register`, {
 				method: 'POST',
@@ -39,39 +60,43 @@ function UsernamePrompt ({googleUser}: UsernamePromptProps) {
 	}
 
 	const handleClose = async () => {
+		if (username.length === 0) {
+			setError(t("errorEmptyUsername")); return ;
+		} else if (username.length > 16) {
+			setError(t("usernameTooLong")); return ;
+		}
 		const success = await checkUsernameTaken();
-		if (!success)
+		if (!success) {
 			return ;
-		navigate("/");
+		}
+		const isTokenValid = await googleLogin(googleUser.credential);
+		if (!isTokenValid) {
+			return ;
+		} else {
+			setRefresh(true);
+			navigate("/");
+			return;
+		}
 	}
 
 	return (
-		<>
 		<div className="modalContainer">
 			<div className="usernameModalContainer">
-				<h1>Edit profile</h1>
-				<p>
-					Please choose a username you'd like to use: 
-				</p>
+				<h1>{t("modalTitle")}</h1>
+				<p> {t("modalPrompt")} </p>
 				<input 
 					type="text" 
 					placeholder="username"
 					onChange={(e) => setUsername(e.target.value)}
 				/>
 				<div className="usernameModalFooter">
-				{ error && 
-					<p className="usernameModalError"> {error} </p>
-				}
-				<button 
-					onClick={handleClose}
-					className="l-button"
-				>
-					Confirm 
+				{ error && <p className="usernameModalError"> {error} </p> }
+				<button onClick={handleClose} id="confirmButton">
+					{t("modalConfirm")}
 				</button>
 				</div>
 			</div>
 		</div>
-		</>
 	)
 }
 
@@ -79,6 +104,7 @@ const GoogleLogin = () => {
 	const [usernamePrompt, setUsernamePrompt] = useState<boolean>(false);
 	const [googleUser, setGoogleUser] = useState<any>(null);
 	const navigate = useNavigate();
+	const { setRefresh } = useAuth();
 
 	useEffect(() => {
 		if (window.google) {
@@ -102,7 +128,6 @@ const GoogleLogin = () => {
 				headers: {'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			});
-
 			if (!response.ok) {
 				const errorData = await response.json();
 				throw new Error(errorData.err);
@@ -116,31 +141,11 @@ const GoogleLogin = () => {
 		}
 	}
 
-	const googleLogin = async (credential: string) => {
-		const payload = { token: credential, };
-		try {
-			const response = await fetch("https://scrabble.brimveyn.dev/api/loginGoogle", {
-				method: 'POST',
-				headers: {'Content-Type': 'application/json' },
-				body: JSON.stringify(payload),
-			});
-
-			if (!response.ok) throw new Error("Verification failed");
-			console.log("Authentification successfull, token validated !");
-			return true;
-		} catch (e) {
-			console.error(e);
-			return false;
-		}
-	}
-
 	const handleCredentialResponse = async (response: any) => {
-		console.log('Encoded JWT ID token: ' + response.credential);
-
-		// Décoder le token JWT (optionnel)
+		// Décoder le token JWT
 		const user = JSON.parse(atob(response.credential.split('.')[1]));
-		console.log('User:', user);
-		setGoogleUser(user);
+		//console.log('User:', user);
+		setGoogleUser({user: user, credential: response.credential});
 
 		const alreadyExist = await checkMail(user.email);
 		if (alreadyExist === true) {
@@ -149,7 +154,8 @@ const GoogleLogin = () => {
 			if (!isTokenValid) {
 				return ;
 			} else {
-				//navigate("/");
+				setRefresh(true);
+				navigate("/");
 				return;
 			}
 		}

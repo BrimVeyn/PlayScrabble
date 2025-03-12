@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { AuthProvider } from './auth/AuthContext.tsx'
 import { BrowserRouter, Routes, Route } from 'react-router'
 
 import Landing from './landing/Landing.tsx'
@@ -17,6 +18,7 @@ import './i18n.jsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+	<AuthProvider>
 		<BrowserRouter>
 			<Routes>
 				<Route path="/" element={<Landing />} />
@@ -27,5 +29,6 @@ createRoot(document.getElementById('root')!).render(
 				<Route path="*" element={<NotFound />} />
 			</Routes>
 		</BrowserRouter>
+	</AuthProvider>
   </StrictMode>,
 )

@@ -10,7 +10,7 @@ export default function ResetButton() {
 	const {t} = useTranslation("solver");
 
 	return (
-		<div className="resetButton">
+		<div className="resetButton glass">
 			<button 
 				data-tooltip-id="eraser"
 				onClick={() => setGrid(emptyGrid)}

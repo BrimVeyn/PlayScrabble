@@ -2,6 +2,7 @@ const std = @import("std");
 const httpz = @import("httpz");
 const pg = @import("pg");
 const jwt = @import("jwt");
+const JWT = jwt.JWT;
 const http = std.http;
 
 const mainModule = @import("main.zig");
@@ -34,23 +35,23 @@ pub const LoginGoogleRequest = struct {
 };
 
 pub const GoogleResponse = struct {
-  iss: []const u8,
-  azp: []const u8,
-  aud: []const u8,
-  sub: []const u8,
-  email: []const u8,
-  email_verified: []const u8,
-  nbf: []const u8,
-  name: []const u8,
-  picture: []const u8,
-  given_name: []const u8,
-  family_name: []const u8,
-  iat: []const u8,
-  exp: []const u8,
-  jti: []const u8,
-  alg: []const u8,
-  kid: []const u8,
-  typ: []const u8
+    iss: []const u8,
+    azp: []const u8,
+    aud: []const u8,
+    sub: []const u8,
+    email: []const u8,
+    email_verified: []const u8,
+    nbf: []const u8,
+    name: []const u8,
+    picture: []const u8,
+    given_name: []const u8,
+    family_name: []const u8,
+    iat: []const u8,
+    exp: []const u8,
+    jti: []const u8,
+    alg: []const u8,
+    kid: []const u8,
+    typ: []const u8
 };
 
 pub fn loginGoogle(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
@@ -90,9 +91,9 @@ pub fn loginGoogle(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
 
         var id: i32 = undefined;
         if (maybeUser == null) {
-            log.err("login: Password missmatch for {s}", .{responseBody.email});
+            log.err("loginGoogle: User with email: {s} not found", .{responseBody.email});
             res.status = 400;
-            try res.json(Error{.err = "Invalid credentials"}, .{});
+            try res.json(Error{.err = "User not found"}, .{});
             return ;
         } else {
             id = maybeUser.?.getCol(i32, "id");
@@ -111,7 +112,7 @@ pub fn loginGoogle(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         });
 
         const refreshToken = try generateJWT(app, res.arena, @intFromEnum(JWTDuration.@"30_days"), idStr);
-        try res.setCookie("Refesh-Token", refreshToken, .{
+        try res.setCookie("Refresh-Token", refreshToken, .{
             .http_only = true,
             .secure = true,
             .same_site = .strict,
@@ -138,7 +139,8 @@ pub fn loginGoogle(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     } else |e| {
         log.err("emailCheck: req.json failed: {!}", .{e});
         res.status = 400;
-        try res.json(Error{.err = "Missing fields"}, .{});
+        res.json(Error{.err = "Missing fields"}, .{}) catch {};
+        return ;
     }
 }
 
@@ -173,7 +175,7 @@ pub fn checkEmail(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
 }
 
 pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
-    const maybeRefresh = req.cookies().get("Refesh-Token");
+    const maybeRefresh = req.cookies().get("Refresh-Token");
     if (maybeRefresh) |refreshToken| {
         var maybeRow = app.db.rowOpts(
             \\SELECT *
@@ -340,7 +342,7 @@ pub fn login(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         });
 
         const refreshToken = try generateJWT(app, res.arena, @intFromEnum(JWTDuration.@"30_days"), idStr);
-        try res.setCookie("Refesh-Token", refreshToken, .{
+        try res.setCookie("Refresh-Token", refreshToken, .{
             .http_only = true,
             .secure = true,
             .same_site = .strict,
@@ -370,30 +372,65 @@ pub fn login(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     }
 }
 
-        // if (req.cookies().get("Access-Token")) |token| {
-        //     var claims = jwt.decode(
-        //         res.arena, 
-        //         struct {sub: []const u8, exp: i32 }, 
-        //         token,
-        //         .{ .secret = app.jwt_secret }, 
-        //     .{}) catch |e| switch (e) {
-        //         error.TokenExpired => {
-        //             log.err("Token expired !", .{});
-        //             res.status = 400;
-        //             return ;
-        //         },
-        //         else => {
-        //             log.err("Error: {!}", .{e});
-        //             return ;
-        //         },
-        //     };
-        //     defer claims.deinit();
-        //
-        //     res.status = 406;
-        //     try res.json(Error{.err = "Already logged in"}, .{});
-        //     return ;
-        // }
-// //        if (req.cookies().get("Refesh-Token")) |token| {
+pub fn logout(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
+
+    //NOTE: Delete refresh from database
+    if (req.cookies().get("Refresh-Token")) |refreshToken| {
+        var token = try getClaimsFromToken(app, res, refreshToken);
+        defer token.deinit();
+
+        _ = app.db.exec(
+            \\UPDATE users
+            \\SET refresh = NULL
+            \\WHERE id = $1
+        , .{token.claims.sub}) catch |e| {
+            log.err("logout: Unable to retreive Refresh-Token: {!}", .{e});
+            res.status = 500;
+            res.body = "Internal server error";
+            return ;
+        };
+    }
+    try deleteCookie(res, "Access-Token");
+    try deleteCookie(res, "Refresh-Token");
+
+    log.info("logout: Successfully logged out", .{});
+    res.status = 200;
+}
+
+pub const JwtClaims = struct {
+    sub: []const u8,
+    exp: i32,
+};
+
+fn getClaimsFromToken(app: *App, res: *httpz.Response, token: []const u8) !JWT(JwtClaims) {
+    const claims = jwt.decode(res.arena, JwtClaims, token,
+    .{ .secret = app.jwt_secret }, 
+    .{}) catch |e| switch (e) {
+        error.TokenExpired => {
+            log.err("Token expired !", .{});
+            res.status = 400;
+            return error.JWT;
+        },
+        else => {
+            log.err("Error: {!}", .{e});
+            return error.JWT;
+        },
+    };
+    return claims;
+}
+
+fn deleteCookie(res: *httpz.Response, identifier: []const u8) !void {
+    try res.setCookie(identifier, "", .{
+        .http_only = true,
+        .secure = true,
+        .same_site = .strict,
+        .max_age = 0,
+    });
+}
+
+
+
+// //        if (req.cookies().get("Refresh-Token")) |token| {
 //             var dbRow = app.db.rowOpts(
 //                 \\SELECT refresh FROM users
 //                 \\WHERE refresh = $1

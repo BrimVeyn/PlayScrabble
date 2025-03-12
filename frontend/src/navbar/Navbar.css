@@ -3,7 +3,7 @@
 	flex-direction: row;
 	width: 100vw;
 	height: 5%;
-	background-color: var(--color-navbar-background);
+	background-color: var(--foreground-color);
 	padding-inline: 10px;
 	height: 5vh;
 	border-bottom: 2px solid #676a8b;
@@ -21,8 +21,8 @@
 }
 
 .navbarButton:hover {
-	border: 2px solid lightblue;
-	background-color: #2f9c95;
+	background-color: var(--background-color);
+	transition: background-color 0.3s ease;
 	border-radius: 5px;
 	cursor: pointer;
 }

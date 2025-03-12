@@ -13,7 +13,7 @@
 .usernameModalContainer {
 	display: flex;
 	width: 400px;
-	height: 300px;
+	height: 250px;
 	flex-direction: column;
 	background-color: rgba(0, 0, 0, .8);
 	border: 3px solid rgba(200, 200, 200, .9);
@@ -34,10 +34,24 @@
 .usernameModalContainer > input {
 	padding-left: 10px;
 	font-size: 20px;
-	margin-top: 50px;
+	margin-top: 20px;
+	margin-bottom: 20px;
 	margin-inline: 10px;
 	border: 2px solid transparent;
 	transition: border-color 0.3s ease;
+}
+
+#confirmButton {
+	width: 150px;
+	height: 50px;
+	border: 1px solid rgba(200, 200, 200, .9);
+}
+
+#confirmButton:hover {
+	cursor: pointer;
+	transition: all .3 ease;
+	background-color: rgba(200, 200, 200, .9);
+	color: black;
 }
 
 .usernameModalContainer > input:focus {
@@ -46,11 +60,14 @@
 }
 
 .usernameModalFooter {
-	padding-top: 60px;
 	display: flex;
-	justify-content: center;
+	flex-direction: column;
+	align-items: center;
 }
 
 .usernameModalError {
 	color: red;
+	width: 100%;
+	padding-left: 20px;
+	padding-bottom: 10px;
 }

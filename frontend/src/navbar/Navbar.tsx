@@ -1,7 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import { NavigateFunction, useNavigate } from "react-router";
+import { SiApplearcade } from "react-icons/si";
+import { useAuth } from "../auth/AuthContext";
+
 import "./Navbar.css"
-import { useNavigate } from "react-router";
 
 const languages: { [id: string] : string; } = {
 	fr: "🇫🇷",
@@ -43,47 +46,81 @@ function LanguageDropdown() {
 	);
 }
 
+interface NavButtonProps {
+	text: string,
+	location: string,
+	navigate: NavigateFunction,
+};
+
+function NavButton({text, location, navigate}: NavButtonProps) {
+	const { t } = useTranslation("navbar");
+	return (
+		<button onClick={() => navigate(location)} className="navbarButton" >
+			{t(text)}
+		</button>
+	)
+}
+
+function LogoutButton({text, location, navigate}: NavButtonProps) {
+	const { setRefresh } = useAuth();
+	const { t } = useTranslation("navbar");
+
+	const logout = async () => {
+		await fetch("https://scrabble.brimveyn.dev/api/logout", {
+			method: 'DELETE',
+			headers: {'Content-Type': 'application/json' },
+		})
+		.then((response) => {
+			if (!response.ok) throw new Error("Logout failed");
+		})
+		.catch((e) => console.error(e));
+
+		setRefresh(true);
+		navigate(location);
+	}
+
+	return (
+		<button className="navbarButton" onClick={logout} >
+			{t(text)}
+		</button>
+	)
+}
+
 
 function Navbar() {
-	const { t } = useTranslation("navbar");
+	const {t} = useTranslation("navbar");
 	const [isOpen, setIsOpen] = useState<boolean>(false);
 	const navigate = useNavigate();
-	
+	const { logged } = useAuth();
 
 	return (
 		<>
 		<div className="navbarContainer">
 			<div className="logo">
-				<button onClick={() => navigate("/")}>Logo</button>
+				<button onClick={() => navigate("/")}>
+				<SiApplearcade />
+				</button>
 			</div>
 			<div className="links">
-				<button 
-					onClick={() => navigate("/")}
-					className="navbarButton"
-				>
-					{t("home")}
-				</button>
-				<button 
-					onClick={() => navigate("/leaderboard")}
-					className="navbarButton"
-				>
-					{t("leaderboard")}
-				</button>
-				<button 
-					onClick={() => navigate("/login")}
-					className="navbarButton"
-				>
-					{t("login")}
-				</button>
+				{logged ? (
+					<>
+					<NavButton text="home" location="/" navigate={navigate}/>
+					<NavButton text="leaderboard" location="/leaderboard" navigate={navigate}/>
+					<LogoutButton text="logout" location="/" navigate={navigate}/>
+					</>
+				) : (
+					<>
+					<NavButton text="login" location="/login" navigate={navigate}/>
+					</>
+				)}
 				<button
 					className="flag"
 					onClick={() => setIsOpen((prev) => !prev)}
-				>{t("flagEmoji", {ns: "misc"})}</button>
+				>{t("flagEmoji", {ns: "misc"})}
+				</button>
 			</div>
 		</div>
-		{ isOpen && (
-			<LanguageDropdown/>
-		)}
+		{ isOpen && (<LanguageDropdown/>)}
 		</>
 	);
 

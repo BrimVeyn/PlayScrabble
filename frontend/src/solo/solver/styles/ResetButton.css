@@ -1,9 +1,6 @@
 .resetButton {
 	width: 70px;
 	height: 70px;
-	box-shadow: var(--container-shadow);
-	background-color: var(--row-background);
-	border: var(--grid-tile-border);
 	border-width: 2px;
 }
 
@@ -13,7 +10,7 @@
 	align-items: center;
 	width: 100%;
 	height: 100%;
-	color: var(--app-grey);
+	color: whitesmoke;
 	font-size: 50px;
 }
 

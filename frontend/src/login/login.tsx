@@ -3,6 +3,7 @@ import "./login.css"
 import { useNavigate } from "react-router";
 import Navbar from "../navbar/Navbar";
 import GoogleLogin from "./components/GoogleLogin";
+import { useTranslation } from "react-i18next";
 
 type Credentials = {
 	emailOrUsername: string,
@@ -12,6 +13,7 @@ type Credentials = {
 export default function Login() {
 	const [credentials, setCrendentials] = useState<Credentials | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const { t } = useTranslation("login");
 	const navigate = useNavigate();
 
 	const handleLogin = async () => {
@@ -44,7 +46,7 @@ export default function Login() {
 		<Navbar/>
 		<div className="loginPageContainer">
 		<div className="loginContainer">
-			<p className="loginText"> Username / Email </p>
+			<p className="loginText"> {t("usernameInputText")} </p>
 			<input 
 				className="loginInput"
 				onChange={(e) => {
@@ -54,9 +56,9 @@ export default function Login() {
 					})
 				}}
 				type="email" 
-				placeholder="name@mail.com"
+				placeholder={t("usernameInputPlaceholder")}
 			/>
-			<p className="loginText"> Password </p>
+			<p className="loginText"> {t("passwordInputText")} </p>
 			<input 
 				onChange={(e) => {
 					setCrendentials((prev) => {
@@ -65,7 +67,7 @@ export default function Login() {
 					})
 				}}
 				className="loginInput"
-				placeholder="password"
+				placeholder={t("passwordInputPlaceholder")}
 				type="password"
 			/>
 			<div className="loginFooter">
@@ -73,13 +75,13 @@ export default function Login() {
 				className="l-button loginButton"
 				onClick={handleLogin}
 			>
-				Login
+				{t("login")}
 			</button>
 			<button
 				className="l-button registerButton"
 				onClick={() => navigate("/register")}
 			>
-				Register
+				{t("register")}
 			</button>
 			<GoogleLogin/>
 			{ error &&

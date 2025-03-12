@@ -1,0 +1,13 @@
+{
+	"login": "Login",
+	"register": "Register",
+	"usernameInputText": "Username / Email",
+	"passwordInputText": "Password",
+	"usernameInputPlaceholder": "name@mail.com",
+	"passwordInputPlaceholder": "password",
+	"modalConfirm": "Confirm",
+	"modalPrompt": "Please choose a username: ",
+	"modalTitle": "Complete profile",
+	"errorEmptyUsername": "Your username cannot be empty.",
+	"usernameTooLong": "You username must be lass than 16 characters long."
+}

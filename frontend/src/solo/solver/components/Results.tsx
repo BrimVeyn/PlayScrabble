@@ -93,7 +93,7 @@ function Results() {
 	return (
 		<>
 		<div className="resContainer">
-			<div className="resTable">
+			<div className="resTable glass">
 				<div className="resHead">
 					<div className="resHeadItem" onClick={() => toggleAscii(sortWay, setSortWay)}>
 						<p>{t("resTableWord")}</p>

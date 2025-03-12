@@ -4,8 +4,11 @@
 
 	display: flex;
 	flex-flow: row no-wrap;
-	background-color: var(--row-background);
-	box-shadow:	var(--container-shadow)
+
+	background: rgba(255, 255, 255, 0.21);
+	box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+	backdrop-filter: blur(5px);
+	-webkit-backdrop-filter: blur(5px);
 }
 
 .rackContainer .s-grid-cell {
@@ -27,6 +30,14 @@
 	.rackContainer .s-grid-cell {
 		width: calc(90vw / 9);
 		height: calc(90vw / 9);
+	}
+
+	.rackContainer .s-grid-tile {
+		font-size: 25px;
+	}
+
+	.rackContainer .score {
+		font-size: 10px;
 	}
 
 	.rackInput {

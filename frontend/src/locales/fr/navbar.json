@@ -1,5 +1,6 @@
 {
 	"home": "Page d'accueil",
 	"leaderboard": "Classement",
-	"login": "Se connecter"
+	"login": "Se connecter",
+	"logout": "Se déconnecter"
 }
