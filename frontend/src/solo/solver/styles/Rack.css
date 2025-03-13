@@ -1,19 +1,17 @@
 .rackContainer {
-	width: calc(70 * 7px);
-	height: 70px;
-
 	display: flex;
 	flex-flow: row no-wrap;
-
 	background: rgba(255, 255, 255, 0.21);
 	box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 	backdrop-filter: blur(5px);
 	-webkit-backdrop-filter: blur(5px);
+	width: 80%;
+	aspect-ratio: 7 / 1;
 }
 
 .rackContainer .s-grid-cell {
-	width: 70px;
-	height: 70px;
+	width: calc(100% / 7);
+	/* height: 70px; */
 }
 
 .rackContainer .s-grid-tile {

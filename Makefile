@@ -1,12 +1,12 @@
 dev:
-	sudo docker compose -f docker-compose.yml -f docker-compose-dev.yml up --build
+	docker compose -f docker-compose.yml -f docker-compose-dev.yml up --build
 dev-daemon:
-	sudo docker compose -f docker-compose.yml -f docker-compose-dev.yml up --build -d
+	docker compose -f docker-compose.yml -f docker-compose-dev.yml up --build -d
 restart-dev:
-	sudo docker compose down && make dev-daemon
+	docker compose down && make dev-daemon
 dev-no-cache:
-	docker-compose -f docker-compose.yml -f docker-compose-dev.yml up --build --no-cache
+	docker compose -f docker-compose.yml -f docker-compose-dev.yml up --build --no-cache
 prod:
-	docker-compose -f docker-compose.yml up --build
+	docker compose -f docker-compose.yml up --build
 down:
-	docker-compose down
+	docker compose down

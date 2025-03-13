@@ -10,7 +10,10 @@
 	flex-wrap: wrap;
 	padding: 2rem;
 	gap: 30px;
+	min-height: 100vh;
+	width: 40vw;
 }
+
 .resultContainer {
 	display: flex;
 	flex-direction: column;
@@ -30,6 +33,11 @@
 	gap: 50px;
 }
 
+.rackOuterContainer {
+	display: flex;
+	flex-flow: inherit;
+}
+
 @media(max-width: 768px) {
 	
 	.solverPage {
@@ -44,6 +52,7 @@
 
 	.contextContainer {
 		width: 100%;
+		min-height: initial;
 		padding: 0;
 		padding-top: 2rem;
 	}

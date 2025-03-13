@@ -25,6 +25,7 @@ services:
       - postgres
     environment:
       DATABASE_URL: postgresql://test:test@postgres:5432/db
+      DICT_URL: postgresql://beelink:Link8961800%5B%5D@dict:5432/dict
       JWT_SECRET: p0jrMzCSas7yxiE8vu5BQ92TVk5ucEdQjF1kXfzdYl5XXe6JMDUIxeoWLuegKiiAcAYvoekGIFdzATZnNT_A0Q
     ports:
       - "8080:8080"
@@ -74,4 +75,3 @@ networks:
     driver: bridge
   proxy:
     external: true
-
