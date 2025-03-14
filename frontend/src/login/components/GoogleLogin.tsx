@@ -110,12 +110,17 @@ const GoogleLogin = () => {
 		if (window.google) {
 			window.google.accounts.id.initialize({
 				client_id: '999610837594-299h07p9o3f1du6d9ghnmo7elqt9hd7m.apps.googleusercontent.com',
-				callback: handleCredentialResponse
+				callback: handleCredentialResponse,
 			});
 
 			window.google.accounts.id.renderButton(
 				document.getElementById('google-login-btn'),
-				{ theme: 'outline', size: 'large' }
+				{ 
+					theme: 'outline',
+					size: 'large',
+					text: "continue_with",
+					shape: "square"
+				}
 			);
 		}
 	}, []);
@@ -161,6 +166,7 @@ const GoogleLogin = () => {
 		}
 		setUsernamePrompt(true);
 	};
+
 
 	return (
 		<div>

@@ -42,7 +42,7 @@ export default function Login() {
 	};
 
 	return (
-		<>
+		<div className="loginPage">
 		<Navbar/>
 		<div className="loginPageContainer">
 		<div className="loginContainer">
@@ -90,6 +90,6 @@ export default function Login() {
 			</div>
 		</div>
 		</div>
-		</>
+		</div>
 	);
 }

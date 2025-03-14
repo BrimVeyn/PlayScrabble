@@ -211,5 +211,6 @@
 		caret-color: transparent;
 		color: transparent;
 		user-select: none;
+		outline: none;
 	}
 }

@@ -10,6 +10,7 @@ export default function Solo() {
 
 	return (
 		<>
+		<div className="soloPage">
 		<Navbar/>
 		<div className="soloPageContainer">
 			<button className="navButton" onClick={() => navigate("/solo/solver")}>
@@ -18,6 +19,7 @@ export default function Solo() {
 			<button className="navButton" onClick={() => navigate("/solo/bot")}>
 				{t("computer1v1")}
 			</button>
+		</div>
 		</div>
 		</>
 	);

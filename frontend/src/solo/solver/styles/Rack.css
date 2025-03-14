@@ -1,21 +1,18 @@
 .rackContainer {
 	display: flex;
-	flex-flow: row no-wrap;
+	grid-column: span 7;
 	background: rgba(255, 255, 255, 0.21);
 	box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 	backdrop-filter: blur(5px);
 	-webkit-backdrop-filter: blur(5px);
-	width: 80%;
-	aspect-ratio: 7 / 1;
 }
 
 .rackContainer .s-grid-cell {
-	width: calc(100% / 7);
-	/* height: 70px; */
+	width: 100%;
 }
 
 .rackContainer .s-grid-tile {
-	font-size: 45px;
+	font-size: min(3vw, 45px);
 }
 
 @media(max-width: 768px) {
@@ -59,5 +56,6 @@
 		caret-color: transparent;
 		color: transparent;
 		user-select: none;
+		outline: none;
 	}
 }

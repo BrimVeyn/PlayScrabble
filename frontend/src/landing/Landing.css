@@ -1,6 +1,11 @@
-.landingContainer {
+.landingPage {
 	width: 100vw;
 	height: 100vh;
+}
+
+.landingContainer {
+	width: 100vw;
+	height: 95%;
 	display: flex;
 	justify-content: center;
 	align-items: center;

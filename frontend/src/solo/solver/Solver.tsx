@@ -10,6 +10,7 @@ import "./Solver.css"
 function Solver() {
 	return (
 		<>
+		<div className="solverPage">
 		<Navbar/>
 		<div className="solverContainer">
 			<GridProvider>
@@ -24,6 +25,7 @@ function Solver() {
 					<Results/>
 				</div>
 			</GridProvider>
+		</div>
 		</div>
 		</>
 	)

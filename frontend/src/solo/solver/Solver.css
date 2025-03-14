@@ -1,17 +1,24 @@
+.solverPage {
+	width: 100vw;
+	height: 100vh;
+}
+
 .solverContainer {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
+	gap: 2rem;
+	padding-inline: clamp(10px, (300 / 920) * (100vw - 1000px), 300px);
+	padding-block: 10px;
+	height: 95%;
 }
 
 .contextContainer {
 	display: flex;
 	flex-direction: column;
 	flex-wrap: wrap;
-	padding: 2rem;
 	gap: 30px;
-	min-height: 100vh;
-	width: 40vw;
+	width: 60%;
 }
 
 .resultContainer {
@@ -19,8 +26,7 @@
 	flex-direction: column;
 	align-items: start;
 	gap: 2rem;
-	padding: 2rem;
-	width: 30vw;
+	width: 40%;
 }
 
 .resultContainer>div {
@@ -30,13 +36,15 @@
 .rackOuterContainer {
 	display: flex;
 	flex-direction: row;
-	gap: 50px;
+	aspect-ratio: 9/1;
 }
 
 .rackOuterContainer {
-	display: flex;
-	flex-flow: inherit;
+	display: grid;
+	width: 100%;
+	grid-template-columns: repeat(9, 1fr);
 }
+
 
 @media(max-width: 768px) {
 	
@@ -46,15 +54,15 @@
 
 	.solverContainer {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		flex-wrap: wrap;
+		padding-inline: 0px;
 	}
 
 	.contextContainer {
 		width: 100%;
 		min-height: initial;
 		padding: 0;
-		padding-top: 2rem;
 	}
 
 	.rackOuterContainer {
@@ -63,6 +71,7 @@
 	}
 
 	.resultContainer {
-		width: 100%;
+		width: 95%;
+		padding-bottom: 50px;
 	}
 }

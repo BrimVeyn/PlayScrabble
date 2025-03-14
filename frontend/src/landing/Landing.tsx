@@ -9,7 +9,7 @@ export default function Landing() {
 	const navigate = useNavigate();
 
 	return (
-		<>
+		<div className="landingPage">
 		<Navbar/>
 		<div className="landingContainer">
 			<button className="navButton" onClick={() => navigate("/solo")}>
@@ -19,6 +19,6 @@ export default function Landing() {
 				{t("multi")}
 			</button>
 		</div>
-		</>
+		</div>
 	);
 }
