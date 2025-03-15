@@ -38,6 +38,7 @@ function Results() {
 	useEffect(() => {
 		setSortWay(null);
 		setLastResults(null);
+		setShownDefinition(null);
 	}, [grid, rack]);
 
 	const showGhostWord = (idx: number) => {
@@ -135,10 +136,7 @@ function Results() {
 										<p> {match.score} </p>
 										<p className="p20"> {match.letterCount || 0} </p>
 										<p className="p10"> {match.dir == 0 ? t("resRowVert") : t("resRowHor")} </p>
-										<p className="p10"> {match.joker ? 
-											match.joker.filter(n => n != 0).length
-											: 0 } 
-										</p>
+										<p className="p10"> {match.joker ? match.joker.filter(n => n != 0).length : 0 } </p>
 									</div>
 								);
 							}}
@@ -147,12 +145,9 @@ function Results() {
 						<SolverButton/>
 					}
 				</div>
-				{
-					lastResults && 
-						<div className="resFooter">
-							{t("resFooterWord")}{!lastResults || lastResults.length}
-						</div>
-				}
+				<div className="resFooter">
+					{t("resFooterWord")}{lastResults ? lastResults.length : 0}
+				</div>
 			</div>
 		</div>
 			<Definitions

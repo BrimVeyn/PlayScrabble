@@ -1,6 +1,7 @@
 {
 	"solo": "Solo",
 	"multi": "Multiplayer",
+	"training": "Training",
 	"gridSolver": "Grid solver",
 	"computer1v1": "1v1 against computer"
 }
