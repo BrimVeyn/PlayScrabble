@@ -1,0 +1,50 @@
+.defContainer {
+	background-color: var(--row-background);
+	border-radius: 10px;
+	height: 200px;
+	width: inherit;
+	box-shadow:	var(--container-shadow)
+}
+
+.defHeader {
+	width: 100%;
+	height: 20%;
+	display: flex;
+	justify-content: center;
+	border-top-left-radius: inherit;
+	border-top-right-radius: inherit;
+	border-bottom: 2px solid var(--app-black);
+	align-items: center;
+	font-weight: bold;
+	color: var(--app-black);
+}
+
+.defContent li:first-child {
+	list-style: none;
+	font-weight: bold;
+}
+
+li {
+	list-style: inside;
+}
+
+.defContent {
+	width: 100%;
+	height: 80%;
+	display: flex;
+	overflow-y: scroll;
+	flex-direction: column;
+	border-bottom-left-radius: inherit;
+	border-bottom-right-radius: inherit;
+	justify-content: start;
+	align-items: start;
+	color: var(--app-black);
+}
+
+.defRow {
+	padding: 5px;
+}
+
+.defPlaceholder {
+	padding: 10px;
+}

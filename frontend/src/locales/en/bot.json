@@ -1,0 +1,10 @@
+{
+	"newGame": "New game",
+	"onGoingGames": "Ongoing games",
+	"Hard": "Hard",
+	"Medium": "Medium",
+	"Expert": "Expert",
+	"Beginner": "Beginner",
+	"unloggedPlaceHolder": "Log in to see your ongoing games",
+	"noOnGoingPlaceHoler": "No ongoing matches"
+}

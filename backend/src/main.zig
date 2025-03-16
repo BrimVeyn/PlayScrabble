@@ -91,17 +91,37 @@ pub fn main() !u8 {
         .headers = "*",
     });
 
-    _ = try app.db.exec(
-        \\DROP TABLE IF EXISTS "users";
-        \\CREATE TABLE "users" (
-        \\id SERIAL PRIMARY KEY,
-        \\username TEXT UNIQUE,
-        \\email TEXT NOT NULL UNIQUE,
-        \\password TEXT NOT NULL,
-        \\refresh TEXT NULL
+    _ = app.db.exec(
+        \\DROP TABLE IF EXISTS "game";
+        \\DROP TABLE IF EXISTS "user";
+        \\
+        \\CREATE TABLE "user" (
+        \\  id SERIAL PRIMARY KEY,
+        \\  username VARCHAR(32) UNIQUE,
+        \\  email VARCHAR(255) NOT NULL UNIQUE,
+        \\  password TEXT NOT NULL,
+        \\  refresh TEXT
         \\);
-        \\INSERT INTO users (username, email, password) VALUES ('bvan', 'test@gmail.com', 'pass');
-    , .{});
+        \\
+        \\INSERT INTO "user" (username, email, password) VALUES ('bryan', 'bryan@gmail.com', 'pass');
+        \\INSERT INTO "user" (username, email, password) VALUES ('robin', 'robin@gmail.com', 'pass');
+        \\INSERT INTO "user" (username, email, password) VALUES ('nathan', 'nathan@gmail.com', 'pass');
+        \\
+        \\CREATE TABLE "game" (
+        \\  id SERIAL PRIMARY KEY,
+        \\  creation_date TIMESTAMP NOT NULL,
+        \\  type VARCHAR(32),
+        \\  status VARCHAR(16),
+        \\  grid TEXT NOT NULL,
+        \\  player_one_id INTEGER NOT NULL,
+        \\  player_two_id INTEGER,
+        \\  FOREIGN KEY (player_one_id) REFERENCES "user"(id),
+        \\  FOREIGN KEY (player_two_id) REFERENCES "user"(id)
+        \\);
+    , .{}) catch |e| {
+        log.err("Error initializing DB: {!}", .{e});
+        return 1;
+    };
 
     var router = server.router(.{.middlewares = &.{cors}});
     //-------------------------------GET--------------------------------

@@ -1,0 +1,25 @@
+.resetButton {
+	border-width: 2px;
+	aspect-ratio: 1 /1;
+	grid-column: -2;
+}
+
+.resetButton button {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+	color: whitesmoke;
+}
+
+.resetButton button:hover {
+	color: var(--app-black);
+}
+
+@media(max-width: 768px) {
+	.resetButton {
+		height: calc(90vw / 9);
+		width: calc(90vw / 9);
+	}
+}

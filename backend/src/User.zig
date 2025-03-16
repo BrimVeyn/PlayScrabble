@@ -81,7 +81,7 @@ pub fn loginGoogle(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         log.info("Email: {s}\n", .{responseBody.email});
 
         var maybeUser = app.db.rowOpts(
-            \\SELECT id as id FROM users WHERE email = $1
+            \\SELECT id as id FROM "user" WHERE email = $1
         , .{responseBody.email}, .{ .column_names = true }) catch |e| {
             log.err("login: PG: {!}", .{e});
             res.status = 500;
@@ -123,7 +123,7 @@ pub fn loginGoogle(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         log.info("RefreshToken generated: {s}", .{refreshToken});
 
         _ = app.db.exec(
-            \\UPDATE users
+            \\UPDATE "user"
             \\SET refresh = $1
             \\WHERE id = $2
         , .{refreshToken, idStr}) catch |e| {
@@ -152,7 +152,7 @@ pub fn checkEmail(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     if (req.json(EmailCheckReq)) |body| {
         //NOTE: Check if a user with same email already exist
         var maybeUser = app.db.row(
-            \\SELECT email FROM users WHERE email = $1
+            \\SELECT email FROM "user" WHERE email = $1
         , .{body.?.email}) catch |e| {
             log.err("register: PG: {!}", .{e});
             res.status = 500;
@@ -179,7 +179,7 @@ pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     if (maybeRefresh) |refreshToken| {
         var maybeRow = app.db.rowOpts(
             \\SELECT *
-            \\FROM USERS
+            \\FROM "user"
             \\WHERE refresh = $1
         , .{refreshToken}, .{.column_names = true}) catch |e| {
             log.err("me: PG: {!}", .{e});
@@ -208,7 +208,7 @@ pub fn getUsers(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
         log.err("getUsers: {!}", .{e});
     }
 
-    const queryRes = try app.db.query("SELECT * FROM users;", .{});
+    const queryRes = try app.db.query("SELECT * FROM 'user';", .{});
     defer queryRes.deinit();
 
     var users = std.ArrayList(UserFields).init(res.arena);
@@ -232,7 +232,7 @@ pub fn register(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
 
         //NOTE: Check if a user with same username already exist
         var maybeUser = app.db.row(
-            \\SELECT username FROM users WHERE username = $1
+            \\SELECT username FROM "user" WHERE username = $1
         , .{body.?.username}) catch |e| {
             log.err("register: PG: {!}", .{e});
             res.status = 500;
@@ -250,7 +250,7 @@ pub fn register(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
 
         //NOTE: Check if a user with same email already exist
         maybeUser = app.db.row(
-            \\SELECT email FROM users WHERE email = $1
+            \\SELECT email FROM "user" WHERE email = $1
         , .{body.?.email}) catch |e| {
             log.err("register: PG: {!}", .{e});
             res.status = 500;
@@ -267,7 +267,7 @@ pub fn register(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         }
 
         _ = app.db.exec(
-            \\INSERT INTO users (username, email, password)
+            \\INSERT INTO "user" (username, email, password)
             \\values ($1, $2, $3)
         , .{body.?.username, body.?.email, body.?.password}) catch |e| {
             log.err("register: PG: {!}", .{e});
@@ -311,7 +311,7 @@ pub fn login(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     if (req.json(LoginRequest)) |body| {
 
         var maybeUser = app.db.rowOpts(
-            \\SELECT id as id FROM users WHERE password = $1
+            \\SELECT id as id FROM "user" WHERE password = $1
         , .{body.?.password}, .{ .column_names = true }) catch |e| {
             log.err("login: PG: {!}", .{e});
             res.status = 500;
@@ -353,7 +353,7 @@ pub fn login(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         log.info("RefreshToken generated: {s}", .{refreshToken});
 
         _ = app.db.exec(
-            \\UPDATE users
+            \\UPDATE "user"
             \\SET refresh = $1
             \\WHERE id = $2
         , .{refreshToken, idStr}) catch |e| {
@@ -380,7 +380,7 @@ pub fn logout(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         defer token.deinit();
 
         _ = app.db.exec(
-            \\UPDATE users
+            \\UPDATE "user"
             \\SET refresh = NULL
             \\WHERE id = $1
         , .{token.claims.sub}) catch |e| {

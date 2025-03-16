@@ -18,7 +18,7 @@ function Text({index, letter}: any) {
 
 export default function NotFound() {
 	return (
-		<>
+		<div className="notFoundPage">
 		<Navbar/>
 		<div className="notFoundContainer">
 			<div className="notFoundRow">
@@ -44,6 +44,6 @@ export default function NotFound() {
 			}
 			</div>
 		</div>
-		</>
+		</div>
 	)
 }

@@ -1,0 +1,10 @@
+{
+	"newGame": "Nouvelle partie",
+	"onGoingGames": "Parties en cours",
+	"Hard": "Difficile",
+	"Medium": "Moyen",
+	"Expert": "Expert",
+	"Beginner": "Débutant",
+	"unloggedPlaceHolder": "Connectez-vous pour voir vos parties en cours",
+	"noOnGoingPlaceHoler": "Aucune partie en cours"
+}

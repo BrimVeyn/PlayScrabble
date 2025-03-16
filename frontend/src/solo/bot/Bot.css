@@ -1,1 +1,86 @@
+.botPage {
+	width: 100vw;
+	height: 100vh;
+}
 
+.botPageContainer {
+	height: 95vh;
+	width: 100vw;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.botMenu {
+	width: fit-content;
+	align-items: center;
+}
+
+.onGoingTable {
+	width: 500px;
+	height: fit-content;
+	font-size: 20px;
+}
+
+.onGoingHead {
+	display: flex;
+	justify-content: center;
+} 
+
+.onGoingBody {
+	display: flex;
+	flex-direction: column;
+}
+
+.onGoingRow {
+	transition: all .125 ease;
+	padding: 10px;
+}
+
+.onGoingRow:hover {
+	background-color: var(--foreground-color);
+}
+
+.onGoingPh {
+	padding: 10px;
+}
+
+.newGameItem {
+	display: flex;
+	flex-direction: column;
+}
+
+.newGameItem span {
+	font-size: 20px;
+	padding: 10px;
+}
+
+.newGameItem select {
+	border: 1px solid var(--foreground-color);
+	margin-inline: 10px;
+	padding-inline: 5px;
+	font-size: 15px;
+}
+
+.newGameMenuContainer {
+	width: 500px;
+	height: fit-content;
+}
+
+.newGameFooter {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+}
+
+.ngButton {
+	margin-block: 10px;
+	transition: all .125s ease;
+	padding: 10px;
+}
+
+.glass.ngButton:hover {
+	background: var(--foreground-color);
+	color: var(--app-black);
+	cursor: pointer;
+}

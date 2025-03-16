@@ -1,0 +1,23 @@
+.solverButtonContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-width: 100%;
+	width: auto;
+	height: auto;
+}
+
+
+.solverButtonContainer>button {
+	width: 66.66%;
+	height: 15%;
+	font-weight: bold;
+	background-color: rgb(213, 228, 255);
+	border-radius: 5px;
+}
+
+.solverButtonContainer>button:hover {
+	cursor: pointer;
+	transition: background-color .2s ease;
+	background-color: rgb(232, 240, 255);
+}

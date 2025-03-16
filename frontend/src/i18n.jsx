@@ -8,6 +8,7 @@ import letterEn from "./locales/en/letterScore.json"
 import miscEn from "./locales/en/misc.json"
 import landingEn from "./locales/en/landing.json"
 import loginEn from "./locales/en/login.json"
+import botEn from "./locales/en/bot.json"
 
 import navbarFr from "./locales/fr/navbar.json"
 import solverFr from "./locales/fr/solver.json"
@@ -15,6 +16,7 @@ import letterFr from "./locales/fr/letterScore.json"
 import miscFr from "./locales/fr/misc.json"
 import landingFr from "./locales/fr/landing.json"
 import loginFr from "./locales/fr/login.json"
+import botFr from "./locales/fr/bot.json"
 
 i18n
 	.use(initReactI18next) 
@@ -27,7 +29,8 @@ i18n
 				letterScore: letterEn,
 				misc: miscEn,
 				landing: landingEn,
-				login: loginEn
+				login: loginEn,
+				bot: botEn
 			},
 			fr: {
 				navbar: navbarFr,
@@ -35,7 +38,8 @@ i18n
 				letterScore: letterFr,
 				misc: miscFr,
 				landing: landingFr,
-				login: loginFr
+				login: loginFr,
+				bot: botFr
 			},
 		},
 		detection: {
