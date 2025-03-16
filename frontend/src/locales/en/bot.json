@@ -6,5 +6,9 @@
 	"Expert": "Expert",
 	"Beginner": "Beginner",
 	"unloggedPlaceHolder": "Log in to see your ongoing games",
-	"noOnGoingPlaceHoler": "No ongoing matches"
+	"noOnGoingPlaceHoler": "No ongoing matches",
+	"goBack": "Back",
+	"confirm": "Confirm",
+	"dict": "Dictionary",
+	"difficulty": "Difficulty"
 }

@@ -27,11 +27,10 @@
 }
 
 .logo {
-	width: 20%;
-	height: 100%;
 	display: flex;
 	justify-content: start;
 	align-items: center;
+	width: 20%;
 }
 
 .links {

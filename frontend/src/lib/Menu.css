@@ -17,5 +17,6 @@
 
 .glass.menuItem:hover {
 	background: var(--foreground-color);
+	color: var(--app-black);
 	cursor: pointer;
 }

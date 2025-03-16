@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useAuth } from "../../auth/AuthContext"
 import { Menu } from "../../lib/Menu"
 import Navbar from "../../navbar/Navbar"
 
 import "./Bot.css"
 import { useTranslation } from "react-i18next"
-import timeNow from "../../lib/Date"
 import Game from "./Game"
 
 
@@ -53,20 +52,17 @@ function BotOngoing () {
 	)
 }
 
-type NewGameOptions = {
-	dict: string,
-	difficulty: string,
-};
 
 interface NewGameMenuProps {
 	setMenuState: React.Dispatch<React.SetStateAction<MenuState>>,
+	gameOptions: NewGameOptions,
+	setGameOptions: React.Dispatch<React.SetStateAction<NewGameOptions>>,
 };
 
 const defaultOptions = {dict: "FR", difficulty: "Medium"};
 
-const NewGameMenu = ({setMenuState}: NewGameMenuProps) => {
+const NewGameMenu = ({setMenuState, gameOptions, setGameOptions}: NewGameMenuProps) => {
 	const { t } = useTranslation("bot");
-	const [gameOptions, setGameOptions] = useState<NewGameOptions>(defaultOptions);
 
 	const handleChangeDict = (e: any) => {
 		setGameOptions((prev) => { return {...prev, dict: e.target.value}; })
@@ -76,16 +72,17 @@ const NewGameMenu = ({setMenuState}: NewGameMenuProps) => {
 	}
 
 	return (
+		<div className="botPageContainer">
 		<div className="glass newGameMenuContainer">
 			<div className="newGameItem">
-				<span><b>Dictionnaire</b></span>
+				<span><b>{t("dict")}</b></span>
 				<select value={gameOptions.dict} onChange={handleChangeDict}>
 					<option value="FR">FR (ODS 8)</option> 
 					<option value="EN">EN (SOWPODS)</option> 
 				</select>
 			</div>
 			<div className="newGameItem">
-				<span><b>Difficulte</b></span>
+				<span><b>{t("difficulty")}</b></span>
 				<select value={gameOptions.difficulty} onChange={handleChangeDiff}>
 					<option value="Expert">{t("Expert")}</option> 
 					<option value="Hard">{t("Hard")}</option> 
@@ -97,12 +94,13 @@ const NewGameMenu = ({setMenuState}: NewGameMenuProps) => {
 				<button 
 					className="glass ngButton"
 					onClick={() => setMenuState(MenuState.Main)}
-				> Retour </button>
+				> {t("goBack")} </button>
 				<button 
 					className="glass ngButton"
 					onClick={() => setMenuState(MenuState.Game)}
-				> Valider </button>
+				> {t("confirm")} </button>
 			</div>
+		</div>
 		</div>
 	)
 }
@@ -114,6 +112,7 @@ interface BotMenuProps {
 const BotMenu = ({setMenuState}: BotMenuProps) => {
 	const { t } = useTranslation("bot");
 	return (
+		<div className="botPageContainer">
 		<Menu style="botMenu">
 			<div 
 				className="glass menuItem"
@@ -123,6 +122,7 @@ const BotMenu = ({setMenuState}: BotMenuProps) => {
 			</div>
 		<BotOngoing/>
 		</Menu>
+		</div>
 	)
 }
 
@@ -132,23 +132,33 @@ enum MenuState {
 	Game = "Game"
 };
 
+export type NewGameOptions = {
+	dict: string,
+	difficulty: string,
+};
+
 export default function Bot () {
 	const [menuState, setMenuState] = useState<MenuState>(MenuState.Main);
+	const [gameOptions, setGameOptions] = useState<NewGameOptions>(defaultOptions);
 
 	const renderState = () => {
 		switch (menuState) {
 			case MenuState.Main: return <BotMenu setMenuState={setMenuState}/>
-			case MenuState.NewGame: return <NewGameMenu setMenuState={setMenuState}/>
-			case MenuState.Game: return <Game/>
+			case MenuState.NewGame: {
+				return <NewGameMenu 
+						setMenuState={setMenuState} 
+						gameOptions={gameOptions}
+						setGameOptions={setGameOptions}
+					/>
+			}
+			case MenuState.Game: return <Game gameOptions={gameOptions}/>
 		}
 	}
 
 	return (
 		<div className="botPage">
 			<Navbar/>
-			<div className="botPageContainer">
-				{renderState()}
-			</div>
+			{renderState()}
 		</div>
 	)
 }

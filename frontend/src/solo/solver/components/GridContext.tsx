@@ -150,6 +150,8 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 			return;
 		}
 		
+		e.preventDefault();
+
 		if (e.code == "Space") {
 			if (cursor.ctx !== "rack") return;
 
@@ -192,7 +194,6 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 				});
 				break;
 			case "ArrowDown":
-				e.preventDefault();
 				setCursor((prev) => {
 					if (!prev) return prev;
 					if (prev.ctx === "grid") {
@@ -221,7 +222,6 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 				});
 				break;
 			case "ArrowUp":
-				e.preventDefault();
 				setCursor((prev) => {
 					if (!prev) return prev;
 					if (prev.cell[0] > 0)

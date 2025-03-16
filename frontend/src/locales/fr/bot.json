@@ -6,5 +6,9 @@
 	"Expert": "Expert",
 	"Beginner": "Débutant",
 	"unloggedPlaceHolder": "Connectez-vous pour voir vos parties en cours",
-	"noOnGoingPlaceHoler": "Aucune partie en cours"
+	"noOnGoingPlaceHoler": "Aucune partie en cours",
+	"goBack": "Retour",
+	"confirm": "Confirmer",
+	"dict": "Dictionnaire",
+	"difficulty": "Difficulté"
 }

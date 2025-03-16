@@ -14,7 +14,7 @@
 	"resButtonLoading": "Chargement...",
 	"resFooterWord": "Nombre de mots trouvés: ",
 	"defTableHead": "Définition(s)",
-	"defTableEmpty": "Pas de definition à afficher",
+	"defTableEmpty": "Pas de définition à afficher",
 	"rackErrorMessage": "⚠️  Votre main ne peut contenir que 7 lettres.",
 	"resetButtonTooltip": "Effacer la grille"
 }
