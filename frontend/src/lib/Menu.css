@@ -20,3 +20,9 @@
 	color: var(--app-black);
 	cursor: pointer;
 }
+
+@media(max-width: 758px) {
+	.menu {
+		width: 95%;
+	}
+}

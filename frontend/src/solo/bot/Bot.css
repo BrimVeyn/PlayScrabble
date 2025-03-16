@@ -12,12 +12,12 @@
 }
 
 .botMenu {
-	width: fit-content;
+	width: 500px;
 	align-items: center;
 }
 
 .onGoingTable {
-	width: 500px;
+	width: 100%;
 	height: fit-content;
 	font-size: 20px;
 }
@@ -83,4 +83,15 @@
 	background: var(--foreground-color);
 	color: var(--app-black);
 	cursor: pointer;
+}
+
+@media(max-width: 768px) {
+	.newGameMenuContainer {
+		width: 95%;
+	}
+
+	.botMenu {
+		width: 95%;
+	}
+	
 }
