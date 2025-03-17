@@ -2,13 +2,14 @@ import { useGrid } from "./GridContext";
 import "../styles/Rack.css"
 import "../styles/Grid.css"
 import { useTranslation } from "react-i18next";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 
 export default function Rack () {
-	const {rack, cursor, setCursor, handleKeyDown, handleKeyDownMobile } = useGrid();
+	const {playerInfo, cursor, setCursor, handleKeyDown, handleKeyDownMobile, setPlayerInfo } = useGrid();
 	const {t} = useTranslation("letterScore");
 	const isMobile = window.matchMedia("(max-width: 768px)").matches;
 	const inputRef = useRef<HTMLInputElement | null>(null);
+	const [myTurn, setMyTurn] = useState<boolean>(false);
 
 	const handleClickMobile = () => {
 		if (!isMobile) return;
@@ -17,9 +18,17 @@ export default function Rack () {
 		}
 	}
 
+	useEffect(() => {
+		if (playerInfo.turn === 0) {
+			setMyTurn(true);
+		} else {
+			setMyTurn(false);
+		}
+	}, [playerInfo])
+
 	return (
 		<div 
-			className="rackContainer"
+			className={`rackContainer ${myTurn ? "rackOutline" : ""}`}
 			onClick={handleClickMobile}
 		>
 		{ isMobile && 
@@ -40,7 +49,7 @@ export default function Rack () {
 			</div>
 			</>
 		}
-		{rack.split('').map((letter, idx) => {
+		{playerInfo.playerOneRack.split('').map((letter, idx) => {
 			const fClass:string = (letter == '.') ? "empty" : "full";
 			const hasScore: boolean = (letter !== '.');
 			const isSelected = (cursor && cursor.ctx === "rack" && cursor.cell[1] == idx);
@@ -53,9 +62,7 @@ export default function Rack () {
 						setCursor({ctx: "rack", cell: [0, idx], direction: "right"});
 					}}
 				> 
-					<p className={`s-grid-tile ${fClass}`}> 
-						{letter}
-					</p>
+					<p className={`s-grid-tile ${fClass}`}> {letter} </p>
 					{ isSelected && <p className="selected"></p> }
 					{ hasScore && 
 						<p className="score">

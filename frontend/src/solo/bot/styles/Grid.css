@@ -133,6 +133,16 @@
 	color: var(--app-black);
 }
 
+.pending {
+	background-color: var(--pending-color);
+	border-right: .1em solid var(--pending-border);
+	border-bottom: .1em solid var(--pending-border);
+	border-top: 0.1em solid transparent;
+	border-left: 0.1em solid transparent;
+	border-radius: 5px;
+	color: var(--app-black);
+}
+
 .selected {
 	position: absolute;
 	z-index: 10;

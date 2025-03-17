@@ -19,8 +19,8 @@ function toggleScore(sortWay: string | null, setSortWay: (value: any) => void) {
 }
 
 function Results() {
-	const {rack, grid, setGhostGrid, lastResults, setLastResults} = useGrid();
-	const {t} = useTranslation("solver");
+	const { setGridLayers, lastResults, setLastResults } = useGrid();
+	const { t } = useTranslation("solver");
 	const [sortWay, setSortWay] = useState<"ascii-asc" |"ascii-des" | "score-asc" | "score-des" | null>(null);
 	const [shownDefinition, setShownDefinition] = useState<{word: string, def: string} | null>(null);
 
@@ -33,12 +33,6 @@ function Results() {
 			case "ascii-des": setLastResults([...lastResults].sort((a, b) => -(a.word.localeCompare(b.word)))); break;
 		}
 	}, [sortWay])
-
-	useEffect(() => {
-		setSortWay(null);
-		setLastResults(null);
-		setShownDefinition(null);
-	}, [grid, rack]);
 
 	const showGhostWord = (idx: number) => {
 		if (!lastResults) return ;
@@ -53,7 +47,7 @@ function Results() {
 					newGrid[row].substring(0, match.pos[0]) +
 					match.word.toUpperCase() + 
 					newGrid[row].substring(match.pos[1] + 1);
-				setGhostGrid(newGrid);
+				setGridLayers((prev) => ({...prev, ghostGrid: newGrid}));
 				break;
 			}
 			case 0: { //VERTICAL
@@ -65,7 +59,7 @@ function Results() {
 						match.word[row - match.pos[0]] + 
 						newGrid[row].substring(col + 1);
 				}
-				setGhostGrid(newGrid);
+				setGridLayers((prev) => ({...prev, ghostGrid: newGrid}));
 				break;
 			}
 			default: return ;
@@ -111,7 +105,7 @@ function Results() {
 					<div className="resHeadItem p10"> <p>{t("resTableDir")}</p> </div>
 					<div className="resHeadItem p10"> <p>{t("resTableJoker")}</p> </div>
 				</div>
-				<div className="resBody" onMouseLeave={() => setGhostGrid(emptyGrid)}>
+				<div className="resBody" onMouseLeave={() => setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}))}>
 					{lastResults &&
 						<List
 							height={500} 

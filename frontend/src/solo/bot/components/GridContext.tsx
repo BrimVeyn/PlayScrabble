@@ -1,4 +1,6 @@
-import React, { useEffect, createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import callSolver from "./useSolver";
+import { testGrid } from "../../solver/components/GridContext";
 
 export const emptyGrid: Array<string> = [
 	"...............",
@@ -17,27 +19,12 @@ export const emptyGrid: Array<string> = [
 	"...............",
 	"...............",
 ];
-export const testGrid: Array<string> = [
-  ".......D...H...",
-  "....VOTENT.U...",
-  ".....RECU..M...",
-  ".......H...I...",
-  ".......U...DORT",
-  ".....E.ET.DE...",
-  ".E...M..R.E....",
-  "ENFILERAI.P....",
-  "P.L..R..A.EN...",
-  "ANALOGUE..CI...",
-  "I.I..E....H...E",
-  "S.R..SALOPERIES",
-  "S.E.......R...T",
-  "E.........A...E",
-  "..........I...R"
-];
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
-type Match = {
+const startPurse: Array<number> = [ 9, 2, 2, 3, 15, 2, 2, 2, 8, 1, 1, 5, 3, 6, 6, 2, 1, 6, 6, 6, 6, 2, 1, 1, 1, 1 ];
+
+export type Match = {
 	word: string;
 	score: number;
 	dir: number;
@@ -54,13 +41,24 @@ type Cursor = {
 	direction: "right" | "down";
 };
 
-interface GridContextType {
+export type GridLayers = {
 	grid: Array<string>;
-	setGrid: React.Dispatch<React.SetStateAction<Array<string>>>;
 	ghostGrid: Array<string>;
-	setGhostGrid: React.Dispatch<React.SetStateAction<Array<string>>>;
-	rack: string;
-	setRack: React.Dispatch<React.SetStateAction<string>>;
+	pendingGrid: Array<string>;
+};
+
+export type PlayerInfo = {
+	purse: Array<number>,
+	turn: number,
+	playerOneRack: string,
+	playerTwoRack: string,
+};
+
+interface GridContextType {
+	gridLayers: GridLayers;
+	setGridLayers: React.Dispatch<React.SetStateAction<GridLayers>>;
+	playerInfo: PlayerInfo;
+	setPlayerInfo: React.Dispatch<React.SetStateAction<PlayerInfo>>;
 	cursor: Cursor | null;
 	setCursor: React.Dispatch<React.SetStateAction<Cursor | null>>;
 	lastResults: Array<Match> | null
@@ -79,39 +77,95 @@ export const useGrid = () => {
 	return context;
 };
 
+interface fillRackProps {
+	player: number
+	playerInfo: PlayerInfo,
+	setPlayerInfo: React.Dispatch<React.SetStateAction<PlayerInfo>>;
+}
+
+function randInt(max: number) {
+	return Math.floor(Math.random() * max);
+}
+
+const refillRack = ({player, playerInfo, setPlayerInfo}: fillRackProps) => {
+	let rack = player === 1 ? playerInfo.playerOneRack : playerInfo.playerTwoRack;
+
+	const emptySlots = rack.split("").map((elem, idx) => { if (elem === '.') return idx}).filter((elem) => elem !== undefined)
+	while (emptySlots.length > 0) {
+		const letter = randInt(25);
+		if (playerInfo.purse[letter] === 0) {
+			continue;
+		}
+		playerInfo.purse[letter] -= 1;
+		rack = rack.split("").map((prev, idx) => {
+			if (idx == emptySlots[0])
+				return String.fromCharCode(letter + 65);
+			return prev;
+		}).join("");
+		console.log("Added: ", letter, "Rack: ", rack);
+		emptySlots.shift();
+	}
+	setPlayerInfo((prev) => {
+		if (player === 1) return {...prev, playerOneRack: rack};
+		return {...prev, playerTwoRack: rack};
+	})
+	console.log(emptySlots);
+}
+
+const defaultPlayerInfo = {
+	purse: startPurse,
+	playerOneRack: ".......",
+	playerTwoRack: ".......",
+	turn: randInt(2),
+};
+
+const defaultLayers = {
+	grid: testGrid,
+	ghostGrid: emptyGrid,
+	pendingGrid: emptyGrid,
+};
+
+const GRID_SIZE = 15;
+
 export const GridProvider = ({ children }: { children: ReactNode }) => {
-	const [grid, setGrid] = useState<Array<string>>(emptyGrid);
-	const [ghostGrid, setGhostGrid] = useState<Array<string>>(emptyGrid);
-	const [rack, setRack] = useState<string>(".......");
+	//TODO: Pass purse as a prop
+	const [gridLayers, setGridLayers] = useState<GridLayers>(defaultLayers);
+	const [playerInfo, setPlayerInfo] = useState<PlayerInfo>(defaultPlayerInfo);
 	const [cursor, setCursor] = useState<Cursor | null>(null);
 	const [lastResults, setLastResults] = useState<Array<Match> | null>(null);
+	const [turnChange, setTurnChange] = useState<boolean>(true);
+
 
 	useEffect(() => {
-		const maybeGrid = localStorage.getItem("solverGridState");
-		if (maybeGrid !== null) setGrid(maybeGrid.split(","));
+		refillRack({player: 1, playerInfo, setPlayerInfo});
+		refillRack({player: 2, playerInfo, setPlayerInfo});
 	}, []);
 
+	useEffect(() => {
+		//const fetchSolver = async () => {
+		//	await callSolver({gridLayers, playerInfo, setLastResults});
+		//}
+		//
+		//if (turnChange === true) {
+		//	fetchSolver();
+		//}
+	}, [turnChange]);
+
 	const handleKeyDownMobile = (ch: string) => {
-		if (!grid || !cursor) return;
+		if (!cursor) return;
 		const [row, col] = cursor.cell;
 		if (letters.includes(ch)) {
-			setGhostGrid(emptyGrid);
+			setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
 			setCursor((prev) => {
 				if (!prev) return prev;
-				(prev.ctx === "grid") && setGrid((prevGrid) => {
-					const newGrid = [...prevGrid];
+				(prev.ctx === "grid") && setGridLayers((prevGrid) => {
+					const newGrid = [...prevGrid.pendingGrid];
 					newGrid[row] = newGrid[row].substring(0, col) + ch.toUpperCase() + newGrid[row].substring(col + 1);
-					return newGrid;
+					return {...prevGrid, pendingGrid: newGrid};
 				});
-				(prev.ctx === "rack") && setRack(() => {
-					const newRack = rack.substring(0, col) + ch.toUpperCase() + rack.substring(col + 1);
-					return newRack;
-				});
-				if (prev.ctx === "rack" && col < rack.length - 1) {
+				if (prev.ctx === "grid" && prev.direction === "right" && col < GRID_SIZE - 1) {
 					return { ...prev, cell: [row, col + 1] };
-				} else if (prev.ctx === "grid" && prev.direction === "right" && col < grid[row].length - 1) {
-					return { ...prev, cell: [row, col + 1] };
-				} else if (prev.ctx === "grid" && prev.direction === "down" && row < grid.length - 1) {
+				} else if (prev.ctx === "grid" && prev.direction === "down" && row < GRID_SIZE - 1) {
 					return { ...prev, cell: [row + 1, col] };
 				}
 				return prev;
@@ -121,73 +175,85 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 	}
 
 	const handleKeyDown = (e: KeyboardEvent) => {
-		if (!grid || !cursor) return;
+		if (!cursor) return;
 
 		const [row, col] = cursor.cell;
 
 		if (letters.includes(e.key)) {
-			setGhostGrid(emptyGrid);
+			setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
 			setCursor((prev) => {
 				if (!prev) return prev;
-				(prev.ctx === "grid") && setGrid((prevGrid) => {
-					const newGrid = [...prevGrid];
-					newGrid[row] = newGrid[row].substring(0, col) + e.key.toUpperCase() + newGrid[row].substring(col + 1);
-					return newGrid;
-				});
-				(prev.ctx === "rack") && setRack(() => {
-					const newRack = rack.substring(0, col) + e.key.toUpperCase() + rack.substring(col + 1);
-					return newRack;
-				});
-				if (prev.ctx === "rack" && col < rack.length - 1) {
-					return { ...prev, cell: [row, col + 1] };
-				} else if (prev.ctx === "grid" && prev.direction === "right" && col < grid[row].length - 1) {
-					return { ...prev, cell: [row, col + 1] };
-				} else if (prev.ctx === "grid" && prev.direction === "down" && row < grid.length - 1) {
-					return { ...prev, cell: [row + 1, col] };
+				if (prev.ctx === "grid") {
+					if (gridLayers.grid[row][col] === '.' && playerInfo.playerOneRack.includes(e.key.toUpperCase())) {
+						setGridLayers((prevGrid) => {
+							const newGrid = [...prevGrid.pendingGrid];
+							newGrid[row] = newGrid[row].substring(0, col) + e.key.toUpperCase() + newGrid[row].substring(col + 1);
+							return {...prevGrid, pendingGrid: newGrid};
+						});
+
+						setPlayerInfo((prevPlayer) => {
+							const target = prevPlayer.playerOneRack.indexOf(e.key.toUpperCase());
+							const newRack = prevPlayer.playerOneRack
+								.split("")
+								.map((letter, idx) => idx === target ? "." : letter)
+								.join("");
+							return {...prevPlayer, playerOneRack: newRack};
+						})
+
+						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
+						else if (prev.direction === "down" && row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
+					}
 				}
 				return prev;
 			});
 			return;
 		}
 		
+		//TODO: Adapt for joker placing on grid
 		if (e.code == "Space") {
-			if (cursor.ctx !== "rack") return;
-
-			const jokerCount = rack.split("?").length - 1;
-			if (jokerCount >= 2) return ;
-
-			setGhostGrid(emptyGrid);
-			setCursor((prev) => {
-				if (!prev) return null;
-				setRack(() => {
-					const newRack = rack.substring(0, col) + "?" + rack.substring(col + 1);
-					return newRack;
-				});
-				if (prev.ctx === "rack" && col < rack.length - 1) {
-					return { ...prev, cell: [row, col + 1] };
-				}
-				return prev;
-			});
-			return ;
+			//if (cursor.ctx !== "rack") return;
+			//
+			//const jokerCount = rack.split("?").length - 1;
+			//if (jokerCount >= 2) return ;
+			//
+			//setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
+			//setCursor((prev) => {
+			//	if (!prev) return null;
+			//	setRack(() => {
+			//		const newRack = rack.substring(0, col) + "?" + rack.substring(col + 1);
+			//		return newRack;
+			//	});
+			//	if (prev.ctx === "rack" && col < rack.length - 1) {
+			//		return { ...prev, cell: [row, col + 1] };
+			//	}
+			//	return prev;
+			//});
+			//return ;
 		}
 
 		switch (e.key) {
 			case "Backspace":
 				setCursor((prev) => {
 					if (!prev) return prev;
-					(prev.ctx === "grid" && grid[row][col] !== '.') && setGrid((prevGrid) => {
-						setGhostGrid(emptyGrid);
-						const newGrid = [...prevGrid];
-						newGrid[row] = newGrid[row].substring(0, col) + "." + newGrid[row].substring(col + 1);
-						return newGrid;
-					});
-					(prev.ctx === "rack" && rack[0][col] !== '.') && setRack(() => {
-						setGhostGrid(emptyGrid);
-						const newRack = rack.substring(0, col) + "." + rack.substring(col + 1);
-						return newRack;
-					});
+					setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
+					if (prev.ctx === "grid" && gridLayers.pendingGrid[row][col] !== '.') {
+						setPlayerInfo((prev) => {
+							const dot = prev.playerOneRack.indexOf(".");
+							const newRack = playerInfo.playerOneRack
+								.split("")
+								.map((value, idx) => idx === dot ? gridLayers.pendingGrid[row][col] : value)
+								.join("");
+							return {...prev, playerOneRack: newRack};
+						})
+						setGridLayers((prev) => {
+							const newGrid = [...prev.pendingGrid];
+							newGrid[row] = newGrid[row].substring(0, col) + "." + newGrid[row].substring(col + 1);
+							return {...prev, pendingGrid: newGrid};
+						});
+					}
 					if (prev.direction === "right" && col > 0) return { ...prev, cell: [row, col - 1] };
 					else if (prev.direction === "down" && row > 0) return { ...prev, cell: [row - 1, col] };
+
 					return prev;
 				});
 				break;
@@ -197,7 +263,7 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 					if (!prev) return prev;
 					if (prev.ctx === "grid") {
 						if (prev.direction === "right") return {...prev, direction: "down"};
-						if (row < grid.length - 1) return { ...prev, cell: [row + 1, col] };
+						if (row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
 					}
 					return prev;
 				});
@@ -207,7 +273,7 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 					if (!prev)  return prev;
 					if (prev.direction === "down") 
 						return {...prev, direction: "right"};
-					if ((prev.ctx === "grid" && col < grid.length - 1) || (col < 6))
+					if ((prev.ctx === "grid" && col < GRID_SIZE - 1) || (col < 6))
 						return {...prev, cell: [row, col + 1] };
 					return prev;
 				});
@@ -235,15 +301,13 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 
 	return (
 		<GridContext.Provider value={{ 
-			grid,
-			setGrid,
-			rack,
-			setRack,
+			gridLayers,
+			setGridLayers,
 			cursor,
 			setCursor,
 			lastResults,
-			ghostGrid,
-			setGhostGrid,
+			playerInfo,
+			setPlayerInfo,
 			setLastResults,
 			handleKeyDown,
 			handleKeyDownMobile

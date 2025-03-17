@@ -10,5 +10,9 @@
 	"goBack": "Back",
 	"confirm": "Confirm",
 	"dict": "Dictionary",
-	"difficulty": "Difficulty"
+	"difficulty": "Difficulty",
+	"rerollButtonText": "Reroll",
+	"passButtonText": "Pass",
+	"placeButtonText": "Validate",
+	"shuffleButtonTooltip": "Shuffle"
 }

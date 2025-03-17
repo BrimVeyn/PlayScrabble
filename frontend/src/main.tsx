@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+//import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { AuthProvider } from './auth/AuthContext.tsx'
 import { BrowserRouter, Routes, Route } from 'react-router'
@@ -17,7 +17,7 @@ import './index.css'
 import './i18n.jsx'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  //<StrictMode>
 	<AuthProvider>
 		<BrowserRouter>
 			<Routes>
@@ -30,5 +30,5 @@ createRoot(document.getElementById('root')!).render(
 			</Routes>
 		</BrowserRouter>
 	</AuthProvider>
-  </StrictMode>,
+  //</StrictMode>,
 )

@@ -26,10 +26,10 @@ function BotOngoing () {
 	const { t } = useTranslation("bot");
 
 	useEffect(() => {
-		if (!logged) return ;
-		
 		//TODO: Fetch users's game history
-		setGames(testGames);
+		if (logged) {
+			setGames(testGames);
+		}
 	}, [logged])
 
 	return (
@@ -64,11 +64,8 @@ const defaultOptions = {dict: "FR", difficulty: "Medium"};
 const NewGameMenu = ({setMenuState, gameOptions, setGameOptions}: NewGameMenuProps) => {
 	const { t } = useTranslation("bot");
 
-	const handleChangeDict = (e: any) => {
-		setGameOptions((prev) => { return {...prev, dict: e.target.value}; })
-	}
-	const handleChangeDiff = (e: any) => {
-		setGameOptions((prev) => { return {...prev, difficulty: e.target.value}; })
+	const handleChange = (e: any, field: string) => {
+		setGameOptions((prev) => ({...prev, [field]: e.target.value}));
 	}
 
 	return (
@@ -76,18 +73,18 @@ const NewGameMenu = ({setMenuState, gameOptions, setGameOptions}: NewGameMenuPro
 		<div className="glass newGameMenuContainer">
 			<div className="newGameItem">
 				<span><b>{t("dict")}</b></span>
-				<select value={gameOptions.dict} onChange={handleChangeDict}>
+				<select value={gameOptions.dict} onChange={(e) => handleChange(e, "dict")}>
 					<option value="FR">FR (ODS 8)</option> 
 					<option value="EN">EN (SOWPODS)</option> 
 				</select>
 			</div>
 			<div className="newGameItem">
 				<span><b>{t("difficulty")}</b></span>
-				<select value={gameOptions.difficulty} onChange={handleChangeDiff}>
-					<option value="Expert">{t("Expert")}</option> 
-					<option value="Hard">{t("Hard")}</option> 
-					<option value="Medium">{t("Medium")}</option> 
+				<select value={gameOptions.difficulty} onChange={(e) => handleChange(e, "difficulty")}>
 					<option value="Beginner">{t("Beginner")}</option> 
+					<option value="Medium">{t("Medium")}</option> 
+					<option value="Hard">{t("Hard")}</option> 
+					<option value="Expert">{t("Expert")}</option> 
 				</select>
 			</div>
 			<div className="newGameFooter">

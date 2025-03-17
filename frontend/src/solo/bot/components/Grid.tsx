@@ -31,7 +31,7 @@ const gridModifiers: Array<Array<number>> = [
 
 
 function Grid() {
-	const {grid, cursor, ghostGrid, setCursor, handleKeyDown, handleKeyDownMobile} = useGrid();
+	const {gridLayers, cursor, setCursor, handleKeyDown, handleKeyDownMobile} = useGrid();
 	const {t} = useTranslation(["solver", "letterScore"]);
 	const inputRef = useRef<HTMLInputElement | null>(null);
 	const isMobile = window.matchMedia("(max-width: 768px)").matches;
@@ -83,14 +83,19 @@ function Grid() {
 					/> 
 				</div>
 			}
-			{grid.map((item, index) => (
+			{gridLayers.grid.map((item, index) => (
 				<div className="s-grid-row" key={index}>
 					{item.split('').map((letter, letterIndex) => {
 						const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == index && cursor.cell[1] == letterIndex)) ? true : false;;
 						const fClass:string = (letter !== '.') ? "full" : "empty";
-						const gLetter:string = ghostGrid[index][letterIndex];
+
+						const gLetter:string = gridLayers.ghostGrid[index][letterIndex];
 						const gClass:string = (gLetter !== '.' && letter === '.') ? "ghost" : "";
-						const hasScore:boolean = (letter !== '.' || gLetter !== '.');
+
+						const pLetter:string = gridLayers.pendingGrid[index][letterIndex];
+						const pClass:string = (pLetter !== '.' && letter === '.') ? "pending" : "";
+
+						const hasScore:boolean = (letter !== '.' || gLetter !== '.' || pLetter !== '.');
 						const [modClass, modText]: [string, string] = (() => {
 							switch (gridModifiers[index][letterIndex]) {
 								case 1: return ["dword", t("dword")];
@@ -107,11 +112,11 @@ function Grid() {
 								onClick={() => updateCursor(index, letterIndex)}
 							> 
 								<span 
-									className={`s-grid-tile ${fClass} ${gClass}`}
+									className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
 									data-score={hasScore && letterScores[letter.charCodeAt(0) - 65]
 										|| letterScores[gLetter.charCodeAt(0) - 65]}
 								>
-									{(letter == '.') ? (gLetter == '.') ? '' : gLetter : letter} 
+									{(letter == '.') ? (gLetter == '.') ? (pLetter == '.') ? '' : pLetter : gLetter : letter} 
 								</span>
 								<span 
 									className={`s-grid-tile-modifier ${modClass}`}

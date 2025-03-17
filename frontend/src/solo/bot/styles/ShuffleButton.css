@@ -14,7 +14,10 @@
 }
 
 .resetButton button:hover {
+	border-radius: 5px;
 	color: var(--app-black);
+	background: var(--foreground-color);
+	cursor: pointer;
 }
 
 @media(max-width: 768px) {

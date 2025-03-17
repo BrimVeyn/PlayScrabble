@@ -1,0 +1,16 @@
+.purseButton {
+	padding-inline: 5px;
+	transition: all .125s ease;
+}
+
+.glass.purseButton:hover {
+	cursor: pointer;
+	background-color: var(--foreground-color);
+}
+
+.purseTooltip {
+	width: 200px;
+	overflow-wrap: break-word; /* Modern property */
+	word-wrap: break-word; /* Fallback for older browsers */
+	white-space: normal; /* Allow text to wrap */
+}
