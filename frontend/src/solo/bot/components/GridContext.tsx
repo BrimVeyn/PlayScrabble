@@ -158,15 +158,26 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 			setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
 			setCursor((prev) => {
 				if (!prev) return prev;
-				(prev.ctx === "grid") && setGridLayers((prevGrid) => {
-					const newGrid = [...prevGrid.pendingGrid];
-					newGrid[row] = newGrid[row].substring(0, col) + ch.toUpperCase() + newGrid[row].substring(col + 1);
-					return {...prevGrid, pendingGrid: newGrid};
-				});
-				if (prev.ctx === "grid" && prev.direction === "right" && col < GRID_SIZE - 1) {
-					return { ...prev, cell: [row, col + 1] };
-				} else if (prev.ctx === "grid" && prev.direction === "down" && row < GRID_SIZE - 1) {
-					return { ...prev, cell: [row + 1, col] };
+				if (prev.ctx === "grid") {
+					if (gridLayers.grid[row][col] === '.' && playerInfo.playerOneRack.includes(ch.toUpperCase())) {
+						setGridLayers((prevGrid) => {
+							const newGrid = [...prevGrid.pendingGrid];
+							newGrid[row] = newGrid[row].substring(0, col) + ch.toUpperCase() + newGrid[row].substring(col + 1);
+							return {...prevGrid, pendingGrid: newGrid};
+						});
+
+						setPlayerInfo((prevPlayer) => {
+							const target = prevPlayer.playerOneRack.indexOf(ch.toUpperCase());
+							const newRack = prevPlayer.playerOneRack
+								.split("")
+								.map((letter, idx) => idx === target ? "." : letter)
+								.join("");
+							return {...prevPlayer, playerOneRack: newRack};
+						})
+
+						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
+						else if (prev.direction === "down" && row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
+					}
 				}
 				return prev;
 			});

@@ -113,6 +113,16 @@ pub const Grid = struct {
         };
     }
 
+    pub fn transpose(self: *Grid) void { //TODO: Move this method to Grid for more coherence
+        for (0..GRID_SIZE) |y| {
+            for (y + 1..GRID_SIZE) |x| {
+                const tmp = self.cells[(x * GRID_SIZE) + y];
+                self.cells[(x * GRID_SIZE) + y] = self.cells[(y * GRID_SIZE) + x];
+                self.cells[(y * GRID_SIZE) + x] = tmp;
+            }
+        }
+    }
+
     pub fn getWordModifier(self: Grid, cell: *const Point) u3 {
         const idx = @as(usize, @intCast(cell[1])) * GRID_SIZE + cell[0];
         return switch(self.cells[idx].modifier) {

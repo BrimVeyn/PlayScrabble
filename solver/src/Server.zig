@@ -8,10 +8,14 @@ const log           = std.log;
 
 const rootModule        = @import("root");
 const solveMultiThread  = rootModule.solveMultiThread;
-const solveEmptyGrid  = rootModule.solveEmptyGrid;
+const solveEmptyGrid    = rootModule.solveEmptyGrid;
+const Match             = rootModule.Match;
+const Range             = @Vector(2, u4);
+const Point             = @Vector(2, u4);
 
 const ctxModule         = @import("Context.zig");
 const Context           = ctxModule.Context;
+const Direction         = ctxModule.Direction;
 
 pub const App = struct {
     permInfos: *Context.CtxPerm,
@@ -43,7 +47,133 @@ fn initSignals() void {
 }
 
 pub const Server = @This();
+const GRID_SIZE = 15;
 
+const Grid = @import("Grid.zig").Grid;
+const scorePar = @import("Score.zig").computeScoreParBis;
+const scorePerp = @import("Score.zig").computeScorePerp;
+
+const GetScoreRequest = struct {
+    lang: []const u8 = "FR",
+    wordList: std.ArrayList([]const u8),
+    grid: Grid,
+    match: Match,
+
+    pub fn fromJson(alloc: Allocator, json: []const u8) !GetScoreRequest {
+        const parsed = try std.json.parseFromSliceLeaky(std.json.Value, alloc, json, .{});
+
+        const langKey = parsed.object.get("lang") orelse return error.MissingField;
+        const lang = langKey.string;
+        
+        const wordListKey = parsed.object.get("wordList") orelse return error.MissingField;
+        const wordListArray = wordListKey.array;
+
+        var wordList: std.ArrayList([]const u8) = .init(alloc);
+        for (wordListArray.items) |word| {
+            try wordList.append(word.string);
+        }
+
+        const gridKey = parsed.object.get("grid") orelse return error.MissingField;
+        const gridArray = gridKey.array;
+        if (gridArray.items.len != GRID_SIZE) {
+            return error.InvalidGridSize;
+        }
+
+        var gridSlice: [GRID_SIZE][GRID_SIZE]u8 = undefined;
+        for (0..GRID_SIZE) |i| {
+            const row = gridArray.items[i].array;
+            if (row.items.len != GRID_SIZE) {
+                return error.InvalidRowSize;
+            }
+            for (0..GRID_SIZE) |j| {
+                gridSlice[i][j] = @as(u8, @intCast(row.items[j].integer));
+            }
+        }
+
+        var grid = Grid.init();
+        try grid.loadGridStateFromSlice(gridSlice);
+
+        const matchKey = parsed.object.get("match") orelse return error.MissingField;
+        const matchObject = matchKey.object;
+
+        const matchWordKey = matchObject.get("word") orelse return error.MissingMatchField;
+        const matchDirKey = matchObject.get("dir") orelse return error.MissingMatchField;
+        const matchRangeKey = matchObject.get("range") orelse return error.MissingMatchField;
+        const matchPerpCoordKey = matchObject.get("perpCoord") orelse return error.MissingMatchField;
+
+        var matchWord:[GRID_SIZE:0]u8 = .{0} ** 15;
+        std.mem.copyForwards(u8, matchWord[0..], matchWordKey.string[0..]);
+        const matchDir = if (matchDirKey.integer == 0) Direction.Horizontal else Direction.Vertical;
+        const matchRange = Range{@as(u4, @intCast(matchRangeKey.array.items[0].integer)), @as(u4, @intCast(matchRangeKey.array.items[1].integer))};
+        const matchPerpCoord = @as(u4, @intCast(matchPerpCoordKey.integer));
+
+        log.info("RANGE: {d}", .{matchRange});
+        log.info("Dir: {any}", .{matchDir});
+        log.info("Perp: {d}", .{matchPerpCoord});
+        log.info("WORd: {s}", .{matchWord});
+
+        const match: Match = .{
+            .word = matchWord,
+            .dir = matchDir,
+            .range = matchRange,
+            .perpCoord = matchPerpCoord,
+        };
+
+        return GetScoreRequest{
+            .lang = lang,
+            .wordList = wordList,
+            .grid = grid,
+            .match = match,
+        };
+    }
+
+};
+
+const ScoreResponse = struct {
+    err: []const u8,
+    score: u32 = 0,
+};
+
+fn getScore(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
+    const b: []const u8 = req.body() orelse return ;
+    var scoreReq = GetScoreRequest.fromJson(res.arena, b) catch |e| {
+        log.err("solver: /solver/getScore: {!}", .{e});
+        res.status = 500;
+        res.body = "Internal server error";
+        return ;
+    };
+
+    for (scoreReq.wordList.items) |word| {
+        if (!app.permInfos.dict.contains(word)) {
+            log.info("Unknown word in dict: {s}: {s}", .{scoreReq.lang, word});
+            try res.json(ScoreResponse{.err = "Unknown word"}, .{});
+            res.status = 200;
+            return ;
+        }
+    }
+
+    log.info("BEFORE: {}", .{scoreReq.match});
+
+    if (scoreReq.match.dir == .Vertical) {
+        scoreReq.grid.transpose();
+    }
+
+    for (scoreReq.match.range[0]..scoreReq.match.range[1] + 1) |x| {
+        const currPoint = Point{@intCast(x), scoreReq.match.perpCoord};
+        if (scoreReq.grid.isEmpty(currPoint) and scoreReq.grid.isAlphaPerp(currPoint)) {
+            const sPerp = scorePerp(scoreReq.grid, currPoint, scoreReq.match.word[x - scoreReq.match.range[0]]);
+            scoreReq.match.score += sPerp;
+            log.info("Score: {d}", .{sPerp});
+        }
+    }
+
+    scoreReq.match.score += scorePar(scoreReq.grid, &scoreReq.match, .{null, null});
+    // log.info("AFTER: {}", .{scoreReq.match});
+    log.info("Score: {d}", .{scoreReq.match.score});
+
+    res.status = 200;
+    return ;
+}
 
 fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     const maybeConfig = req.json(Context.CtxConfig) catch |e| {
@@ -109,7 +239,8 @@ pub fn start() !void {
     });
 
     var router = server.router(.{.middlewares = &.{cors}});
-    router.post("/solver/solve", solve, .{});
+    router.post("/solver/solve", Server.solve, .{});
+    router.post("/solver/getScore", Server.getScore, .{});
 
     log.info("Solver listening http://{s}:{d}/", .{"0.0.0.0", PORT});
 

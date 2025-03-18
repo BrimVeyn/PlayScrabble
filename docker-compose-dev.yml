@@ -11,3 +11,9 @@ services:
         target: dev
       volumes:
       - ./backend:/app 
+  solver:
+      build:
+        context: ./solver
+        target: dev
+      volumes:
+      - ./solver:/app 

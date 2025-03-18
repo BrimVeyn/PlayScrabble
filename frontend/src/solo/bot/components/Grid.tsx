@@ -114,7 +114,7 @@ function Grid() {
 								<span 
 									className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
 									data-score={hasScore && letterScores[letter.charCodeAt(0) - 65]
-										|| letterScores[gLetter.charCodeAt(0) - 65]}
+										|| letterScores[gLetter.charCodeAt(0) - 65] || letterScores[pLetter.charCodeAt(0) - 65]}
 								>
 									{(letter == '.') ? (gLetter == '.') ? (pLetter == '.') ? '' : pLetter : gLetter : letter} 
 								</span>

@@ -9,7 +9,7 @@ import "../styles/Grid.css"
 
 export default function ShuffleButton() {
 	const { setPlayerInfo } = useGrid();
-	const {t} = useTranslation("bot");
+	const { t } = useTranslation("bot");
 
 	const shuffleRack = () => {
 		setPlayerInfo((prev) => {

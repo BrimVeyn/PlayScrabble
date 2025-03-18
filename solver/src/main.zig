@@ -90,7 +90,7 @@ pub const Match = struct {
     range: Range,
     perpCoord: u4,
     placedLetters: u4 = 0,
-    score: u32,
+    score: u32 = 0,
     jokers: [2]u8 = .{0, 0},
     jokerPoses: [2]?u4 = .{null, null},
 
@@ -106,7 +106,6 @@ pub const Match = struct {
                 cell[0] + (@as(u4, @intCast(currWord.len)) - 1),
             },
             .perpCoord = cell[1],
-            .score = 0,
             .placedLetters = placedLetters,
         };
     }
@@ -383,7 +382,10 @@ fn routineSafe(gpa: Allocator, ctx: *Context, rY: Range, rX: Range, rotate: bool
 
     var tmpCtx = ctx.clone(arenaAlloc) catch {return ;};
 
-    if (rotate) tmpCtx.transposeGrid();
+    if (rotate) { 
+        tmpCtx.grid.transpose();
+        tmpCtx.state = .Vertical;
+    }
     fillCrossCheck(&tmpCtx) catch {};
     evaluateGrid(&tmpCtx, rY, rX) catch {};
 
@@ -428,7 +430,8 @@ pub fn solveSingleThread(ctx: *Context, _: Allocator) !void {
     try fillCrossCheck(ctx);
     try evaluateGrid(ctx, .{0, GRID_SIZE}, .{0, GRID_SIZE});
 
-    ctx.transposeGrid();
+    ctx.grid.transpose();
+    ctx.state = .Vertical;
 
     try fillCrossCheck(ctx);
     try evaluateGrid(ctx, .{0, GRID_SIZE}, .{0, GRID_SIZE});

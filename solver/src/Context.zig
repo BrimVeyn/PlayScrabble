@@ -191,16 +191,6 @@ pub const Context = struct {
         }
     };
 
-    pub fn transposeGrid(self: *Context) void { //TODO: Move this method to Grid for more coherence
-        for (0..GRID_SIZE) |y| {
-            for (y + 1..GRID_SIZE) |x| {
-                const tmp = self.grid.cells[(x * GRID_SIZE) + y];
-                self.grid.cells[(x * GRID_SIZE) + y] = self.grid.cells[(y * GRID_SIZE) + x];
-                self.grid.cells[(y * GRID_SIZE) + x] = tmp;
-            }
-        }
-        self.state = .Vertical;
-    }
 
     pub fn clone(self: Context, alloc: Allocator) !Context {
         var rack = String.init(alloc);

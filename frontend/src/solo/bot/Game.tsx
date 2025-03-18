@@ -28,7 +28,6 @@ function Game({gameOptions}: GameProps) {
 		<div className="solverContainer">
 		<GridProvider>
 			<div className="contextContainer">
-				<Grid/>
 				<div className="actionOuterContainer">
 					<RerollButton/>
 					<PassButton/>
@@ -39,6 +38,7 @@ function Game({gameOptions}: GameProps) {
 					<Rack/>
 					<ShuffleButton/>
 				</div>
+				<Grid/>
 			</div>
 			<div className="resultContainer">
 				<Results/>

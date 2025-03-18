@@ -9,8 +9,29 @@
 }
 
 .purseTooltip {
-	width: 200px;
-	overflow-wrap: break-word; /* Modern property */
-	word-wrap: break-word; /* Fallback for older browsers */
-	white-space: normal; /* Allow text to wrap */
+	z-index: 1;
+}
+
+.purseTooltipContent {
+	display: grid;
+	grid-template-columns: repeat(4, 50px);
+}
+
+.purseItem {
+	grid-column: span 1;
+}
+
+.purseKey {
+	color: var(--white-smoke);
+}
+
+.purseValue {
+	padding-left: 2px;
+}
+
+
+@media(max-width: 768px) {
+	.purseTooltipContent {
+		grid-template-columns: repeat(5, 40px);
+	}
 }

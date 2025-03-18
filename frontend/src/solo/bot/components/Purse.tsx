@@ -6,13 +6,11 @@ import { useEffect, useState } from "react";
 
 function Purse() {
 	const { playerInfo } = useGrid();
-	const [content, setContent] = useState<string>("");
+	const [content, setContent] = useState<Array<{key: string, value: number}>>([{key:"", value:0}]);
 
 	useEffect(() => {
 		const newContent = playerInfo.purse
 			.map((value, index) => ({key: String.fromCharCode(index + 65), value: value}))
-			.map(o => o.key + o.value + ',')
-			.join("");
 		setContent(newContent);
 	}, [playerInfo]);
 
@@ -21,14 +19,22 @@ function Purse() {
 			<button 
 				className="glass purseButton"
 				data-tooltip-id="purseTooltip"
-				data-tooltip-content={content}
 			>
 				<TbMoneybag/>
 			</button>
-			<Tooltip 
-				id="purseTooltip"
+			<Tooltip id="purseTooltip"
 				className="purseTooltip"
-			/>
+			>
+				<div className="purseTooltipContent">
+					{content.map((o, idx) => (
+						<p key={idx} className="purseItem">
+							<span className="purseKey">{o.key}</span>
+							:
+							<span className="purseValue">{o.value}</span>
+						</p>
+					))}
+				</div>
+			</Tooltip>
 		</>
 	)
 }

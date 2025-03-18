@@ -83,6 +83,7 @@
 		width: 100%;
 		min-height: initial;
 		padding: 0;
+		gap: 0;
 	}
 
 	.rackOuterContainer {

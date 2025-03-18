@@ -137,6 +137,7 @@ pub fn main() !u8 {
     router.post("/api/loginGoogle", User.loginGoogle, .{});
     router.post("/api/checkEmail", User.checkEmail, .{});
     //------------------------------------------------------------------
+    // router.post("/api/validateWordList", Game.validateWordList, .{});
 
     router.delete("/api/logout", User.logout, .{});
 
