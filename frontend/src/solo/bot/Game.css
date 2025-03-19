@@ -66,6 +66,11 @@
 	background-color: var(--rt-color-success);
 }
 
+.scoreContainer {
+	display: flex;
+	align-items: center;
+}
+
 @media(max-width: 768px) {
 	
 	.solverPage {

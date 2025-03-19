@@ -48,16 +48,16 @@ function isContiguous(gridLayers: GridLayers, poses: Array<[number, number]>, di
 function isInContact(grid: Array<string>, poses: Array<[number, number]>) {
 	for (let pos of poses) {
 		if (pos[0] + 1 < grid.length && grid[pos[0] + 1][pos[1]] !== '.') {
-			return true;
+			return 1;
 		} else if (pos[0] - 1 >= 0 && grid[pos[0] - 1][pos[1]] !== '.') {
-			return true;
+			return 1;
 		} else if (pos[1] + 1 < grid.length && grid[pos[0]][pos[1] + 1] !== '.') {
-			return true;
+			return 0;
 		} else if (pos[1] - 1 >= 0 && grid[pos[0]][pos[1] - 1] !== '.') {
-			return true;
+			return 0;
 		}
 	}
-	return false;
+	return null;
 }
 
 function getChar(gridLayers: GridLayers, pos: [number, number], dir: number) {
@@ -133,11 +133,18 @@ function getWordList(gridLayers: GridLayers) {
 	const pending = gridLayers.pendingGrid;
 
 	const poses = getLettersPoses(pending);
-	const alignedVert = isAligned(poses, 1);
-	const alignedHor = isAligned(poses, 0);
-	if (!isInContact(gridLayers.grid, poses)) {
+	let alignedVert = isAligned(poses, 1);
+	let alignedHor = isAligned(poses, 0);
+	const contacts = isInContact(gridLayers.grid, poses);
+	if (contacts === null) {
 		console.debug("Not in contact");
 		return null;
+	} else if (poses.length === 1 && contacts === 1) {
+		alignedVert = true;
+		alignedHor = false;
+	} else if (poses.length === 1) {
+		alignedVert = false;
+		alignedHor = true;
 	}
 
 	alignedVert && console.debug("Aligned vertically");
@@ -155,7 +162,7 @@ function getWordList(gridLayers: GridLayers) {
 			word: getWord(gridLayers, poses[0], 1),
 			dir: 1,
 			range: [start, end],
-			perpCoord: poses[0][0],
+			perpCoord: poses[0][1],
 			//TODO: JOKERS
 		};
 		console.log(match);
@@ -193,14 +200,17 @@ async function validateWords(gridLayers: GridLayers, data: {match: any, wordList
 	};
 
 	console.log(JSON.stringify(payload));
-	//
-	//fetch("https://scrabble.brimveyn.dev/solver/validateWordList", {
-	//	method: "POST",
-	//	headers: { 'Content-Type': 'application/json' },
-	//	body: JSON.stringify(payload),
-	//})
-	//.then((response) => response.json())
-	//.then((value) => console.info(value))
+	return fetch("https://scrabble.brimveyn.dev/solver/getScore", {
+		method: "POST",
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(payload),
+	})
+	.then((response) => response.json())
+	.then((value) => {
+		console.info(value)
+		return value;
+	})
+	.catch((e) => console.error(e));
 }
 
 function PlaceButton() {
@@ -208,10 +218,10 @@ function PlaceButton() {
 	const { gridLayers, playerInfo } = useGrid();
 
 	const handlePlace = async () => {
-		//if (playerInfo.turn !== 0) {
-		//	console.log("Not your turn");
-		//	return ;
-		//}
+		if (playerInfo.turn !== 0) {
+			console.log("Not your turn");
+			return ;
+		}
 		if (getLettersPoses(gridLayers.pendingGrid).length === 0) {
 			console.log("You haven't placed any letter");
 			return ;
@@ -220,10 +230,14 @@ function PlaceButton() {
 		if (wordList === null) {
 			return ;
 		}
-		const allWordsValid = await validateWords(gridLayers, wordList);
+		const ok = await validateWords(gridLayers, wordList);
+		if (ok.err.length == 0) {
+			console.log("Yes !");
+		} else {
+			console.debug("solver/getScore:", ok.err);
+		}
 			//pendingToGrid();
 			//turnSwitch();
-		console.log("Place pressed");
 	}
 
 	return (

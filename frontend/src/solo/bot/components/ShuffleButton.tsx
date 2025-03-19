@@ -8,19 +8,21 @@ import "../styles/ShuffleButton.css"
 import "../styles/Grid.css"
 
 export default function ShuffleButton() {
-	const { setPlayerInfo } = useGrid();
+	const { setPlayers } = useGrid();
 	const { t } = useTranslation("bot");
 
 	const shuffleRack = () => {
-		setPlayerInfo((prev) => {
-			const shuffled = prev.playerOneRack
+		setPlayers((prev) => {
+			const next = new Map(prev);
+			const shuffled = prev.get(0)!.rack
 				.split("")
 				.map(value => ({value, key: Math.random() }))
 				.sort((a, b) => a.key - b.key)
 				.map(({value}) => value)
 				.join("");
 
-			return {...prev, playerOneRack: shuffled};
+			next.set(0, {...next.get(0)!, rack: shuffled});
+			return next;
 		})
 	}
 

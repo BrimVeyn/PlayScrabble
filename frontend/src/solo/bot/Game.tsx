@@ -11,6 +11,7 @@ import PassButton from "./components/PassButton.tsx";
 import RerollButton from "./components/RerollButton.tsx";
 import Purse from "./components/Purse.tsx";
 import ShuffleButton from "./components/ShuffleButton";
+import Score from "./components/Score.tsx";
 
 import "./Game.css"
 
@@ -26,9 +27,14 @@ function Game({gameOptions}: GameProps) {
 	return (
 		<div className="gamePage">
 		<div className="solverContainer">
-		<GridProvider>
+		<GridProvider
+			gameOptions={gameOptions}
+		>
 			<div className="contextContainer">
 				<div className="actionOuterContainer">
+					<div className="scoreContainer">
+						<Score/>
+					</div>
 					<RerollButton/>
 					<PassButton/>
 					<PlaceButton/>

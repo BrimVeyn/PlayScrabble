@@ -3,7 +3,7 @@ import { useGrid } from "./GridContext";
 
 function RerollButton() {
 	const {t} = useTranslation("bot");
-	const { playerInfo } = useGrid();
+	const { players } = useGrid();
 
 	const handleReroll = () => {
 		console.log("Reroll pressed");

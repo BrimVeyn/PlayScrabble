@@ -113,7 +113,7 @@ pub const Grid = struct {
         };
     }
 
-    pub fn transpose(self: *Grid) void { //TODO: Move this method to Grid for more coherence
+    pub fn transpose(self: *Grid) void {
         for (0..GRID_SIZE) |y| {
             for (y + 1..GRID_SIZE) |x| {
                 const tmp = self.cells[(x * GRID_SIZE) + y];
@@ -198,5 +198,20 @@ pub const Grid = struct {
             const idx = @as(usize, @intCast(cell[1])) * GRID_SIZE + cell[0];
             return self.cells[idx].letter;
         } else return 0;
+    }
+
+    pub fn format(self: *const Grid, comptime fmt: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        _ = fmt;
+        _ = try writer.write("---GRID---\n");
+        for (0..GRID_SIZE) |y| {
+            for (0..GRID_SIZE) |x| {
+                if (self.cells[y * GRID_SIZE + x].letter != 0) {
+                    try writer.print("{c}", .{@as(u8, self.cells[y * GRID_SIZE + x].letter) + '@'});
+                } else {
+                    _ = try writer.write(".");
+                }
+            }
+            _ = try writer.write("\n");
+        }
     }
 };

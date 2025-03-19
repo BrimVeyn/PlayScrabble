@@ -1,14 +1,12 @@
-import { GridLayers, Match, PlayerInfo } from "./GridContext";
+import { GridLayers, Match } from "./GridContext";
 
 interface callSolverProps {
 	gridLayers: GridLayers
-	playerInfo: PlayerInfo
+	rack: string
 	setLastResults: React.Dispatch<React.SetStateAction<Array<Match> | null>>;
 }
 
-async function callSolver ({gridLayers, playerInfo, setLastResults}: callSolverProps) {
-
-	const rack = playerInfo.turn === 0 ? playerInfo.playerOneRack : playerInfo.playerTwoRack;
+async function callSolver ({gridLayers, rack, setLastResults}: callSolverProps) {
 	const grid = gridLayers.grid;
 	const lang = "FR"; //TODO: dynamically get locale
 	const gridNumbers = grid.map(row =>
@@ -16,6 +14,7 @@ async function callSolver ({gridLayers, playerInfo, setLastResults}: callSolverP
 	);
 	const sentRack = rack.replace(/\./g, "");
 	const payload = { lang: lang, grid: gridNumbers, rack: sentRack };
+	console.debug("solver/solve Payload:", payload);
 
 	try {
 		const response = await fetch(`https://scrabble.brimveyn.dev/solver/solve`, {

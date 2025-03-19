@@ -152,11 +152,15 @@ fn getScore(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         }
     }
 
+    log.info("{}", .{scoreReq.grid});
+
     log.info("BEFORE: {}", .{scoreReq.match});
 
     if (scoreReq.match.dir == .Vertical) {
         scoreReq.grid.transpose();
     }
+
+    log.info("{}", .{scoreReq.grid});
 
     for (scoreReq.match.range[0]..scoreReq.match.range[1] + 1) |x| {
         const currPoint = Point{@intCast(x), scoreReq.match.perpCoord};
@@ -170,7 +174,7 @@ fn getScore(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     scoreReq.match.score += scorePar(scoreReq.grid, &scoreReq.match, .{null, null});
     // log.info("AFTER: {}", .{scoreReq.match});
     log.info("Score: {d}", .{scoreReq.match.score});
-
+    try res.json(ScoreResponse{.err = "", .score = scoreReq.match.score}, .{});
     res.status = 200;
     return ;
 }
@@ -184,6 +188,12 @@ fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     };
 
     if (maybeConfig) |config| {
+        if (config.rack.len == 0) {
+            log.err("solver: /solver/solve: Empty rack", .{});
+            res.status = 400;
+            res.body = "Malformed request";
+            return ;
+        }
         var ctx = try app.permInfos.loadConfig(res.arena, config);
         if (ctx.grid.isGridEmpty()) {
             try solveEmptyGrid(&ctx, res.arena);

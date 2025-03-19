@@ -4,15 +4,22 @@ import { Tooltip } from "react-tooltip";
 import { useGrid } from "./GridContext";
 import { useEffect, useState } from "react";
 
+const alphabet = "ABCDEFGHIJKLMONPQRSTUVWXYZ";
+
 function Purse() {
-	const { playerInfo } = useGrid();
+	const { gameInfo } = useGrid();
 	const [content, setContent] = useState<Array<{key: string, value: number}>>([{key:"", value:0}]);
 
 	useEffect(() => {
-		const newContent = playerInfo.purse
-			.map((value, index) => ({key: String.fromCharCode(index + 65), value: value}))
+		const purseChar = gameInfo.purse.map(value => value.charCodeAt(0));
+		const newContent = alphabet.split("").map((letter) => {
+			return {
+				key: letter,
+				value: purseChar.reduce((sum, value) => (value === letter.charCodeAt(0) ? sum + 1 : sum), 0),
+			}
+		});
 		setContent(newContent);
-	}, [playerInfo]);
+	}, [gameInfo]);
 
 	return (
 		<>

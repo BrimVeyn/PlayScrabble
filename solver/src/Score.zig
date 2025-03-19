@@ -76,15 +76,18 @@ pub fn computeScorePerp(grid: Grid, currPoint: Point, currCh: u8) u32 {
     for (start..end + 1) |y| {
         if (y == currPoint[1]) {
             buffer[y - start] = currCh;
-            const idx: u8 = currCh - 'A';
+            const idx: u8 = currCh - '@';
             score += LetterScore[idx] * grid.getLetterModifier(&currPoint);
             wordMultiplier = grid.getWordModifier(&currPoint);
+            std.log.info("U:Letter: ({c},{d}):{d}", .{@as(u8, idx) + '@', idx, LetterScore[idx]});
         } else {
             const ch = grid.getChar(.{currPoint[0], @intCast(y)});
-            buffer[y - start] = @as(u8, @intCast(ch)) + 'A';
-            score += LetterScore[ch];
+            buffer[y - start] = @as(u8, ch) + '@';
+            score += LetterScore[ch - 1];
+            std.log.info("B:Letter: ({c},{d}):{d}", .{@as(u8, ch) + '@', ch, LetterScore[ch - 1]});
         }
     }
     std.log.info("word: {s}", .{buffer});
+    std.log.info("WordScore, Mult: {d}, {d}", .{score, wordMultiplier});
     return score * wordMultiplier;
 }

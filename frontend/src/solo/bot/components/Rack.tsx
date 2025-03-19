@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useRef, useState, useEffect } from "react";
 
 export default function Rack () {
-	const {playerInfo, cursor, setCursor, handleKeyDown, handleKeyDownMobile, setPlayerInfo } = useGrid();
+	const {players, gameInfo, cursor, setCursor, handleKeyDown, handleKeyDownMobile } = useGrid();
 	const {t} = useTranslation("letterScore");
 	const isMobile = window.matchMedia("(max-width: 768px)").matches;
 	const inputRef = useRef<HTMLInputElement | null>(null);
@@ -19,12 +19,12 @@ export default function Rack () {
 	}
 
 	useEffect(() => {
-		if (playerInfo.turn === 0) {
+		if (gameInfo.playing === 0) {
 			setMyTurn(true);
 		} else {
 			setMyTurn(false);
 		}
-	}, [playerInfo])
+	}, [gameInfo])
 
 	return (
 		<div 
@@ -49,7 +49,7 @@ export default function Rack () {
 			</div>
 			</>
 		}
-		{playerInfo.playerOneRack.split('').map((letter, idx) => {
+		{players.get(0)!.rack.split('').map((letter, idx) => {
 			const fClass:string = (letter == '.') ? "empty" : "full";
 			const hasScore: boolean = (letter !== '.');
 			const isSelected = (cursor && cursor.ctx === "rack" && cursor.cell[1] == idx);

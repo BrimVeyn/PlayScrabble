@@ -1,5 +1,6 @@
 import { FixedSizeList as List } from "react-window";
-import { useGrid, emptyGrid } from "./GridContext";
+import { useGrid } from "./GridContext";
+import { emptyGrid } from "./GridContext.types";
 import { useEffect, useState } from "react";
 import { FaSortAlphaDown, FaSortAlphaUpAlt, FaSortNumericDown, FaSortNumericUpAlt } from "react-icons/fa";
 import { TiSortAlphabetically, TiSortNumerically } from "react-icons/ti";

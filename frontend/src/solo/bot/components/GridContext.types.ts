@@ -1,0 +1,57 @@
+import { NewGameOptions } from "../Bot";
+
+export type Match = {
+	word: string;
+	score: number;
+	dir: number;
+	pos: [number, number];
+	savedCoord: number;
+	letterCount: number;
+	joker: [number, number];
+	jokerPoses: [number, number];
+};
+
+export type Cursor = {
+	ctx: "grid" | "rack";
+	cell: [number, number];
+	direction: "right" | "down";
+};
+
+export type GridLayers = {
+	grid: Array<string>;
+	ghostGrid: Array<string>;
+	pendingGrid: Array<string>;
+};
+
+export type GameInfo = {
+	purse: Array<string>,
+	playing: number,
+	turnNo: number,
+	gameOptions: NewGameOptions,
+};
+
+export type PlayerInfo = {
+	rack: string,
+	score: number,
+}
+
+export const emptyGrid: Array<string> = [
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+	"...............",
+];
+
+export const letterFrequencies: Array<number> = [ 9, 2, 2, 3, 15, 2, 2, 2, 8, 1, 1, 5, 3, 6, 6, 2, 1, 6, 6, 6, 6, 2, 1, 1, 1, 1 ];
+
