@@ -124,8 +124,14 @@ function placeWord({players, gameInfo, gridLayers, setGridLayers, match}: PlaceW
 				return row.map((col, colI) => {
 					if (colI !== it || it > match.pos[1]) return col;
 					it++;
-					if (col.value === ".") newRack = removeFromRack(newRack, match.word[it - 1 - match.pos[0]]);
-					return {...col, value: match.word[it - 1 - match.pos[0]]};
+					const idx = it - 1 - match.pos[0];
+					if (col.value === ".") {
+						newRack = removeFromRack(newRack, match.word[idx]);
+					} else {
+						return col;
+					}
+					const isJoker = (idx === match.jokerPoses[0] || idx === match.jokerPoses[1]);
+					return {joker: isJoker , value: match.word[it - 1 - match.pos[0]]};
 				});
 			});
 			setGridLayers((prev) => ({...prev, grid: newGrid}));
@@ -138,8 +144,14 @@ function placeWord({players, gameInfo, gridLayers, setGridLayers, match}: PlaceW
 				return row.map((col, colI) => {
 					if (colI !== match.savedCoord || it > match.pos[1]) return col;
 					it++;
-					if (col.value === ".") newRack = removeFromRack(newRack, match.word[it - 1 - match.pos[0]]);
-					return {...col, value: match.word[it - 1 - match.pos[0]]};
+					const idx = it - 1 - match.pos[0];
+					if (col.value === ".") {
+						newRack = removeFromRack(newRack, match.word[idx]);
+					} else {
+						return col;
+					}
+					const isJoker = (idx === match.jokerPoses[0] || idx === match.jokerPoses[1]);
+					return {joker: isJoker , value: match.word[it - 1 - match.pos[0]]};
 				});
 			})
 			setGridLayers((prev) => ({...prev, grid: newGrid}));

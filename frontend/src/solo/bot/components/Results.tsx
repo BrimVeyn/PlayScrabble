@@ -51,7 +51,6 @@ function Results() {
 					it++;
 					return {...col, value: match.word[it - 1 - match.pos[0]]};
 				});
-				console.log("New grid:", newGrid[row]);
 				setGridLayers((prev) => ({...prev, ghostGrid: newGrid}));
 				break;
 			}

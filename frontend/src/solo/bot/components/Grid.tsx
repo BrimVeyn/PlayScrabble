@@ -96,6 +96,9 @@ function Grid() {
 						const pLetter:Tile = gridLayers.pendingGrid[index][letterIndex];
 						const pClass:string = (pLetter.value !== '.' && tile.value === '.') ? "pending" : "";
 
+						const isJoker = (tile.joker || gLetter.joker || pLetter.joker);
+						const jokerClass = (isJoker) ? "" : "joker";
+
 						const hasScore:boolean = (tile.value !== '.' || gLetter.value !== '.' || pLetter.value !== '.');
 						const [modClass, modText]: [string, string] = (() => {
 							switch (gridModifiers[index][letterIndex]) {
@@ -114,8 +117,9 @@ function Grid() {
 							> 
 								<span 
 									className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
-									data-score={hasScore && letterScores[tile.value.charCodeAt(0) - 65]
-										|| letterScores[gLetter.value.charCodeAt(0) - 65] || letterScores[pLetter.value.charCodeAt(0) - 65]}
+									data-score={ (isJoker && "0" ) ||
+										(hasScore && letterScores[tile.value.charCodeAt(0) - 65]
+										|| letterScores[gLetter.value.charCodeAt(0) - 65] || letterScores[pLetter.value.charCodeAt(0) - 65])}
 								>
 									{(tile.value == '.') ? (gLetter.value == '.') ? (pLetter.value == '.') ? '' : pLetter.value : gLetter.value : tile.value} 
 								</span>

@@ -108,6 +108,10 @@
 	color: var(--app-black);
 }
 
+.s-grid-tile[data-score="0"]::after {
+	color: red;
+}
+
 .empty {
 	color: transparent;
 }

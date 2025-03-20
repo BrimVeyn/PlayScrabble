@@ -34,8 +34,8 @@ pub fn build(b: *std.Build) void {
 
     solver_exe.root_module.addImport("httpz", httpz.module("httpz"));
     solver_exe.linkLibC();
+    solver_exe.use_llvm = false;
     // if (optimize == .Debug) {
-    //     solver_exe.use_llvm = false;
     // }
 
     b.installArtifact(solver_exe);
