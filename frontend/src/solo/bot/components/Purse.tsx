@@ -29,9 +29,7 @@ function Purse() {
 			>
 				<TbMoneybag/>
 			</button>
-			<Tooltip id="purseTooltip"
-				className="purseTooltip"
-			>
+			<Tooltip id="purseTooltip" className="purseTooltip">
 				<div className="purseTooltipContent">
 					{content.map((o, idx) => (
 						<p key={idx} className="purseItem">

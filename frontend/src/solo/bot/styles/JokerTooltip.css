@@ -1,0 +1,20 @@
+#jokerTooltip {
+	z-index: 1;
+	/*background-color: red;*/
+}
+
+#jokerTooltipContent {
+	display: grid;
+	grid-template-columns: repeat(4, 50px);
+}
+
+.jokerItem {
+	display: flex;
+	justify-content: center;
+	border: 1px solid var(--foreground-color);
+	grid-column: span 1;
+}
+
+.jokerItem:hover {
+	background-color: red;
+}

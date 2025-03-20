@@ -14,6 +14,8 @@ interface GridContextType {
 	setGameInfo: React.Dispatch<React.SetStateAction<GameInfo>>;
 	cursor: Cursor | null;
 	setCursor: React.Dispatch<React.SetStateAction<Cursor | null>>;
+	jokerModal: boolean;
+	setJokerModal: React.Dispatch<React.SetStateAction<boolean>>; 
 	lastResults: Array<Match> | null
 	setLastResults: React.Dispatch<React.SetStateAction<Array<Match> | null>>;
 	handleKeyDown: (e: KeyboardEvent) => void;
@@ -183,7 +185,7 @@ function pickRandomMatch(gameInfo: GameInfo, results: Array<Match>) {
 }
 
 const defaultPlayers: Map<number, PlayerInfo> = new Map([
-    [0, { score: 0, rack: "......." }],
+    [0, { score: 0, rack: "SALOP?S" }],
     [1, { score: 0, rack: "......." }]
 ]);
 
@@ -194,6 +196,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 	const [cursor, setCursor] = useState<Cursor | null>(null);
 	const [lastResults, setLastResults] = useState<Array<Match> | null>(null);
 	const [turnChange, setTurnChange] = useState<boolean>(false);
+	const [jokerModal, setJokerModal] = useState<boolean>(false);
 
 	useEffect(() => {
 		const [rackOne, purseOne] = refillRack({key: 0, gameInfo, players});
@@ -211,8 +214,8 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 	}, []);
 
 	useEffect(() => {
-		//if (lastResults === null || gameInfo.playing === 0) return ;
-		if (lastResults === null) return ;
+		if (lastResults === null || gameInfo.playing === 0) return ;
+		//if (lastResults === null) return ;
 
 		let match = pickRandomMatch(gameInfo, lastResults);
 		if (match === null) {
@@ -322,24 +325,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 		
 		//TODO: Adapt for joker placing on grid
 		if (e.code == "Space") {
-			//if (cursor.ctx !== "rack") return;
-			//
-			//const jokerCount = rack.split("?").length - 1;
-			//if (jokerCount >= 2) return ;
-			//
-			//setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
-			//setCursor((prev) => {
-			//	if (!prev) return null;
-			//	setRack(() => {
-			//		const newRack = rack.substring(0, col) + "?" + rack.substring(col + 1);
-			//		return newRack;
-			//	});
-			//	if (prev.ctx === "rack" && col < rack.length - 1) {
-			//		return { ...prev, cell: [row, col + 1] };
-			//	}
-			//	return prev;
-			//});
-			//return ;
+			setJokerModal((prev) => !prev);
 		}
 
 		switch (e.key) {
@@ -420,6 +406,8 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			players,
 			setPlayers,
 			setLastResults,
+			jokerModal,
+			setJokerModal,
 			handleKeyDown,
 			handleKeyDownMobile
 		}}>

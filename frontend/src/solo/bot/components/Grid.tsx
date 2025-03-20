@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
+import { alphabet } from './GridContext.types';
 import { Tile } from './GridContext.types';
 
 import "../styles/Grid.css"
+import { Tooltip } from 'react-tooltip';
+import JokerToolTip from './JokerTooltip';
 
 //NOTE: modifier Values: 
 // 0 None
@@ -32,7 +35,7 @@ const gridModifiers: Array<Array<number>> = [
 
 
 function Grid() {
-	const {gridLayers, cursor, setCursor, handleKeyDown, handleKeyDownMobile} = useGrid();
+	const {gridLayers, cursor, jokerModal, setCursor, handleKeyDown, handleKeyDownMobile} = useGrid();
 	const {t} = useTranslation(["solver", "letterScore"]);
 	const inputRef = useRef<HTMLInputElement | null>(null);
 	const isMobile = window.matchMedia("(max-width: 768px)").matches;
@@ -97,7 +100,6 @@ function Grid() {
 						const pClass:string = (pLetter.value !== '.' && tile.value === '.') ? "pending" : "";
 
 						const isJoker = (tile.joker || gLetter.joker || pLetter.joker);
-						const jokerClass = (isJoker) ? "" : "joker";
 
 						const hasScore:boolean = (tile.value !== '.' || gLetter.value !== '.' || pLetter.value !== '.');
 						const [modClass, modText]: [string, string] = (() => {
@@ -110,10 +112,14 @@ function Grid() {
 							}
 						})();
 						return (
+							<>
+							{ isSelected && jokerModal && <JokerToolTip/>}
 							<div 
 								className="s-grid-cell" 
 								key={index + letterIndex}
-								onClick={() => updateCursor(index, letterIndex)}
+								onClick={() => {
+									if (!jokerModal) updateCursor(index, letterIndex)
+								}}
 							> 
 								<span 
 									className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
@@ -134,6 +140,7 @@ function Grid() {
 									/>
 								}
 							</div>
+							</>
 						)
 					})}
 				</div>
