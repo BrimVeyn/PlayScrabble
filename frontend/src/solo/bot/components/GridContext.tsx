@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { NewGameOptions } from "../Bot.tsx";
-import { letterFrequencies, emptyGrid, GridLayers, PlayerInfo, GameInfo, Match, Cursor } from "./GridContext.types.ts"
+import { letterFrequencies, emptyGrid, GridLayers, Tile, PlayerInfo, GameInfo, Match, Cursor } from "./GridContext.types.ts"
 import callSolver from "./useSolver";
+import { updateTile } from "./GridContextUtils.tsx";
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 interface GridContextType {
@@ -47,7 +48,8 @@ const refillRack = ({key, gameInfo, players}: RefillRackProps): [string, string[
 	const emptySlots = rack.split("").map((elem, idx) => { if (elem === '.') return idx}).filter((elem) => elem !== undefined)
 	while (purse.length > 0 && emptySlots.length > 0) {
 		const randomIndex = randInt(purse.length);
-		const letter = purse[randomIndex];
+		let letter = purse[randomIndex];
+		if (letter === '[') letter = '?';
         purse.splice(randomIndex, 1); 
 
 		rack = rack.split("").map((prev, idx) => {
@@ -66,7 +68,7 @@ const startPurse: Array<string> = letterFrequencies.flatMap((value, i) => {
 
 const startGameInfo = {
 	purse: startPurse,
-	playing: randInt(2),
+	playing: 0,
 	turnNo: 0,
 };
 
@@ -83,12 +85,6 @@ interface GridProviderProps {
 
 const GRID_SIZE = 15;
 
-function removeFromRack(rack: string, col: string) {
-	const idx = rack.indexOf(col);
-	const newRack =rack.substring(0, idx) + "." + rack.substring(idx + 1);
-	console.log("TEST:", newRack, col);
-	return newRack;
-}
 
 interface PlaceWordProps {
 	players: Map<number, PlayerInfo>,
@@ -98,21 +94,39 @@ interface PlaceWordProps {
 	match: Match,
 }
 
+function removeFromRack(rack: string, col: string) {
+	const idx = rack.indexOf(col);
+	if (idx == -1) return rack;
+	const newRack = rack.substring(0, idx) + "." + rack.substring(idx + 1);
+	return newRack;
+}
+
 function placeWord({players, gameInfo, gridLayers, setGridLayers, match}: PlaceWordProps) {
 	//TODO: update score
 	let newRack = players.get(gameInfo.playing)!.rack;
+	if (match.jokerPoses[0] !== -1) {
+		const count = match.jokerPoses.reduce((sum, value) => {
+			if (value !== -1) return sum + 1;
+			return sum;
+		}, 0);
+		for (let i = 0; i < count; i++) {
+			const jokerIdx = newRack.indexOf("?");
+			newRack = newRack.substring(0, jokerIdx) + "." + newRack.substring(jokerIdx + 1);
+		}
+	}
+	console.log("Rack:", newRack);
 
 	switch (match.dir) {
 		case 1: { //NOTE: Horizontal
 			let it = match.pos[0];
-			const newGrid = gridLayers.grid.map((row, rowI) => {
+			const newGrid: Array<Array<Tile>> = gridLayers.grid.map((row, rowI) => {
 				if (rowI !== match.savedCoord) return row;
-				return row.split("").map((col, colI) => {
+				return row.map((col, colI) => {
 					if (colI !== it || it > match.pos[1]) return col;
 					it++;
-					if (col === ".") newRack = removeFromRack(newRack, match.word[it - 1 - match.pos[0]]);
-					return match.word[it - 1 - match.pos[0]];
-				}).join("")
+					if (col.value === ".") newRack = removeFromRack(newRack, match.word[it - 1 - match.pos[0]]);
+					return {...col, value: match.word[it - 1 - match.pos[0]]};
+				});
 			});
 			setGridLayers((prev) => ({...prev, grid: newGrid}));
 			break;
@@ -121,12 +135,12 @@ function placeWord({players, gameInfo, gridLayers, setGridLayers, match}: PlaceW
 			let it = match.pos[0];
 			const newGrid = gridLayers.grid.map((row, rowI) => {
 				if (rowI !== it) return row;
-				return row.split("").map((col, colI) => {
+				return row.map((col, colI) => {
 					if (colI !== match.savedCoord || it > match.pos[1]) return col;
 					it++;
-					if (col === ".") newRack = removeFromRack(newRack, match.word[it - 1 - match.pos[0]]);
-					return match.word[it - 1 - match.pos[0]];
-				}).join("")
+					if (col.value === ".") newRack = removeFromRack(newRack, match.word[it - 1 - match.pos[0]]);
+					return {...col, value: match.word[it - 1 - match.pos[0]]};
+				});
 			})
 			setGridLayers((prev) => ({...prev, grid: newGrid}));
 			break;
@@ -138,6 +152,7 @@ function placeWord({players, gameInfo, gridLayers, setGridLayers, match}: PlaceW
 function pickRandomMatch(gameInfo: GameInfo, results: Array<Match>) {
 	//INFO: No possibility
 	if (results.length === 0) {
+		console.error("Cannot play");
 		//TODO: Try to change as most letters as possible
 		return null;
 	}
@@ -178,10 +193,13 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			return updated;
 		})
 		setGameInfo((prev) => ({...prev, purse: purseTwo}));
-		setTurnChange(true);
+		setTimeout(() => {
+			setTurnChange(true);
+		}, 0);
 	}, []);
 
 	useEffect(() => {
+		//if (lastResults === null || gameInfo.playing === 0) return ;
 		if (lastResults === null) return ;
 
 		let match = pickRandomMatch(gameInfo, lastResults);
@@ -199,12 +217,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 
 		setPlayers(updated);
 		setGameInfo((prev) => ({...prev, playing: prev.playing === 0 ? 1 : 0, purse: updatedPurse}));
-		setTimeout(() => {
-			setTurnChange(true);
-		}, 0);
-		
-		console.log("Match selected: ", match);
-		
+		setTurnChange(true);
 	}, [lastResults]);
 
 	useEffect(() => {
@@ -228,12 +241,8 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			setCursor((prev) => {
 				if (!prev) return prev;
 				if (prev.ctx === "grid") {
-					if (gridLayers.grid[row][col] === '.' && players.get(0)!.rack.includes(ch.toUpperCase())) {
-						setGridLayers((prevGrid) => {
-							const newGrid = [...prevGrid.pendingGrid];
-							newGrid[row] = newGrid[row].substring(0, col) + ch.toUpperCase() + newGrid[row].substring(col + 1);
-							return {...prevGrid, pendingGrid: newGrid};
-						});
+					if (gridLayers.grid[row][col].value === '.' && players.get(0)!.rack.includes(ch.toUpperCase())) {
+						updateTile(gridLayers.pendingGrid, [row,col], setGridLayers, ch.toUpperCase());
 
 						setPlayers((prevPlayer) => {
 							const next = new Map(prevPlayer);
@@ -264,12 +273,22 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			setCursor((prev) => {
 				if (!prev) return prev;
 				if (prev.ctx === "grid") {
-					if (gridLayers.grid[row][col] === '.' && players.get(0)!.rack.includes(e.key.toUpperCase())) {
-						setGridLayers((prevGrid) => {
-							const newGrid = [...prevGrid.pendingGrid];
-							newGrid[row] = newGrid[row].substring(0, col) + e.key.toUpperCase() + newGrid[row].substring(col + 1);
-							return {...prevGrid, pendingGrid: newGrid};
+					if (gridLayers.pendingGrid[row][col].value !== '.' && players.get(0)!.rack.includes(e.key.toUpperCase())) {
+						setPlayers((prevPlayer) => {
+							const next = new Map(prevPlayer);
+							const target = next.get(0)!.rack.indexOf(e.key.toUpperCase());
+							const newRack = next.get(0)!.rack.split("")
+								.map((letter, idx) => idx === target ? gridLayers.pendingGrid[row][col].value : letter).join("");
+							next.set(0, {...next.get(0)!, rack:newRack});
+							return next;
 						});
+						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, e.key.toUpperCase());
+
+						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
+						else if (prev.direction === "down" && row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
+						
+					} else if (gridLayers.grid[row][col].value === '.' && players.get(0)!.rack.includes(e.key.toUpperCase())) {
+						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, e.key.toUpperCase());
 
 						setPlayers((prevPlayer) => {
 							const next = new Map(prevPlayer);
@@ -280,7 +299,6 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 
 							return next;
 						})
-
 						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
 						else if (prev.direction === "down" && row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
 					}
@@ -317,22 +335,18 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 				setCursor((prev) => {
 					if (!prev) return prev;
 					setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
-					if (prev.ctx === "grid" && gridLayers.pendingGrid[row][col] !== '.') {
+					if (prev.ctx === "grid" && gridLayers.pendingGrid[row][col].value !== '.') {
 						setPlayers((prev) => {
 							const next = new Map(prev);
 							const dot = next.get(0)!.rack.indexOf(".");
 							const newRack = next.get(0)!.rack
 								.split("")
-								.map((value, idx) => idx === dot ? gridLayers.pendingGrid[row][col] : value)
+								.map((value, idx) => idx === dot ? gridLayers.pendingGrid[row][col].value : value)
 								.join("");
 							next.set(0, {...next.get(0)!, rack: newRack});
 							return next;
-						})
-						setGridLayers((prev) => {
-							const newGrid = [...prev.pendingGrid];
-							newGrid[row] = newGrid[row].substring(0, col) + "." + newGrid[row].substring(col + 1);
-							return {...prev, pendingGrid: newGrid};
 						});
+						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, ".");
 					}
 					if (prev.direction === "right" && col > 0) return { ...prev, cell: [row, col - 1] };
 					else if (prev.direction === "down" && row > 0) return { ...prev, cell: [row - 1, col] };

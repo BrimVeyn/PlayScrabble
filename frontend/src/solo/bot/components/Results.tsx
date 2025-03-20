@@ -44,21 +44,24 @@ function Results() {
 			case 1: { //HORIZONTAL
 				const row = match.savedCoord;
 				const newGrid = [...emptyGrid];
-				newGrid[row] = 
-					newGrid[row].substring(0, match.pos[0]) +
-					match.word.toUpperCase() + 
-					newGrid[row].substring(match.pos[1] + 1);
+				let it: number = match.pos[0];
+				//TODO: Also render jokers poses
+				newGrid[row] = newGrid[row].map((col, x) => {
+					if (x !== it || it > match.pos[1]) return col;
+					it++;
+					return {...col, value: match.word[it - 1 - match.pos[0]]};
+				});
+				console.log("New grid:", newGrid[row]);
 				setGridLayers((prev) => ({...prev, ghostGrid: newGrid}));
 				break;
 			}
 			case 0: { //VERTICAL
-				const col = match.savedCoord;
 				const newGrid = [...emptyGrid];
 				for (let row = match.pos[0]; row <= match.pos[1]; row++) {
-					newGrid[row] = 
-						newGrid[row].substring(0, col) +
-						match.word[row - match.pos[0]] + 
-						newGrid[row].substring(col + 1);
+					newGrid[row] = newGrid[row].map((col, x) => {
+						if (x !== match.savedCoord) return col;
+						return {...col, value: match.word[row - match.pos[0]]};
+					});
 				}
 				setGridLayers((prev) => ({...prev, ghostGrid: newGrid}));
 				break;

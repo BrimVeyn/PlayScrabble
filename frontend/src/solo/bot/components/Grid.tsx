@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
+import { Tile } from './GridContext.types';
 
 import "../styles/Grid.css"
 
@@ -85,17 +86,17 @@ function Grid() {
 			}
 			{gridLayers.grid.map((item, index) => (
 				<div className="s-grid-row" key={index}>
-					{item.split('').map((letter, letterIndex) => {
+					{item.map((tile, letterIndex) => {
 						const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == index && cursor.cell[1] == letterIndex)) ? true : false;;
-						const fClass:string = (letter !== '.') ? "full" : "empty";
+						const fClass:string = (tile.value !== '.') ? "full" : "empty";
 
-						const gLetter:string = gridLayers.ghostGrid[index][letterIndex];
-						const gClass:string = (gLetter !== '.' && letter === '.') ? "ghost" : "";
+						const gLetter:Tile = gridLayers.ghostGrid[index][letterIndex];
+						const gClass:string = (gLetter.value !== '.' && tile.value === '.') ? "ghost" : "";
 
-						const pLetter:string = gridLayers.pendingGrid[index][letterIndex];
-						const pClass:string = (pLetter !== '.' && letter === '.') ? "pending" : "";
+						const pLetter:Tile = gridLayers.pendingGrid[index][letterIndex];
+						const pClass:string = (pLetter.value !== '.' && tile.value === '.') ? "pending" : "";
 
-						const hasScore:boolean = (letter !== '.' || gLetter !== '.' || pLetter !== '.');
+						const hasScore:boolean = (tile.value !== '.' || gLetter.value !== '.' || pLetter.value !== '.');
 						const [modClass, modText]: [string, string] = (() => {
 							switch (gridModifiers[index][letterIndex]) {
 								case 1: return ["dword", t("dword")];
@@ -113,10 +114,10 @@ function Grid() {
 							> 
 								<span 
 									className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
-									data-score={hasScore && letterScores[letter.charCodeAt(0) - 65]
-										|| letterScores[gLetter.charCodeAt(0) - 65] || letterScores[pLetter.charCodeAt(0) - 65]}
+									data-score={hasScore && letterScores[tile.value.charCodeAt(0) - 65]
+										|| letterScores[gLetter.value.charCodeAt(0) - 65] || letterScores[pLetter.value.charCodeAt(0) - 65]}
 								>
-									{(letter == '.') ? (gLetter == '.') ? (pLetter == '.') ? '' : pLetter : gLetter : letter} 
+									{(tile.value == '.') ? (gLetter.value == '.') ? (pLetter.value == '.') ? '' : pLetter.value : gLetter.value : tile.value} 
 								</span>
 								<span 
 									className={`s-grid-tile-modifier ${modClass}`}

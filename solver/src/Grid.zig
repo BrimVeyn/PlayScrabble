@@ -44,6 +44,7 @@ pub const Grid = struct {
         modifier: u3,
     };
     cells: [GRID_SIZE * GRID_SIZE]GridCell,
+    jokers: std.StaticBitSet(GRID_SIZE * GRID_SIZE),
 
     pub fn init() Grid {
         var cells: [GRID_SIZE * GRID_SIZE]GridCell = undefined;
@@ -57,14 +58,18 @@ pub const Grid = struct {
         }
         return .{
             .cells = cells,
+            .jokers = std.StaticBitSet(GRID_SIZE * GRID_SIZE).initEmpty(),
         };
     }
 
     pub fn clone(self: Grid) Grid {
         var cells: [GRID_SIZE * GRID_SIZE]GridCell = undefined;
         std.mem.copyForwards(GridCell, cells[0..], self.cells[0..]);
+        var jokers = std.StaticBitSet(GRID_SIZE * GRID_SIZE).initEmpty();
+        jokers = jokers.unionWith(self.jokers);
         return Grid{
             .cells = cells,
+            .jokers = jokers,
         };
     }
 
@@ -147,6 +152,10 @@ pub const Grid = struct {
 
     pub fn isEmpty(grid: Grid, cell: Point) bool {
         return !grid.isAlpha(cell);
+    }
+
+    pub fn isJoker(grid: Grid, cell: Point) bool {
+        return grid.jokers.isSet(cell[1] * cell[0]);
     }
 
     pub fn isInBounds(_: Grid, cell: Point) bool {

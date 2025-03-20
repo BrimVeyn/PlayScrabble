@@ -17,10 +17,15 @@ export type Cursor = {
 	direction: "right" | "down";
 };
 
+export type Tile = {
+	value: string,
+	joker: boolean,
+};
+
 export type GridLayers = {
-	grid: Array<string>;
-	ghostGrid: Array<string>;
-	pendingGrid: Array<string>;
+	grid: Array<Array<Tile>>
+	ghostGrid: Array<Array<Tile>>
+	pendingGrid: Array<Array<Tile>>
 };
 
 export type GameInfo = {
@@ -35,23 +40,10 @@ export type PlayerInfo = {
 	score: number,
 }
 
-export const emptyGrid: Array<string> = [
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-	"...............",
-];
+export const GRID_SIZE: number = 15;
 
-export const letterFrequencies: Array<number> = [ 9, 2, 2, 3, 15, 2, 2, 2, 8, 1, 1, 5, 3, 6, 6, 2, 1, 6, 6, 6, 6, 2, 1, 1, 1, 1 ];
+export const emptyGrid: Array<Array<Tile>> = Array(GRID_SIZE).fill(
+	Array(GRID_SIZE).fill({value: ".", joker: false})
+);
 
+export const letterFrequencies: Array<number> = [ 9, 2, 2, 3, 15, 2, 2, 2, 8, 1, 1, 5, 3, 6, 6, 2, 1, 6, 6, 6, 6, 2, 1, 1, 1, 1, 2 ];

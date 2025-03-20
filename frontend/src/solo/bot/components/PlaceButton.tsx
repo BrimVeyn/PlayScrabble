@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useGrid } from "./GridContext";
-import { GridLayers } from "./GridContext";
+import { GridLayers } from "./GridContext.types";
 
 function getLettersPoses(grid: Array<string>) {
 	let ret: Array<[number, number]> = [];
@@ -215,10 +215,10 @@ async function validateWords(gridLayers: GridLayers, data: {match: any, wordList
 
 function PlaceButton() {
 	const {t} = useTranslation("bot");
-	const { gridLayers, playerInfo } = useGrid();
+	const { gridLayers, gameInfo } = useGrid();
 
 	const handlePlace = async () => {
-		if (playerInfo.turn !== 0) {
+		if (gameInfo.playing !== 0) {
 			console.log("Not your turn");
 			return ;
 		}

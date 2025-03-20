@@ -194,6 +194,7 @@ fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
             res.body = "Malformed request";
             return ;
         }
+        std.log.info("Solving with as rack: {s}", .{config.rack});
         var ctx = try app.permInfos.loadConfig(res.arena, config);
         if (ctx.grid.isGridEmpty()) {
             try solveEmptyGrid(&ctx, res.arena);

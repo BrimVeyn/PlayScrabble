@@ -1,4 +1,4 @@
-import { GridLayers, Match } from "./GridContext";
+import { GridLayers, Match, Tile } from "./GridContext.types";
 
 interface callSolverProps {
 	gridLayers: GridLayers
@@ -6,15 +6,18 @@ interface callSolverProps {
 	setLastResults: React.Dispatch<React.SetStateAction<Array<Match> | null>>;
 }
 
+
 async function callSolver ({gridLayers, rack, setLastResults}: callSolverProps) {
-	const grid = gridLayers.grid;
+	const grid: Array<Array<Tile>> = gridLayers.grid;
 	const lang = "FR"; //TODO: dynamically get locale
-	const gridNumbers = grid.map(row =>
-		row.split('').map(char => (char === '.' ? 0 : char.charCodeAt(0)))
-	);
+	const gridNumbers: Array<Array<number>> = grid.map(row => {
+		return row.map((col) => {
+			return col.value == "." ? 0 : col.value.charCodeAt(0);
+		})
+	});
 	const sentRack = rack.replace(/\./g, "");
 	const payload = { lang: lang, grid: gridNumbers, rack: sentRack };
-	console.debug("solver/solve Payload:", payload);
+	console.debug("solver/solve Payload:", JSON.stringify(payload));
 
 	try {
 		const response = await fetch(`https://scrabble.brimveyn.dev/solver/solve`, {
@@ -25,7 +28,9 @@ async function callSolver ({gridLayers, rack, setLastResults}: callSolverProps) 
 
 		if (!response.ok) throw new Error('Erreur serveur');
 
+		console.debug("Waiting for response...");
 		const data = await response.json();
+		//console.debug("/solver/solve:", data);
 		const formattedData = data.map((item: any) => ({
 			word: item[0],
 			score: item[1],
@@ -33,8 +38,8 @@ async function callSolver ({gridLayers, rack, setLastResults}: callSolverProps) 
 			pos: item[3],
 			savedCoord: item[4],
 			letterCount: item[5],
-			joker: item[6],
-			jokerPoses: item[7],
+			joker: (item[6] === undefined) ? [0, 0] : item[6],
+			jokerPoses: (item[7] === undefined) ? [-1, -1] : item[7],
 		}));
 		setLastResults(formattedData);
 	} catch (error) {
