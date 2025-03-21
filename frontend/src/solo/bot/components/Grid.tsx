@@ -1,11 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
-import { alphabet } from './GridContext.types';
 import { Tile } from './GridContext.types';
 
 import "../styles/Grid.css"
-import { Tooltip } from 'react-tooltip';
 import JokerToolTip from './JokerTooltip';
 
 //NOTE: modifier Values: 
@@ -82,7 +80,8 @@ function Grid() {
 							e.currentTarget.value = ""
 						}}
 						onKeyDown={(e) => {
-							if (e.key == "Backspace") handleKeyDown(e)
+							console.log(e.key);
+							if (e.key == "Backspace" || e.code == "Space") handleKeyDown(e)
 						}}
 					/> 
 				</div>

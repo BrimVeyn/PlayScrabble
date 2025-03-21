@@ -1,5 +1,5 @@
 import React from "react";
-import { GridLayers, Tile } from "./GridContext.types";
+import { GridLayers, PlayerInfo, Tile } from "./GridContext.types";
 
 export function updateTile(
 	grid: Array<Array<Tile>>,
@@ -17,4 +17,19 @@ export function updateTile(
 		})
 	});
 	setGridLayers((prevGrid) => ({...prevGrid, pendingGrid: newGrid}));
+}
+
+export function updatePlayers(
+	setPlayers: React.Dispatch<React.SetStateAction<Map<number, PlayerInfo>>>,
+	haystack: string,
+	needle: string,
+) {
+	setPlayers((prevPlayer) => {
+		const next = new Map(prevPlayer);
+		const goal = next.get(0)!.rack.indexOf(haystack);
+		const newRack = next.get(0)!.rack.split("")
+		.map((letter, idx) => idx === goal ? needle : letter).join("");
+		next.set(0, {...next.get(0)!, rack:newRack});
+		return next;
+	});
 }

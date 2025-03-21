@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { NewGameOptions } from "../Bot.tsx";
 import { letterFrequencies, emptyGrid, GridLayers, Tile, PlayerInfo, GameInfo, Match, Cursor } from "./GridContext.types.ts"
 import callSolver from "./useSolver";
-import { updateTile } from "./GridContextUtils.tsx";
+import { updateTile, updatePlayers } from "./GridContextUtils.tsx";
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 interface GridContextType {
@@ -258,15 +258,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 				if (prev.ctx === "grid") {
 					if (gridLayers.grid[row][col].value === '.' && players.get(0)!.rack.includes(ch.toUpperCase())) {
 						updateTile(gridLayers.pendingGrid, [row,col], setGridLayers, ch.toUpperCase());
-
-						setPlayers((prevPlayer) => {
-							const next = new Map(prevPlayer);
-							const target = prevPlayer.get(0)!.rack.indexOf(ch.toUpperCase());
-							const newRack = prevPlayer.get(0)!.rack.split("")
-								.map((letter, idx) => idx === target ? "." : letter).join("");
-							next.set(0, {...next.get(0)!, rack: newRack});
-							return next;
-						})
+						updatePlayers(setPlayers, ch.toUpperCase(), ".");
 
 						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
 						else if (prev.direction === "down" && row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
@@ -288,32 +280,20 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			setCursor((prev) => {
 				if (!prev) return prev;
 				if (prev.ctx === "grid") {
-					if (gridLayers.pendingGrid[row][col].value !== '.' && players.get(0)!.rack.includes(e.key.toUpperCase())) {
-						setPlayers((prevPlayer) => {
-							const next = new Map(prevPlayer);
-							const target = next.get(0)!.rack.indexOf(e.key.toUpperCase());
-							const newRack = next.get(0)!.rack.split("")
-								.map((letter, idx) => idx === target ? gridLayers.pendingGrid[row][col].value : letter).join("");
-							next.set(0, {...next.get(0)!, rack:newRack});
-							return next;
-						});
+					const hasLetter = (players.get(0)!.rack.includes(e.key.toUpperCase()));
+					const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
+					const gridEmpty = (gridLayers.grid[row][col].value === ".");
+					if (!pendingEmpty && (hasLetter || jokerModal)) {
+						updatePlayers(setPlayers, e.key.toUpperCase(), gridLayers.pendingGrid[row][col].value);
 						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, e.key.toUpperCase());
 
 						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
 						else if (prev.direction === "down" && row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
 						
-					} else if (gridLayers.grid[row][col].value === '.' && players.get(0)!.rack.includes(e.key.toUpperCase())) {
+					} else if (gridEmpty && (hasLetter || jokerModal)) {
 						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, e.key.toUpperCase());
+						updatePlayers(setPlayers, e.key.toUpperCase(), ".");
 
-						setPlayers((prevPlayer) => {
-							const next = new Map(prevPlayer);
-							const target = next.get(0)!.rack.indexOf(e.key.toUpperCase());
-							const newRack = next.get(0)!.rack.split("")
-								.map((letter, idx) => idx === target ? "." : letter).join("");
-							next.set(0, {...next.get(0)!, rack: newRack});
-
-							return next;
-						})
 						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
 						else if (prev.direction === "down" && row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
 					}
@@ -334,16 +314,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 					if (!prev) return prev;
 					setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
 					if (prev.ctx === "grid" && gridLayers.pendingGrid[row][col].value !== '.') {
-						setPlayers((prev) => {
-							const next = new Map(prev);
-							const dot = next.get(0)!.rack.indexOf(".");
-							const newRack = next.get(0)!.rack
-								.split("")
-								.map((value, idx) => idx === dot ? gridLayers.pendingGrid[row][col].value : value)
-								.join("");
-							next.set(0, {...next.get(0)!, rack: newRack});
-							return next;
-						});
+						updatePlayers(setPlayers, ".", gridLayers.pendingGrid[row][col].value);
 						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, ".");
 					}
 					if (prev.direction === "right" && col > 0) return { ...prev, cell: [row, col - 1] };
