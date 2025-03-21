@@ -1,11 +1,12 @@
 import React from "react";
-import { GridLayers, PlayerInfo, Tile } from "./GridContext.types";
+import { GridLayers, Cursor, PlayerInfo, Tile } from "./GridContext.types";
 
 export function updateTile(
 	grid: Array<Array<Tile>>,
 	pos: [number, number],
 	setGridLayers: React.Dispatch<React.SetStateAction<GridLayers>>,
-	char: string
+	char: string,
+	joker: boolean
 ) {
 	const [row, col] = [pos[0], pos[1]];
 
@@ -13,7 +14,7 @@ export function updateTile(
 		if (y !== row) return [...rowV];
 		return rowV.map((colV, x) => {
 			if (x !== col) return colV;
-			return {value: char, joker: false};
+			return {value: char, joker: joker};
 		})
 	});
 	setGridLayers((prevGrid) => ({...prevGrid, pendingGrid: newGrid}));
@@ -31,5 +32,42 @@ export function updatePlayers(
 		.map((letter, idx) => idx === goal ? needle : letter).join("");
 		next.set(0, {...next.get(0)!, rack:newRack});
 		return next;
+	});
+}
+
+export enum Direction {
+	UP,
+	RIGHT,
+	DOWN,
+	LEFT,
+};
+
+
+export function updateCursor(
+	setCursor: React.Dispatch<React.SetStateAction<Cursor | null>>,
+	direction: Direction,
+) {
+	setCursor((prev) => {
+		if (!prev)  return prev;
+		switch (direction) {
+			case Direction.UP: {
+				if (prev.cell[0] > 0) return {...prev, direction: "down", cell: [prev.cell[0] - 1, prev.cell[1]]};
+				return prev;
+			}
+			case Direction.RIGHT: {
+				if (prev.direction === "down") return {...prev, direction: "right"};
+				if (prev.cell[1] < 14) return {...prev, direction: "right", cell: [prev.cell[0], prev.cell[1] + 1]};
+				return prev;
+			}
+			case Direction.DOWN: {
+				if (prev.direction === "right") return {...prev, direction: "down"};
+				if (prev.cell[0] < 14) return {...prev, direction: "down", cell: [prev.cell[0] + 1, prev.cell[1]]};
+				return prev;
+			}
+			case Direction.LEFT: {
+				if (prev.cell[1] > 0) return {...prev, direction: "right", cell: [prev.cell[0], prev.cell[1] - 1]};
+				return prev;
+			}
+		}
 	});
 }

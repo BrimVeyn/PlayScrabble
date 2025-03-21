@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { useGrid } from "./GridContext";
-import { GridLayers } from "./GridContext.types";
+import { GameInfo, GridLayers, Tile } from "./GridContext.types";
 
-function getLettersPoses(grid: Array<string>) {
+function getLettersPoses(grid: Array<Array<Tile>>) {
 	let ret: Array<[number, number]> = [];
 	for (let i = 0; i < grid.length; i++) {
 		for (let j = 0; j < grid[i].length; j++) {
-			if (grid[i][j] !== '.')
+			if (grid[i][j].value !== '.')
 				ret.push([i, j]);
 		}
 	}
@@ -27,33 +27,33 @@ function isContiguous(gridLayers: GridLayers, poses: Array<[number, number]>, di
 	const grid = gridLayers.grid;
 	const pending = gridLayers.pendingGrid;
 
-	poses.forEach(pos => console.log(pos));
+	//poses.forEach(pos => console.log(pos));
 
 	const fixedCoord = (dir === 0) ? poses[0][0] : poses[0][1];
 	const first = (dir === 1) ? poses[0][0] : poses[0][1];
 	const last = (dir === 1) ? poses[poses.length - 1][0] : poses[poses.length - 1][1];
 
-	console.debug(fixedCoord, first, last);
+	//console.debug(fixedCoord, first, last);
 
 	for (let i = first; i <= last; i++) {
-		if (dir === 0 && pending[fixedCoord][i] === '.' && grid[fixedCoord][i] === '.')
+		if (dir === 0 && pending[fixedCoord][i].value === '.' && grid[fixedCoord][i].value === '.')
 			return false;
-		if (dir === 1 && pending[i][fixedCoord] === '.' && grid[i][fixedCoord] === '.')
+		if (dir === 1 && pending[i][fixedCoord].value === '.' && grid[i][fixedCoord].value === '.')
 			return false;
 	}
 	
 	return true;
 }
 
-function isInContact(grid: Array<string>, poses: Array<[number, number]>) {
+function isInContact(grid: Array<Array<Tile>>, poses: Array<[number, number]>) {
 	for (let pos of poses) {
-		if (pos[0] + 1 < grid.length && grid[pos[0] + 1][pos[1]] !== '.') {
+		if (pos[0] + 1 < grid.length && grid[pos[0] + 1][pos[1]].value !== '.') {
 			return 1;
-		} else if (pos[0] - 1 >= 0 && grid[pos[0] - 1][pos[1]] !== '.') {
+		} else if (pos[0] - 1 >= 0 && grid[pos[0] - 1][pos[1]].value !== '.') {
 			return 1;
-		} else if (pos[1] + 1 < grid.length && grid[pos[0]][pos[1] + 1] !== '.') {
+		} else if (pos[1] + 1 < grid.length && grid[pos[0]][pos[1] + 1].value !== '.') {
 			return 0;
-		} else if (pos[1] - 1 >= 0 && grid[pos[0]][pos[1] - 1] !== '.') {
+		} else if (pos[1] - 1 >= 0 && grid[pos[0]][pos[1] - 1].value !== '.') {
 			return 0;
 		}
 	}
@@ -64,9 +64,9 @@ function getChar(gridLayers: GridLayers, pos: [number, number], dir: number) {
 	if (pos[0] >= 15 || pos[0] < 0 || pos[1] >= 15 || pos[1] < 0)
 		return ".";
 	if (dir === 0) {
-		return (gridLayers.grid[pos[0]][pos[1]] === ".") ? (gridLayers.pendingGrid[pos[0]][pos[1]] === ".") ? "." : gridLayers.pendingGrid[pos[0]][pos[1]] : gridLayers.grid[pos[0]][pos[1]];
+		return (gridLayers.grid[pos[0]][pos[1]].value === ".") ? (gridLayers.pendingGrid[pos[0]][pos[1]].value === ".") ? "." : gridLayers.pendingGrid[pos[0]][pos[1]].value : gridLayers.grid[pos[0]][pos[1]].value;
 	} else {
-		return (gridLayers.grid[pos[1]][pos[0]] === ".") ? (gridLayers.pendingGrid[pos[1]][pos[0]] === ".") ? "." : gridLayers.pendingGrid[pos[1]][pos[0]] : gridLayers.grid[pos[1]][pos[0]];
+		return (gridLayers.grid[pos[1]][pos[0]].value === ".") ? (gridLayers.pendingGrid[pos[1]][pos[0]].value === ".") ? "." : gridLayers.pendingGrid[pos[1]][pos[0]].value : gridLayers.grid[pos[1]][pos[0]].value;
 	}
 }
 
@@ -129,14 +129,44 @@ type Match = {
 	perpCoord: number,
 };
 
-function getWordList(gridLayers: GridLayers) {
+function onMiddleRow(poses: Array<[number, number]>) {
+	let centerPiece = false
+	for (let pos of poses) {
+		if (pos[0] !== 7)
+			return false;
+		if (pos[1] === 7) centerPiece = true;
+	}
+	return centerPiece;
+}
+
+function getJokersPoses(gridLayers: GridLayers, poses: Array<[number, number]>) {
+	let it: number = 0;
+	let jokerIt: number = 0;
+	const jokers = gridLayers.pendingGrid.reduce<[number, number]>((acc, row, rowI) => {
+		row.map((col, colI) => {
+			if (it < poses.length && poses[it][0] === rowI && poses[it][1] === colI) {
+				it++;
+				//console.log("FOUND one lettr");
+				if (col.joker) {
+					acc[jokerIt++] = it;
+				}
+			}
+			return col;
+		})
+		return acc;
+	}, [0, 0])
+	return jokers;
+}
+
+function getWordList(gameInfo: GameInfo, gridLayers: GridLayers) {
 	const pending = gridLayers.pendingGrid;
 
 	const poses = getLettersPoses(pending);
 	let alignedVert = isAligned(poses, 1);
 	let alignedHor = isAligned(poses, 0);
 	const contacts = isInContact(gridLayers.grid, poses);
-	if (contacts === null) {
+	const firstTurnException = (onMiddleRow(poses) && gameInfo.turnNo == 0);
+	if (contacts === null && !firstTurnException) {
 		console.debug("Not in contact");
 		return null;
 	} else if (poses.length === 1 && contacts === 1) {
@@ -155,6 +185,8 @@ function getWordList(gridLayers: GridLayers) {
 		return null;
 	}
 
+	const jokerPoses = getJokersPoses(gridLayers, poses);
+	console.log("jokerPoses poses:", jokerPoses);
 
 	if (alignedVert && isContiguous(gridLayers, poses, 1)) {
 		const [start, end] = getBounds(gridLayers, poses[0], 1);
@@ -163,6 +195,7 @@ function getWordList(gridLayers: GridLayers) {
 			dir: 1,
 			range: [start, end],
 			perpCoord: poses[0][1],
+			jokerPoses: jokerPoses,
 			//TODO: JOKERS
 		};
 		console.log(match);
@@ -175,21 +208,22 @@ function getWordList(gridLayers: GridLayers) {
 			dir: 0,
 			range: [start, end],
 			perpCoord: poses[0][0],
+			jokerPoses: jokerPoses,
 			//TODO: JOKERS
 		};
 		console.log(match);
 		console.info("VALID");
 		return {match: match, wordList: collectWords(gridLayers, poses, 0)};
 	}
+	console.info("Not contiguous");
 
 	return null;
 }
 
 async function validateWords(gridLayers: GridLayers, data: {match: any, wordList: Array<string>}) {
-	const grid = gridLayers.grid
-		.map((rowV) => (rowV.split("")
-		.map((colV) => (colV === "." ? 0 : colV.charCodeAt(0)))));
-
+	const grid: Array<Array<number>> = gridLayers.grid
+		.map((rowV) => (rowV
+		.map((colV) => (colV.value === "." ? 0 : colV.value.charCodeAt(0)))));
 	console.log(grid);
 
 	const payload = {
@@ -226,7 +260,7 @@ function PlaceButton() {
 			console.log("You haven't placed any letter");
 			return ;
 		}
-		const wordList = getWordList(gridLayers);
+		const wordList = getWordList(gameInfo, gridLayers);
 		if (wordList === null) {
 			return ;
 		}
@@ -236,8 +270,8 @@ function PlaceButton() {
 		} else {
 			console.debug("solver/getScore:", ok.err);
 		}
-			//pendingToGrid();
-			//turnSwitch();
+		//pendingToGrid();
+		//turnSwitch();
 	}
 
 	return (

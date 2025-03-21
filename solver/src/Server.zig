@@ -100,12 +100,14 @@ const GetScoreRequest = struct {
         const matchDirKey = matchObject.get("dir") orelse return error.MissingMatchField;
         const matchRangeKey = matchObject.get("range") orelse return error.MissingMatchField;
         const matchPerpCoordKey = matchObject.get("perpCoord") orelse return error.MissingMatchField;
+        const matchJokerPosesKey = matchObject.get("jokerPoses") orelse return error.MissingMatchField;
 
         var matchWord:[GRID_SIZE:0]u8 = .{0} ** 15;
         std.mem.copyForwards(u8, matchWord[0..], matchWordKey.string[0..]);
         const matchDir = if (matchDirKey.integer == 0) Direction.Horizontal else Direction.Vertical;
         const matchRange = Range{@as(u4, @intCast(matchRangeKey.array.items[0].integer)), @as(u4, @intCast(matchRangeKey.array.items[1].integer))};
         const matchPerpCoord = @as(u4, @intCast(matchPerpCoordKey.integer));
+        const matchJokerPoses: [2]?u4 = .{@as(u4, @intCast(matchJokerPosesKey.array.items[0].integer)), @as(u4, @intCast(matchJokerPosesKey.array.items[1].integer))};
 
         log.info("RANGE: {d}", .{matchRange});
         log.info("Dir: {any}", .{matchDir});
@@ -117,6 +119,7 @@ const GetScoreRequest = struct {
             .dir = matchDir,
             .range = matchRange,
             .perpCoord = matchPerpCoord,
+            .jokerPoses = matchJokerPoses,
         };
 
         return GetScoreRequest{

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
 import { Tile } from './GridContext.types';
@@ -86,23 +86,23 @@ function Grid() {
 					/> 
 				</div>
 			}
-			{gridLayers.grid.map((item, index) => (
-				<div className="s-grid-row" key={index}>
-					{item.map((tile, letterIndex) => {
-						const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == index && cursor.cell[1] == letterIndex)) ? true : false;;
+			{gridLayers.grid.map((item, row) => (
+				<div className="s-grid-row" key={`row-${row}`}>
+					{item.map((tile, col) => {
+						const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == row && cursor.cell[1] == col)) ? true : false;;
 						const fClass:string = (tile.value !== '.') ? "full" : "empty";
 
-						const gLetter:Tile = gridLayers.ghostGrid[index][letterIndex];
+						const gLetter:Tile = gridLayers.ghostGrid[row][col];
 						const gClass:string = (gLetter.value !== '.' && tile.value === '.') ? "ghost" : "";
 
-						const pLetter:Tile = gridLayers.pendingGrid[index][letterIndex];
+						const pLetter:Tile = gridLayers.pendingGrid[row][col];
 						const pClass:string = (pLetter.value !== '.' && tile.value === '.') ? "pending" : "";
 
 						const isJoker = (tile.joker || gLetter.joker || pLetter.joker);
 
 						const hasScore:boolean = (tile.value !== '.' || gLetter.value !== '.' || pLetter.value !== '.');
 						const [modClass, modText]: [string, string] = (() => {
-							switch (gridModifiers[index][letterIndex]) {
+							switch (gridModifiers[row][col]) {
 								case 1: return ["dword", t("dword")];
 								case 2: return ["tword", t("tword")];
 								case 3: return ["dletter", t("dletter")];
@@ -110,14 +110,15 @@ function Grid() {
 								default: return ["", ""];
 							}
 						})();
+						const key = `${row}-${col}-${tile.value}`;
 						return (
-							<>
-							{ isSelected && jokerModal && <JokerToolTip/>}
+							<Fragment key={key}>
+							{ isSelected && jokerModal && <JokerToolTip key={`joker-${key}`}/>}
 							<div 
 								className="s-grid-cell" 
-								key={index + letterIndex}
+								key={key}
 								onClick={() => {
-									if (!jokerModal) updateCursor(index, letterIndex)
+									if (!jokerModal) updateCursor(row, col)
 								}}
 							> 
 								<span 
@@ -139,7 +140,7 @@ function Grid() {
 									/>
 								}
 							</div>
-							</>
+							</Fragment>
 						)
 					})}
 				</div>

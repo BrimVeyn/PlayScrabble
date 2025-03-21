@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { NewGameOptions } from "../Bot.tsx";
 import { letterFrequencies, emptyGrid, GridLayers, Tile, PlayerInfo, GameInfo, Match, Cursor } from "./GridContext.types.ts"
 import callSolver from "./useSolver";
-import { updateTile, updatePlayers } from "./GridContextUtils.tsx";
+import { updateTile, updatePlayers, updateCursor, Direction } from "./GridContextUtils.tsx";
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 interface GridContextType {
@@ -257,7 +257,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 				if (!prev) return prev;
 				if (prev.ctx === "grid") {
 					if (gridLayers.grid[row][col].value === '.' && players.get(0)!.rack.includes(ch.toUpperCase())) {
-						updateTile(gridLayers.pendingGrid, [row,col], setGridLayers, ch.toUpperCase());
+						updateTile(gridLayers.pendingGrid, [row,col], setGridLayers, ch.toUpperCase(), jokerModal);
 						updatePlayers(setPlayers, ch.toUpperCase(), ".");
 
 						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
@@ -283,20 +283,18 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 					const hasLetter = (players.get(0)!.rack.includes(e.key.toUpperCase()));
 					const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
 					const gridEmpty = (gridLayers.grid[row][col].value === ".");
+					const fromPlayer = (jokerModal) ? "?" : e.key.toUpperCase();
+
 					if (!pendingEmpty && (hasLetter || jokerModal)) {
-						updatePlayers(setPlayers, e.key.toUpperCase(), gridLayers.pendingGrid[row][col].value);
-						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, e.key.toUpperCase());
-
-						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
-						else if (prev.direction === "down" && row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
-						
+						updatePlayers(setPlayers, fromPlayer, gridLayers.pendingGrid[row][col].value);
+						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, e.key.toUpperCase(), jokerModal);
+						updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
 					} else if (gridEmpty && (hasLetter || jokerModal)) {
-						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, e.key.toUpperCase());
-						updatePlayers(setPlayers, e.key.toUpperCase(), ".");
-
-						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
-						else if (prev.direction === "down" && row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
+						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, e.key.toUpperCase(), jokerModal);
+						updatePlayers(setPlayers, fromPlayer, ".");
+						updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
 					}
+					if (jokerModal) setJokerModal(false);
 				}
 				return prev;
 			});
@@ -305,62 +303,31 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 		
 		//TODO: Adapt for joker placing on grid
 		if (e.code == "Space") {
-			setJokerModal((prev) => !prev);
+			if (players.get(0)!.rack.includes("?")) {
+				setJokerModal((prev) => !prev);
+			}
 		}
 
+		e.preventDefault();
 		switch (e.key) {
 			case "Backspace":
+				if (jokerModal) setJokerModal(false);
 				setCursor((prev) => {
 					if (!prev) return prev;
 					setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
 					if (prev.ctx === "grid" && gridLayers.pendingGrid[row][col].value !== '.') {
-						updatePlayers(setPlayers, ".", gridLayers.pendingGrid[row][col].value);
-						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, ".");
+						const letterBack = (gridLayers.pendingGrid[row][col].joker) ? "?" : gridLayers.pendingGrid[row][col].value;
+						updatePlayers(setPlayers, ".", letterBack);
+						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, ".", jokerModal);
 					}
-					if (prev.direction === "right" && col > 0) return { ...prev, cell: [row, col - 1] };
-					else if (prev.direction === "down" && row > 0) return { ...prev, cell: [row - 1, col] };
-
+					updateCursor(setCursor, (prev.direction === "right") ? Direction.LEFT : Direction.UP);
 					return prev;
 				});
 				break;
-			case "ArrowDown":
-				e.preventDefault();
-				setCursor((prev) => {
-					if (!prev) return prev;
-					if (prev.ctx === "grid") {
-						if (prev.direction === "right") return {...prev, direction: "down"};
-						if (row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
-					}
-					return prev;
-				});
-				break;
-			case "ArrowRight":
-				setCursor((prev) => {
-					if (!prev)  return prev;
-					if (prev.direction === "down") 
-						return {...prev, direction: "right"};
-					if ((prev.ctx === "grid" && col < GRID_SIZE - 1) || (col < 6))
-						return {...prev, cell: [row, col + 1] };
-					return prev;
-				});
-				break;
-			case "ArrowLeft":
-				setCursor((prev) => {
-					if (!prev) return prev;
-					if (prev.cell[1] > 0) 
-						return { ...prev, cell: [row, col - 1], direction: "right" }
-					return { ...prev, direction: "right" }
-				});
-				break;
-			case "ArrowUp":
-				e.preventDefault();
-				setCursor((prev) => {
-					if (!prev) return prev;
-					if (prev.cell[0] > 0)
-						return { ...prev, cell: [row - 1, col], direction: "down" }
-					return {...prev, direction: "down"};
-				});
-				break;
+			case "ArrowDown": updateCursor(setCursor, Direction.DOWN); break;
+			case "ArrowRight": updateCursor(setCursor, Direction.RIGHT); break;
+			case "ArrowLeft": updateCursor(setCursor, Direction.LEFT); break;
+			case "ArrowUp": updateCursor(setCursor, Direction.UP); break;
 			default: break;
 		}
 	};
