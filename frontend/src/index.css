@@ -29,8 +29,23 @@
 	--secondary: rgb(209, 125, 154);
 	--white-smoke: rgba(255, 255, 255, 0.75);
 
-	--background-color: #92abd9;
-	--foreground-color: #5a78b0;
+    --rt-color-accept: #49B568;
+    --rt-color-accept-rgb: 73, 181, 104;
+
+    --rt-color-deny: #DD111B;
+    --rt-color-deny-rgb: 221, 17, 27;
+
+    --rt-color-black: #070837;
+    --rt-color-black-rgb: 7, 8, 55;
+
+    --rt-color-white: #FEFEFE;
+    --rt-color-white-rgb: 254, 254, 254;
+
+    --background-color: #92abd9;
+    --background-color-rgb: 146, 171, 217;
+
+    --foreground-color: #5a78b0;
+    --foreground-color-rgb: 90, 120, 176;
 
 	--tile-background: rgb(238 230 188);
 	--tile-border: rgb(130 115 31);

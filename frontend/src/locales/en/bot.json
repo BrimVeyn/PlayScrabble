@@ -14,5 +14,12 @@
 	"rerollButtonText": "Reroll",
 	"passButtonText": "Pass",
 	"placeButtonText": "Validate",
-	"shuffleButtonTooltip": "Shuffle"
+	"shuffleButtonTooltip": "Shuffle",
+	"pursePlaceholder": "No more letters",
+	"placeModalConfirmTitle": "Confirm",
+	"placeModalConfirmText": "Confirm your action",
+	"passModalConfirmTitle": "Pass",
+	"passModalConfirmText": "Do you really want to pass ?",
+	"yes": "Yes",
+	"no": "No"
 }

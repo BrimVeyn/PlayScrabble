@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { placeWord, refillRack, useGrid } from "./GridContext";
 import { GameInfo, Match, GridLayers, Tile, emptyGrid } from "./GridContext.types";
+import { Modal, ModalTitle, ModalText, ModalButton, ModalFooter } from "../../../lib/Modal";
+import { useState } from "react";
+
+import "../styles/PlaceButton.css"
 
 function getLettersPoses(grid: Array<Array<Tile>>) {
 	let ret: Array<[number, number]> = [];
@@ -246,6 +250,7 @@ async function validateWords(gridLayers: GridLayers, data: {match: any, wordList
 function PlaceButton() {
 	const {t} = useTranslation("bot");
 	const { gridLayers, gameInfo, setGameInfo, setGridLayers, setTurnChange, players, setPlayers } = useGrid();
+	const [modal, setModal] = useState<boolean>(false);
 
 	const handlePlace = async () => {
 		if (gameInfo.playing !== 0) {
@@ -281,13 +286,28 @@ function PlaceButton() {
 	}
 
 	return (
+		<>
 		<button 
 			className="glass actionButton"
 			id ="placeButton"
-			onClick={handlePlace}
+			onClick={() => setModal(true)}
 		>
 			{t("placeButtonText")}
 		</button>
+		{ modal && (
+			<Modal>
+					<ModalTitle text={t("placeModalConfirmTitle")}/>
+					<ModalText text={t("placeModalConfirmText")}/>
+					<ModalFooter>
+						<ModalButton text={t("no")} style={"modalButtonDeny"} callback={() => setModal(false)}/>
+						<ModalButton text={t("yes")} style={"modalButtonAccept"} callback={() => {
+							handlePlace();
+							setModal(false);
+						}}/>
+					</ModalFooter>
+			</Modal>
+		)}
+		</>
 	);
 }
 

@@ -1,0 +1,77 @@
+.modalBackground {
+	position: absolute;
+	z-index: 1;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 500vh;
+	background-color: red;
+	background-color: rgba(90, 90, 90, .7);
+}
+
+.modalOuterContent {
+	z-index: 2;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.modalInnerContent {
+	width: 400px;
+	max-height: max-content;
+	flex-direction: column;
+	background-color: rgba(0, 0, 0, .8);
+	border: 3px solid rgba(200, 200, 200, .9);
+	border-radius: 10px;
+}
+
+.modalTitle {
+	font-size: 20px;
+	font-weight: bold;
+	padding-block: 10px;
+}
+
+.modalInnerContent > p {
+	padding-inline: 20px;
+}
+
+.modalFooter {
+	display: flex;
+	justify-content: space-around;
+}
+
+.modalButton {
+	width: 100px;
+	height: 50px;
+	border: 2px solid transparent;
+	margin-block: 20px;
+	transition: all .125s ease;
+	border-radius: 10px;
+}
+
+.modalButton:hover {
+	cursor: pointer;
+}
+
+.modalButtonDeny {
+	border: 2px solid var(--rt-color-deny);
+}
+
+.modalButtonDeny:hover {
+	background-color: rgba(var(--rt-color-deny-rgb), .8);
+	border-color: var(--rt-color-white);
+}
+
+.modalButtonAccept {
+	border: 2px solid var(--rt-color-accept);
+}
+
+.modalButtonAccept:hover {
+	background-color: rgba(var(--rt-color-accept-rgb), .8);
+	border-color: var(--rt-color-white);
+}

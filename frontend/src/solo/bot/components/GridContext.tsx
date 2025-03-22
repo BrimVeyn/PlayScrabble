@@ -276,6 +276,11 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 
 		const [row, col] = cursor.cell;
 
+		if (gridLayers.grid[row][col].value === e.key.toUpperCase()) {
+			updateCursor(setCursor, cursor.direction === "right" ? Direction.RIGHT : Direction.DOWN);
+			return ;
+		}
+
 		if (letters.includes(e.key)) {
 			setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
 			setCursor((prev) => {
