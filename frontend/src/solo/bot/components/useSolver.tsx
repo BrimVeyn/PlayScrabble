@@ -31,14 +31,14 @@ async function callSolver ({gridLayers, rack, setLastResults}: callSolverProps) 
 		console.debug("Waiting for response...");
 		const data = await response.json();
 		//console.debug("/solver/solve:", data);
-		const formattedData = data.map((item: any) => ({
+		const formattedData: Array<Match> = data.map((item: any) => ({
 			word: item[0],
 			score: item[1],
 			dir: item[2],
-			pos: item[3],
-			savedCoord: item[4],
+			range: item[3],
+			perpCoord: item[4],
 			letterCount: item[5],
-			joker: (item[6] === undefined) ? [0, 0] : item[6],
+			jokers: (item[6] === undefined) ? [0, 0] : item[6],
 			jokerPoses: (item[7] === undefined) ? [-1, -1] : item[7],
 		}));
 		setLastResults(formattedData);

@@ -4,10 +4,10 @@ export type Match = {
 	word: string;
 	score: number;
 	dir: number;
-	pos: [number, number];
-	savedCoord: number;
-	letterCount: number;
-	joker: [number, number];
+	range: [number, number];
+	perpCoord: number;
+	placedLetters: number;
+	jokers: [number, number];
 	jokerPoses: [number, number];
 };
 

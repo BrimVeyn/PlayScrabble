@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { useGrid } from "./GridContext";
-import { GameInfo, GridLayers, Tile } from "./GridContext.types";
+import { placeWord, refillRack, useGrid } from "./GridContext";
+import { GameInfo, Match, GridLayers, Tile, emptyGrid } from "./GridContext.types";
 
 function getLettersPoses(grid: Array<Array<Tile>>) {
 	let ret: Array<[number, number]> = [];
@@ -122,13 +122,6 @@ function collectWords(gridLayers: GridLayers, poses: Array<[number, number]>, di
 	return ret;
 }
 
-type Match = {
-	word: string,
-	dir: number,
-	range: [number, number],
-	perpCoord: number,
-};
-
 function onMiddleRow(poses: Array<[number, number]>) {
 	let centerPiece = false
 	for (let pos of poses) {
@@ -139,22 +132,22 @@ function onMiddleRow(poses: Array<[number, number]>) {
 	return centerPiece;
 }
 
-function getJokersPoses(gridLayers: GridLayers, poses: Array<[number, number]>) {
+function getJokersPoses(gridLayers: GridLayers, poses: Array<[number, number]>): [[number, number],[number,number]] {
 	let it: number = 0;
 	let jokerIt: number = 0;
-	const jokers = gridLayers.pendingGrid.reduce<[number, number]>((acc, row, rowI) => {
+	const jokers = gridLayers.pendingGrid.reduce<[[number, number],[number,number]]>((acc, row, rowI) => {
 		row.map((col, colI) => {
 			if (it < poses.length && poses[it][0] === rowI && poses[it][1] === colI) {
-				it++;
-				//console.log("FOUND one lettr");
 				if (col.joker) {
-					acc[jokerIt++] = it;
+					acc[0][jokerIt] = col.value.charCodeAt(0);
+					acc[1][jokerIt++] = it;
 				}
+				it++;
 			}
 			return col;
 		})
 		return acc;
-	}, [0, 0])
+	}, [[0, 0], [-1, -1]])
 	return jokers;
 }
 
@@ -166,6 +159,7 @@ function getWordList(gameInfo: GameInfo, gridLayers: GridLayers) {
 	let alignedHor = isAligned(poses, 0);
 	const contacts = isInContact(gridLayers.grid, poses);
 	const firstTurnException = (onMiddleRow(poses) && gameInfo.turnNo == 0);
+
 	if (contacts === null && !firstTurnException) {
 		console.debug("Not in contact");
 		return null;
@@ -185,34 +179,36 @@ function getWordList(gameInfo: GameInfo, gridLayers: GridLayers) {
 		return null;
 	}
 
-	const jokerPoses = getJokersPoses(gridLayers, poses);
+	const [jokers, jokerPoses] = getJokersPoses(gridLayers, poses);
 	console.log("jokerPoses poses:", jokerPoses);
 
 	if (alignedVert && isContiguous(gridLayers, poses, 1)) {
 		const [start, end] = getBounds(gridLayers, poses[0], 1);
-		const match = {
+		const match: Match = {
 			word: getWord(gridLayers, poses[0], 1),
-			dir: 1,
+			dir: 0,
+			score: 0,
+			placedLetters: poses.length,
 			range: [start, end],
 			perpCoord: poses[0][1],
+			jokers: jokers,
 			jokerPoses: jokerPoses,
-			//TODO: JOKERS
 		};
 		console.log(match);
-		console.info("VALID");
 		return {match: match, wordList: collectWords(gridLayers, poses, 1)};
 	} else if (alignedHor && isContiguous(gridLayers, poses, 0)) {
 		const [start, end] = getBounds(gridLayers, poses[0], 0);
-		const match = {
+		const match: Match = {
 			word: getWord(gridLayers, poses[0], 0),
-			dir: 0,
+			dir: 1,
+			score: 0,
+			placedLetters: poses.length,
 			range: [start, end],
 			perpCoord: poses[0][0],
+			jokers: jokers,
 			jokerPoses: jokerPoses,
-			//TODO: JOKERS
 		};
 		console.log(match);
-		console.info("VALID");
 		return {match: match, wordList: collectWords(gridLayers, poses, 0)};
 	}
 	console.info("Not contiguous");
@@ -249,7 +245,7 @@ async function validateWords(gridLayers: GridLayers, data: {match: any, wordList
 
 function PlaceButton() {
 	const {t} = useTranslation("bot");
-	const { gridLayers, gameInfo } = useGrid();
+	const { gridLayers, gameInfo, setGameInfo, setGridLayers, setTurnChange, players, setPlayers } = useGrid();
 
 	const handlePlace = async () => {
 		if (gameInfo.playing !== 0) {
@@ -260,18 +256,28 @@ function PlaceButton() {
 			console.log("You haven't placed any letter");
 			return ;
 		}
-		const wordList = getWordList(gameInfo, gridLayers);
-		if (wordList === null) {
+		const data = getWordList(gameInfo, gridLayers);
+		if (data === null) {
 			return ;
 		}
-		const ok = await validateWords(gridLayers, wordList);
+		const ok = await validateWords(gridLayers, data);
 		if (ok.err.length == 0) {
 			console.log("Yes !");
+			data.match.score = ok.score;
+			console.log("Filled match: ", data.match);
+			placeWord({players, gameInfo, gridLayers, setGridLayers, match: data.match});
+			setGridLayers((prev) => ({...prev, pendingGrid: emptyGrid}));
+			const [newRack, newPurse] = refillRack({key: 0, gameInfo, players});
+			setPlayers((prev) => {
+				let next = new Map(prev);
+				next.set(0, {rack: newRack, score: next.get(0)!.score + data.match.score});
+				return next;
+			})
+			setGameInfo((prev) => ({...prev, purse: newPurse, turnNo: prev.turnNo + 1, playing: 1}));
+			setTurnChange(true);
 		} else {
 			console.debug("solver/getScore:", ok.err);
 		}
-		//pendingToGrid();
-		//turnSwitch();
 	}
 
 	return (

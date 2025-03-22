@@ -28,12 +28,16 @@
 
 	--secondary: rgb(209, 125, 154);
 	--white-smoke: rgba(255, 255, 255, 0.75);
+
 	--background-color: #92abd9;
 	--foreground-color: #5a78b0;
+
 	--tile-background: rgb(238 230 188);
 	--tile-border: rgb(130 115 31);
+
 	--ghost-color: rgb(147 223 151);
 	--ghost-border: rgb(47, 134, 51);
+
 	--pending-color: rgb(170, 164, 132);
 	--pending-border: rgb(121, 111, 54);
 
@@ -71,7 +75,7 @@
     left: 0;
     margin: 0;
     padding: 0;
-    background: #7e9bd0;
+    background: var(--background-color);
     overflow: hidden;
 }
 .background li {

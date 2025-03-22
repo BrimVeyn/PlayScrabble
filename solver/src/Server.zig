@@ -100,14 +100,23 @@ const GetScoreRequest = struct {
         const matchDirKey = matchObject.get("dir") orelse return error.MissingMatchField;
         const matchRangeKey = matchObject.get("range") orelse return error.MissingMatchField;
         const matchPerpCoordKey = matchObject.get("perpCoord") orelse return error.MissingMatchField;
+        const matchJokersKey = matchObject.get("jokers") orelse return error.MissingMatchField;
         const matchJokerPosesKey = matchObject.get("jokerPoses") orelse return error.MissingMatchField;
+        const matchPlacedLettersKey = matchObject.get("placedLetters") orelse return error.MissingMatchField;
 
         var matchWord:[GRID_SIZE:0]u8 = .{0} ** 15;
         std.mem.copyForwards(u8, matchWord[0..], matchWordKey.string[0..]);
-        const matchDir = if (matchDirKey.integer == 0) Direction.Horizontal else Direction.Vertical;
+        const matchDir = if (matchDirKey.integer == 1) Direction.Horizontal else Direction.Vertical;
         const matchRange = Range{@as(u4, @intCast(matchRangeKey.array.items[0].integer)), @as(u4, @intCast(matchRangeKey.array.items[1].integer))};
         const matchPerpCoord = @as(u4, @intCast(matchPerpCoordKey.integer));
-        const matchJokerPoses: [2]?u4 = .{@as(u4, @intCast(matchJokerPosesKey.array.items[0].integer)), @as(u4, @intCast(matchJokerPosesKey.array.items[1].integer))};
+        const matchJokers: [2]u8 = .{@as(u8, @intCast(matchJokersKey.array.items[0].integer)),@as(u8, @intCast(matchJokersKey.array.items[1].integer))};
+        const matchPlacedLetters: u4 = @as(u4, @intCast(matchPlacedLettersKey.integer));
+        const matchJokerPoses: [2]?u4 = .{
+            if (matchJokerPosesKey.array.items[0].integer == -1) null else
+            @as(u4, @intCast(matchJokerPosesKey.array.items[0].integer)),
+            if (matchJokerPosesKey.array.items[1].integer == -1) null else
+            @as(u4, @intCast(matchJokerPosesKey.array.items[1].integer))
+        };
 
         log.info("RANGE: {d}", .{matchRange});
         log.info("Dir: {any}", .{matchDir});
@@ -119,6 +128,8 @@ const GetScoreRequest = struct {
             .dir = matchDir,
             .range = matchRange,
             .perpCoord = matchPerpCoord,
+            .placedLetters = matchPlacedLetters,
+            .jokers = matchJokers,
             .jokerPoses = matchJokerPoses,
         };
 
@@ -173,8 +184,9 @@ fn getScore(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
             log.info("Score: {d}", .{sPerp});
         }
     }
+    scoreReq.match.score += scorePar(scoreReq.grid, &scoreReq.match, scoreReq.match.jokerPoses);
+    scoreReq.match.score += if (scoreReq.match.placedLetters == 7) 50 else 0;
 
-    scoreReq.match.score += scorePar(scoreReq.grid, &scoreReq.match, .{null, null});
     // log.info("AFTER: {}", .{scoreReq.match});
     log.info("Score: {d}", .{scoreReq.match.score});
     try res.json(ScoreResponse{.err = "", .score = scoreReq.match.score}, .{});
@@ -194,7 +206,7 @@ fn solve(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         if (config.rack.len == 0) {
             log.err("solver: /solver/solve: Empty rack", .{});
             res.status = 400;
-            res.body = "Malformed request";
+            res.body = "Empty rack";
             return ;
         }
         std.log.info("Solving with as rack: {s}", .{config.rack});

@@ -42,24 +42,24 @@ function Results() {
 
 		switch (match.dir) {
 			case 1: { //HORIZONTAL
-				const row = match.savedCoord;
+				const row = match.perpCoord;
 				const newGrid = [...emptyGrid];
-				let it: number = match.pos[0];
+				let it: number = match.range[0];
 				//TODO: Also render jokers poses
 				newGrid[row] = newGrid[row].map((col, x) => {
-					if (x !== it || it > match.pos[1]) return col;
+					if (x !== it || it > match.range[1]) return col;
 					it++;
-					return {...col, value: match.word[it - 1 - match.pos[0]]};
+					return {...col, value: match.word[it - 1 - match.range[0]]};
 				});
 				setGridLayers((prev) => ({...prev, ghostGrid: newGrid}));
 				break;
 			}
 			case 0: { //VERTICAL
 				const newGrid = [...emptyGrid];
-				for (let row = match.pos[0]; row <= match.pos[1]; row++) {
+				for (let row = match.range[0]; row <= match.range[1]; row++) {
 					newGrid[row] = newGrid[row].map((col, x) => {
-						if (x !== match.savedCoord) return col;
-						return {...col, value: match.word[row - match.pos[0]]};
+						if (x !== match.perpCoord) return col;
+						return {...col, value: match.word[row - match.range[0]]};
 					});
 				}
 				setGridLayers((prev) => ({...prev, ghostGrid: newGrid}));
@@ -130,9 +130,9 @@ function Results() {
 									> 
 										<p> {match.word} </p>
 										<p> {match.score} </p>
-										<p className="p20"> {match.letterCount || 0} </p>
+										<p className="p20"> {match.placedLetters || 0} </p>
 										<p className="p10"> {match.dir == 0 ? t("resRowVert") : t("resRowHor")} </p>
-										<p className="p10"> {match.joker ? match.joker.filter(n => n != 0).length : 0 } </p>
+										<p className="p10"> {match.jokers ? match.jokers.filter(n => n != 0).length : 0 } </p>
 									</div>
 								);
 							}}

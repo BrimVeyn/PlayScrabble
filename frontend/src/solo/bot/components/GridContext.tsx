@@ -12,6 +12,8 @@ interface GridContextType {
 	setPlayers: React.Dispatch<React.SetStateAction<Map<number, PlayerInfo>>>;
 	gameInfo: GameInfo,
 	setGameInfo: React.Dispatch<React.SetStateAction<GameInfo>>;
+	turnChange: boolean,
+	setTurnChange: React.Dispatch<React.SetStateAction<boolean>>;
 	cursor: Cursor | null;
 	setCursor: React.Dispatch<React.SetStateAction<Cursor | null>>;
 	jokerModal: boolean;
@@ -43,7 +45,7 @@ interface RefillRackProps {
 	players: Map<number, PlayerInfo>,
 }
 
-const refillRack = ({key, gameInfo, players}: RefillRackProps): [string, string[]] => {
+export const refillRack = ({key, gameInfo, players}: RefillRackProps): [string, string[]] => {
 	let rack: string = players.get(key)!.rack;
 	let purse: Array<string> = [...gameInfo.purse];
 
@@ -103,8 +105,7 @@ function removeFromRack(rack: string, col: string) {
 	return newRack;
 }
 
-function placeWord({players, gameInfo, gridLayers, setGridLayers, match}: PlaceWordProps) {
-	//TODO: update score
+export function placeWord({players, gameInfo, gridLayers, setGridLayers, match}: PlaceWordProps) {
 	let newRack = players.get(gameInfo.playing)!.rack;
 	if (match.jokerPoses[0] !== -1) {
 		const count = match.jokerPoses.reduce((sum, value) => {
@@ -120,40 +121,40 @@ function placeWord({players, gameInfo, gridLayers, setGridLayers, match}: PlaceW
 
 	switch (match.dir) {
 		case 1: { //NOTE: Horizontal
-			let it = match.pos[0];
+			let it = match.range[0];
 			const newGrid: Array<Array<Tile>> = gridLayers.grid.map((row, rowI) => {
-				if (rowI !== match.savedCoord) return row;
+				if (rowI !== match.perpCoord) return row;
 				return row.map((col, colI) => {
-					if (colI !== it || it > match.pos[1]) return col;
+					if (colI !== it || it > match.range[1]) return col;
 					it++;
-					const idx = it - 1 - match.pos[0];
+					const idx = it - 1 - match.range[0];
 					if (col.value === ".") {
 						newRack = removeFromRack(newRack, match.word[idx]);
 					} else {
 						return col;
 					}
 					const isJoker = (idx === match.jokerPoses[0] || idx === match.jokerPoses[1]);
-					return {joker: isJoker , value: match.word[it - 1 - match.pos[0]]};
+					return {joker: isJoker , value: match.word[it - 1 - match.range[0]]};
 				});
 			});
 			setGridLayers((prev) => ({...prev, grid: newGrid}));
 			break;
 		}
 		case 0: { //NOTE: Vertical
-			let it = match.pos[0];
+			let it = match.range[0];
 			const newGrid = gridLayers.grid.map((row, rowI) => {
 				if (rowI !== it) return row;
 				return row.map((col, colI) => {
-					if (colI !== match.savedCoord || it > match.pos[1]) return col;
+					if (colI !== match.perpCoord || it > match.range[1]) return col;
 					it++;
-					const idx = it - 1 - match.pos[0];
+					const idx = it - 1 - match.range[0];
 					if (col.value === ".") {
 						newRack = removeFromRack(newRack, match.word[idx]);
 					} else {
 						return col;
 					}
 					const isJoker = (idx === match.jokerPoses[0] || idx === match.jokerPoses[1]);
-					return {joker: isJoker , value: match.word[it - 1 - match.pos[0]]};
+					return {joker: isJoker , value: match.word[it - 1 - match.range[0]]};
 				});
 			})
 			setGridLayers((prev) => ({...prev, grid: newGrid}));
@@ -185,7 +186,7 @@ function pickRandomMatch(gameInfo: GameInfo, results: Array<Match>) {
 }
 
 const defaultPlayers: Map<number, PlayerInfo> = new Map([
-    [0, { score: 0, rack: "SALOP?S" }],
+    [0, { score: 0, rack: "....?.." }],
     [1, { score: 0, rack: "......." }]
 ]);
 
@@ -341,6 +342,8 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			lastResults,
 			gameInfo,
 			setGameInfo,
+			turnChange,
+			setTurnChange,
 			players,
 			setPlayers,
 			setLastResults,
