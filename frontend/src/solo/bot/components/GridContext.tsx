@@ -275,6 +275,10 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 					updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, jokerModal);
 					updatePlayers(setPlayers, fromPlayer, ".");
 					updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+				} else if (gridEmpty && !hasLetter && !jokerModal && players.get(0)!.rack.includes('?')) {
+					updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, true);
+					updatePlayers(setPlayers, "?", ".");
+					updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
 				}
 				if (jokerModal) setJokerModal(false);
 			}
@@ -285,34 +289,24 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 
 	const handleKeyDownMobile = (ch: string) => {
 		if (!cursor) return;
-		if (letters.includes(ch)) {
-			handleLetters(ch);
-		}
+		if (ch === " ") return; //FIX: Avoid getting into this function
+		handleLetters(ch);
 	}
 
 	const handleKeyDown = (e: KeyboardEvent) => {
 		if (!cursor) return;
 		const [row, col] = cursor.cell;
 
-		console.log("In handleKeyDown:", e);
-
-		//if (letters.includes(e.key)) {
-		//	handleLetters(e.key);
-		//} 
-
 		if (["Space", "Backspace", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(e.key)) {
 			e.preventDefault();
 		}
 		
 		if (e.code == "Space") {
-			console.log("Space detected");
 			if (players.get(0)!.rack.includes("?")) {
-				console.log("Space activated");
 				setJokerModal((prev) => !prev);
 				return ;
 			}
 		}
-
 
 		switch (e.key) {
 			case "Backspace":
