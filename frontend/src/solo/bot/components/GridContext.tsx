@@ -294,16 +294,20 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 		if (!cursor) return;
 		const [row, col] = cursor.cell;
 
-		if (letters.includes(e.key)) {
-			handleLetters(e.key);
-		} 
+		console.log("In handleKeyDown:", e);
+
+		//if (letters.includes(e.key)) {
+		//	handleLetters(e.key);
+		//} 
 
 		if (["Space", "Backspace", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(e.key)) {
 			e.preventDefault();
 		}
 		
 		if (e.code == "Space") {
+			console.log("Space detected");
 			if (players.get(0)!.rack.includes("?")) {
+				console.log("Space activated");
 				setJokerModal((prev) => !prev);
 				return ;
 			}

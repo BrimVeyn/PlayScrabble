@@ -35,16 +35,7 @@ const gridModifiers: Array<Array<number>> = [
 function Grid() {
 	const {gridLayers, cursor, jokerModal, setCursor, handleKeyDown, handleKeyDownMobile} = useGrid();
 	const {t} = useTranslation(["solver", "letterScore"]);
-	const inputRef = useRef<HTMLInputElement | null>(null);
-	const isMobile = window.matchMedia("(max-width: 768px)").matches;
-
-	useEffect(() => {
-		if (isMobile) return ;
-		window.addEventListener('keydown', handleKeyDown);
-		return () => {
-			window.removeEventListener('keydown', handleKeyDown);
-		};
-	}, [handleKeyDown]);
+	const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
 	const updateCursor = (row: number, col: number) => {
 		setCursor((prev) => {
@@ -55,39 +46,36 @@ function Grid() {
 		});
 	};
 
-	const handleClickMobile = () => {
-		if (!isMobile) return;
-		if (inputRef.current) {
-			inputRef.current.focus();
-		}
-	}
-
 	const letterScores = t("letterScore", {ns: "letterScore"}).split(",");
 
 	return (
-		<div 
-			onClick={handleClickMobile} 
-			className="s-grid"
-		>
-			{isMobile && 
-				<div className="inputContainer">
+		<div className="s-grid">
+			{gridLayers.grid.map((item, row) => (
+				<div 
+					className="s-grid-row"
+					key={`row-${row}`}
+					onClick={() => {
+						inputRefs.current[row]?.focus();
+						inputRefs.current[row]?.scrollIntoView({behavior: 'smooth', block: 'center'});
+					}}
+				>
 					<input 
-						ref={inputRef}
-						className="mobileInput" 
+						ref={(el) => {inputRefs.current[row] = el}}
+						className="botMobileInput" 
 						type="text"
 						onChange={(e) => {
 							handleKeyDownMobile(e.currentTarget.value);
 							e.currentTarget.value = ""
 						}}
 						onKeyDown={(e) => {
-							console.log(e.key);
-							if (e.key == "Backspace" || e.code == "Space") handleKeyDown(e)
+							console.log(e);
+							if (["Space", "Backspace", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(e.key) ||
+								["Space", "Backspace", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(e.code) 
+							) {
+								handleKeyDown(e);
+							}
 						}}
 					/> 
-				</div>
-			}
-			{gridLayers.grid.map((item, row) => (
-				<div className="s-grid-row" key={`row-${row}`}>
 					{item.map((tile, col) => {
 						const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == row && cursor.cell[1] == col)) ? true : false;;
 						const fClass:string = (tile.value !== '.') ? "full" : "empty";
@@ -117,9 +105,7 @@ function Grid() {
 							<div 
 								className="s-grid-cell" 
 								key={key}
-								onClick={() => {
-									if (!jokerModal) updateCursor(row, col)
-								}}
+								onClick={() => updateCursor(row, col)}
 							> 
 								<span 
 									className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
