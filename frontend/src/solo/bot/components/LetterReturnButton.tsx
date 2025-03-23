@@ -32,7 +32,7 @@ export function returnLetters ({setPlayers, gridLayers, setGridLayers}: returnLe
 export default function LetterReturnButton() {
 	const {setPlayers, gridLayers, setGridLayers } = useGrid();
 	return (
-		<div className="resetButton glass">
+		<div className="resetButton glass" id="rack-return">
 			<button onClick={() => returnLetters({setPlayers, gridLayers, setGridLayers})}>
 				<PiArrowBendRightUpFill/>
 			</button>

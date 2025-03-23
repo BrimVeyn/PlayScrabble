@@ -6,10 +6,12 @@ import { useState } from "react";
 function PassButton() {
 	const {t} = useTranslation("bot");
 	const [modal, setModal] = useState<boolean>(false);
-	//const { playerInfo } = useGrid();
+	const { setTurnChange, setGameInfo } = useGrid();
 
 	const handlePass = () => {
 		console.log("Pass pressed");
+		setTurnChange(true);
+		setGameInfo((prev) => ({...prev, playing: (prev.playing == 0) ? 1 : 0}));
 	}
 
 	return (

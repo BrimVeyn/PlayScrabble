@@ -1,15 +1,11 @@
-import { Tooltip } from "react-tooltip";
 import { FaShuffle } from "react-icons/fa6";
-
 import { useGrid } from "./GridContext"
-import { useTranslation } from "react-i18next";
 
 import "../styles/ShuffleButton.css"
 import "../styles/Grid.css"
 
 export default function ShuffleButton() {
 	const { setPlayers } = useGrid();
-	const { t } = useTranslation("bot");
 
 	const shuffleRack = () => {
 		setPlayers((prev) => {
@@ -27,18 +23,13 @@ export default function ShuffleButton() {
 	}
 
 	return (
-		<div className="resetButton glass">
+		<div className="resetButton glass" id="rack-shuffle">
 			<button 
 				data-tooltip-id="eraser"
 				onClick={shuffleRack}
 			>
 				<FaShuffle/>
 			</button>
-			<Tooltip
-				id="eraser"
-				place="top"
-				content={t("shuffleButtonTooltip")}
-			/>
 		</div>
 	);
 }

@@ -7,12 +7,20 @@
 	-webkit-backdrop-filter: blur(5px);
 }
 
+#rack-shuffle {
+	grid-column: -2;
+}
+
+#rack-return {
+	grid-column: -3;
+}
+
 .rackContainer .s-grid-cell {
 	width: 100%;
 }
 
 .rackContainer .s-grid-tile {
-	font-size: min(3vw, 45px);
+	font-size: min(2.5vw, 45px);
 }
 
 .rackOutline {

@@ -249,72 +249,67 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 		}
 	}, [turnChange]);
 
+	const handleLetters = (char: string) => {
+		const [row, col] = cursor!.cell;
+		const charUp = char.toUpperCase();
+
+		if (gridLayers.grid[row][col].value === charUp || gridLayers.pendingGrid[row][col].value === charUp) {
+			updateCursor(setCursor, cursor!.direction === "right" ? Direction.RIGHT : Direction.DOWN);
+			return ;
+		}
+
+		setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
+		setCursor((prev) => {
+			if (!prev) return prev;
+			if (prev.ctx === "grid") {
+				const hasLetter = (players.get(0)!.rack.includes(charUp));
+				const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
+				const gridEmpty = (gridLayers.grid[row][col].value === ".");
+				const fromPlayer = (jokerModal) ? "?" : charUp;
+
+				if (!pendingEmpty && (hasLetter || jokerModal)) {
+					updatePlayers(setPlayers, fromPlayer, gridLayers.pendingGrid[row][col].value);
+					updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, jokerModal);
+					updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+				} else if (gridEmpty && (hasLetter || jokerModal)) {
+					updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, jokerModal);
+					updatePlayers(setPlayers, fromPlayer, ".");
+					updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+				}
+				if (jokerModal) setJokerModal(false);
+			}
+			return prev;
+		});
+		return;
+	}
+
 	const handleKeyDownMobile = (ch: string) => {
 		if (!cursor) return;
-		const [row, col] = cursor.cell;
 		if (letters.includes(ch)) {
-			setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
-			setCursor((prev) => {
-				if (!prev) return prev;
-				if (prev.ctx === "grid") {
-					if (gridLayers.grid[row][col].value === '.' && players.get(0)!.rack.includes(ch.toUpperCase())) {
-						updateTile(gridLayers.pendingGrid, [row,col], setGridLayers, ch.toUpperCase(), jokerModal);
-						updatePlayers(setPlayers, ch.toUpperCase(), ".");
-
-						if (prev.direction === "right" && col < GRID_SIZE - 1) return { ...prev, cell: [row, col + 1] };
-						else if (prev.direction === "down" && row < GRID_SIZE - 1) return { ...prev, cell: [row + 1, col] };
-					}
-				}
-				return prev;
-			});
-			return;
+			handleLetters(ch);
 		}
 	}
 
 	const handleKeyDown = (e: KeyboardEvent) => {
 		if (!cursor) return;
-
 		const [row, col] = cursor.cell;
 
-		if (gridLayers.grid[row][col].value === e.key.toUpperCase()) {
-			updateCursor(setCursor, cursor.direction === "right" ? Direction.RIGHT : Direction.DOWN);
-			return ;
-		}
-
 		if (letters.includes(e.key)) {
-			setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
-			setCursor((prev) => {
-				if (!prev) return prev;
-				if (prev.ctx === "grid") {
-					const hasLetter = (players.get(0)!.rack.includes(e.key.toUpperCase()));
-					const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
-					const gridEmpty = (gridLayers.grid[row][col].value === ".");
-					const fromPlayer = (jokerModal) ? "?" : e.key.toUpperCase();
+			handleLetters(e.key);
+		} 
 
-					if (!pendingEmpty && (hasLetter || jokerModal)) {
-						updatePlayers(setPlayers, fromPlayer, gridLayers.pendingGrid[row][col].value);
-						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, e.key.toUpperCase(), jokerModal);
-						updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
-					} else if (gridEmpty && (hasLetter || jokerModal)) {
-						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, e.key.toUpperCase(), jokerModal);
-						updatePlayers(setPlayers, fromPlayer, ".");
-						updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
-					}
-					if (jokerModal) setJokerModal(false);
-				}
-				return prev;
-			});
-			return;
+		if (["Space", "Backspace", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(e.key)) {
+			e.preventDefault();
 		}
 		
-		//TODO: Adapt for joker placing on grid
 		if (e.code == "Space") {
 			if (players.get(0)!.rack.includes("?")) {
 				setJokerModal((prev) => !prev);
+				return ;
 			}
 		}
 
-		e.preventDefault();
+
 		switch (e.key) {
 			case "Backspace":
 				if (jokerModal) setJokerModal(false);

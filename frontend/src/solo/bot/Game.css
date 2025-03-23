@@ -36,13 +36,13 @@
 .rackOuterContainer {
 	display: flex;
 	flex-direction: row;
-	aspect-ratio: 9/1;
 }
 
 .rackOuterContainer {
 	display: grid;
 	width: 100%;
-	grid-template-columns: repeat(9, 1fr);
+	grid-template-columns: repeat(10, 1fr);
+	aspect-ratio: unset;
 }
 
 .actionOuterContainer {
