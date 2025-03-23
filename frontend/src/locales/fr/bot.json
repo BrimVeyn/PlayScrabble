@@ -20,6 +20,8 @@
 	"placeModalConfirmText": "Confirmez votre action",
 	"passModalConfirmTitle": "Passer",
 	"passModalConfirmText": "Voulez-vous vraiment passer ?",
+	"rerollModalConfirmTitle": "Changer de lettres",
+	"rerollModalConfirmText": "Choisissez les lettres que vous voulez changer",
 	"yes": "Oui",
 	"no": "Non"
 }

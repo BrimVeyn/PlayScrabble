@@ -12,6 +12,7 @@ import RerollButton from "./components/RerollButton.tsx";
 import Purse from "./components/Purse.tsx";
 import ShuffleButton from "./components/ShuffleButton";
 import Score from "./components/Score.tsx";
+import LetterReturnButton from "./components/LetterReturnButton.tsx";
 
 import "./Game.css"
 
@@ -42,6 +43,7 @@ function Game({gameOptions}: GameProps) {
 				</div>
 				<div className="rackOuterContainer">
 					<Rack/>
+					<LetterReturnButton/>
 					<ShuffleButton/>
 				</div>
 				<Grid/>
