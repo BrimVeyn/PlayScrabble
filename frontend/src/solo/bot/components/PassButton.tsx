@@ -11,7 +11,7 @@ function PassButton() {
 	const handlePass = () => {
 		console.log("Pass pressed");
 		setTurnChange(true);
-		setGameInfo((prev) => ({...prev, playing: (prev.playing == 0) ? 1 : 0}));
+		setGameInfo((prev) => ({...prev, playing: 1}));
 	}
 
 	return (

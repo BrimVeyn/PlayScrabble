@@ -1,10 +1,10 @@
 import { useGrid } from "./GridContext";
-import "../styles/Rack.css"
 import "../styles/Grid.css"
+import "../styles/Rack.css"
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { updateCursorClick, updatePlayersIdx, updateTile } from "./GridContextUtils";
-import { Direction } from "./GridContext.types";
+import { Direction, emptyGrid } from "./GridContext.types";
 
 export default function Rack () {
 	const {players, gameInfo, cursor, gridLayers, setGridLayers, setPlayers, setCursor, setJokerModal} = useGrid();
@@ -12,11 +12,7 @@ export default function Rack () {
 	const [myTurn, setMyTurn] = useState<boolean>(false);
 
 	useEffect(() => {
-		if (gameInfo.playing === 0) {
-			setMyTurn(true);
-		} else {
-			setMyTurn(false);
-		}
+		setMyTurn(gameInfo.playing === 0);
 	}, [gameInfo])
 
 	const handleClick = (letter: string, index: number) => {
@@ -28,6 +24,7 @@ export default function Rack () {
 		const [row, col] = cursor!.cell;
 		const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
 		const gridEmpty = (gridLayers.grid[row][col].value === ".");
+		setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
 
 		if (!pendingEmpty) {
 			const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
@@ -46,15 +43,13 @@ export default function Rack () {
 		{players.get(0)!.rack.split('').map((letter, idx) => {
 			const fClass:string = (letter == '.') ? "empty" : "full";
 			const hasScore: boolean = (letter !== '.');
-			const isSelected = (cursor && cursor.ctx === "rack" && cursor.cell[1] == idx);
-
+			const greyTile: string = (myTurn) ? "" : "greyTile";
 			return (
 				<div 
 					className="s-grid-cell" 
 					key={idx}
 					onClick={() => {handleClick(letter, idx);}}> 
-					<p className={`s-grid-tile ${fClass}`}> {letter} </p>
-					{ isSelected && <p className="selected"></p> }
+					<p className={`${greyTile} s-grid-tile ${fClass}`}> {letter} </p>
 					{ hasScore && 
 						<p className="score">
 							{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}

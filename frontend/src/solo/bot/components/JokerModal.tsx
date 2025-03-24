@@ -1,7 +1,7 @@
 import "../styles/JokerModal.css"
 import { useGrid } from "./GridContext";
 import { updateCursorClick, updatePlayers, updateTile } from "./GridContextUtils";
-import { Direction } from "./GridContext.types";
+import { Direction, emptyGrid } from "./GridContext.types";
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -14,6 +14,7 @@ export default function JokerModal() {
 		const [row, col] = cursor!.cell;
 		const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
 		const gridEmpty = (gridLayers.grid[row][col].value === ".");
+		setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
 
 		if (!pendingEmpty) {
 			const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;

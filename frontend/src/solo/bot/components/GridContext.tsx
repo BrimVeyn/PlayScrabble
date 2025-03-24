@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { NewGameOptions } from "../Bot.tsx";
 import { letterFrequencies, emptyGrid, GridLayers, Direction, Tile, PlayerInfo, GameInfo, Match, Cursor } from "./GridContext.types.ts"
 import callSolver from "./useSolver";
-import { updateTile, updatePlayers, updateCursor } from "./GridContextUtils.tsx";
+import { randInt, updateTile, updatePlayers, updateCursor } from "./GridContextUtils.tsx";
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 interface GridContextType {
@@ -32,11 +32,6 @@ export const useGrid = () => {
 	}
 	return context;
 };
-
-
-function randInt(max: number) {
-	return Math.floor(Math.random() * max);
-}
 
 interface RefillRackProps {
 	key: number,
@@ -161,13 +156,6 @@ export function placeWord({players, gameInfo, gridLayers, setGridLayers, match}:
 }
 
 function pickRandomMatch(gameInfo: GameInfo, results: Array<Match>) {
-	//INFO: No possibility
-	if (results.length === 0) {
-		console.error("Cannot play");
-		//TODO: Try to change as most letters as possible
-		return null;
-	}
-
 	const resultSize = results.length;
 	const difficultyMap: Map<string, number> = new Map([
 		["Beginner", resultSize - Math.floor(0.6 * resultSize)],
@@ -211,31 +199,31 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			return updated;
 		})
 		setGameInfo((prev) => ({...prev, purse: purseTwo}));
-		setTimeout(() => {
-			setTurnChange(true);
-		}, 0);
+		setTurnChange(true);
 	}, []);
 
 	useEffect(() => {
 		if (lastResults === null || gameInfo.playing === 0) return ;
-		//if (lastResults === null) return ;
 
-		let match = pickRandomMatch(gameInfo, lastResults);
-		if (match === null) {
-			console.error("Not words to be found !");
+		if (lastResults.length === 0) {
+			//TODO: Handle end of game
+			console.log("No words to be found");
 			return ;
 		}
+		setTimeout(() => {
+			let match = pickRandomMatch(gameInfo, lastResults);
+			const newRack = placeWord({players, gameInfo, gridLayers, setGridLayers, match});
+			const updated = new Map(players);
 
-		const newRack = placeWord({players, gameInfo, gridLayers, setGridLayers, match});
-		const updated = new Map(players);
+			updated.set(gameInfo.playing, {...updated.get(gameInfo.playing)!, rack: newRack});
+			const [refilledRack, updatedPurse] = refillRack({key: gameInfo.playing, gameInfo, players: updated});
+			updated.set(gameInfo.playing, {score: updated.get(gameInfo.playing)!.score + match.score, rack: refilledRack});
 
-		updated.set(gameInfo.playing, {...updated.get(gameInfo.playing)!, rack: newRack});
-		const [refilledRack, updatedPurse] = refillRack({key: gameInfo.playing, gameInfo, players: updated});
-		updated.set(gameInfo.playing, {score: updated.get(gameInfo.playing)!.score + match.score, rack: refilledRack});
+			setPlayers(updated);
+			setGameInfo((prev) => ({...prev, playing: prev.playing = 0, purse: updatedPurse, turnNo: prev.turnNo + 1}));
+			setTurnChange(true);
+		}, 1000);
 
-		setPlayers(updated);
-		setGameInfo((prev) => ({...prev, playing: prev.playing === 0 ? 1 : 0, purse: updatedPurse}));
-		setTurnChange(true);
 	}, [lastResults]);
 
 	useEffect(() => {

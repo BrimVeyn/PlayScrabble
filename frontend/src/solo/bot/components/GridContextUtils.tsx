@@ -1,6 +1,10 @@
 import React from "react";
 import { Direction, GridLayers, Cursor, PlayerInfo, Tile } from "./GridContext.types";
 
+export function randInt(max: number) {
+	return Math.floor(Math.random() * max);
+}
+
 export function updateTile(
 	grid: Array<Array<Tile>>,
 	pos: [number, number],

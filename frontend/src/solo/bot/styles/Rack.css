@@ -15,6 +15,10 @@
 	grid-column: -3;
 }
 
+.s-grid-tile.full.greyTile {
+	background-color: lightgray;
+}
+
 .rackContainer .s-grid-cell {
 	width: 100%;
 }
@@ -24,7 +28,6 @@
 }
 
 .rackOutline {
-	box-shadow: 0px 0px 8px 4px #10F137;
 }
 
 @media(max-width: 768px) {
