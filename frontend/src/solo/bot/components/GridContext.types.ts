@@ -11,6 +11,13 @@ export type Match = {
 	jokerPoses: [number, number];
 };
 
+export enum Direction {
+	UP,
+	RIGHT,
+	DOWN,
+	LEFT,
+};
+
 export type Cursor = {
 	ctx: "grid" | "rack";
 	cell: [number, number];

@@ -1,10 +1,10 @@
-import { Fragment, useEffect, useRef } from 'react'
+import { Fragment, useEffect } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
 import { Tile } from './GridContext.types';
 
 import "../styles/Grid.css"
-import JokerToolTip from './JokerTooltip';
+import JokerModal from './JokerModal.tsx';
 
 //NOTE: modifier Values: 
 // 0 None
@@ -33,49 +33,31 @@ const gridModifiers: Array<Array<number>> = [
 
 
 function Grid() {
-	const {gridLayers, cursor, jokerModal, setCursor, handleKeyDown, handleKeyDownMobile} = useGrid();
+	const {gridLayers, cursor, jokerModal, setCursor, handleKeyDown } = useGrid();
 	const {t} = useTranslation(["solver", "letterScore"]);
-	const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+	useEffect(() => {
+		window.addEventListener('keydown', handleKeyDown);
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+		}
+	}, [handleKeyDown]);
 
 	const updateCursor = (row: number, col: number) => {
 		setCursor((prev) => {
 			if (prev && prev.ctx === "grid" && prev.cell[0] == row && prev.cell[1] == col) {
 				return { ...prev, cell: [row, col], direction: (prev.direction === "right" ? "down" : "right")};
 			}
-			return { ctx: "grid", cell: [row, col], direction: "right"};
+			return { ctx: "grid", cell: [row, col], direction: prev?.direction || "right"};
 		});
 	};
-
 	const letterScores = t("letterScore", {ns: "letterScore"}).split(",");
 
 	return (
 		<div className="s-grid">
+			{jokerModal && <JokerModal/>}
 			{gridLayers.grid.map((item, row) => (
-				<div 
-					className="s-grid-row"
-					key={`row-${row}`}
-					onClick={() => {
-						inputRefs.current[row]?.focus();
-						inputRefs.current[row]?.scrollIntoView({behavior: 'smooth', block: 'center'});
-					}}
-				>
-					<input 
-						ref={(el) => {inputRefs.current[row] = el}}
-						className="botMobileInput" 
-						type="text"
-						onChange={(e) => {
-							handleKeyDownMobile(e.currentTarget.value);
-							e.currentTarget.value = ""
-						}}
-						onKeyDown={(e) => {
-							console.log(e);
-							if (["Space", "Backspace", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(e.key) ||
-								["Space", "Backspace", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(e.code) 
-							) {
-								handleKeyDown(e);
-							}
-						}}
-					/> 
+				<div className="s-grid-row" key={`row-${row}`}>
 					{item.map((tile, col) => {
 						const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == row && cursor.cell[1] == col)) ? true : false;;
 						const fClass:string = (tile.value !== '.') ? "full" : "empty";
@@ -101,31 +83,24 @@ function Grid() {
 						const key = `${row}-${col}-${tile.value}`;
 						return (
 							<Fragment key={key}>
-							{ isSelected && jokerModal && <JokerToolTip key={`joker-${key}`}/>}
-							<div 
-								className="s-grid-cell" 
-								key={key}
-								onClick={() => updateCursor(row, col)}
-							> 
-								<span 
-									className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
-									data-score={ (isJoker && "0" ) ||
-										(hasScore && letterScores[tile.value.charCodeAt(0) - 65]
-										|| letterScores[gLetter.value.charCodeAt(0) - 65] || letterScores[pLetter.value.charCodeAt(0) - 65])}
-								>
-									{(tile.value == '.') ? (gLetter.value == '.') ? (pLetter.value == '.') ? '' : pLetter.value : gLetter.value : tile.value} 
-								</span>
-								<span 
-									className={`s-grid-tile-modifier ${modClass}`}
-									data-modifier-text={modText}
-								/>
-								{ isSelected && 
+								<div 
+									className="s-grid-cell" 
+									key={key}
+									onClick={() => updateCursor(row, col)}
+								> 
 									<span 
-										className={`selected`}
-										data-direction={cursor?.direction}
-									/>
-								}
-							</div>
+										className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
+										data-score={ (isJoker && "0" ) ||
+											(hasScore && letterScores[tile.value.charCodeAt(0) - 65]
+												|| letterScores[gLetter.value.charCodeAt(0) - 65] || letterScores[pLetter.value.charCodeAt(0) - 65])}
+									>
+										{(tile.value == '.') ? (gLetter.value == '.') ? (pLetter.value == '.') ? '' : pLetter.value : gLetter.value : tile.value} 
+									</span>
+									<span className={`s-grid-tile-modifier ${modClass}`} data-modifier-text={modText}/>
+									{ isSelected && 
+										<span className={`selected`} data-direction={cursor?.direction}/>
+									}
+								</div>
 							</Fragment>
 						)
 					})}

@@ -1,5 +1,5 @@
 import React from "react";
-import { GridLayers, Cursor, PlayerInfo, Tile } from "./GridContext.types";
+import { Direction, GridLayers, Cursor, PlayerInfo, Tile } from "./GridContext.types";
 
 export function updateTile(
 	grid: Array<Array<Tile>>,
@@ -35,12 +35,20 @@ export function updatePlayers(
 	});
 }
 
-export enum Direction {
-	UP,
-	RIGHT,
-	DOWN,
-	LEFT,
-};
+export function updatePlayersIdx(
+	setPlayers: React.Dispatch<React.SetStateAction<Map<number, PlayerInfo>>>,
+	goal: number,
+	needle: string,
+) {
+	setPlayers((prevPlayer) => {
+		const next = new Map(prevPlayer);
+		const newRack = next.get(0)!.rack.split("")
+		.map((letter, idx) => idx === goal ? needle : letter).join("");
+		next.set(0, {...next.get(0)!, rack:newRack});
+		return next;
+	});
+}
+
 
 
 export function updateCursor(

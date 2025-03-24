@@ -2,21 +2,14 @@ import { useGrid } from "./GridContext";
 import "../styles/Rack.css"
 import "../styles/Grid.css"
 import { useTranslation } from "react-i18next";
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { updateCursor, updatePlayersIdx, updateTile } from "./GridContextUtils";
+import { Direction } from "./GridContext.types";
 
 export default function Rack () {
-	const {players, gameInfo, cursor, setCursor, handleKeyDown, handleKeyDownMobile } = useGrid();
+	const {players, gameInfo, cursor, gridLayers, setGridLayers, setPlayers, setCursor, setJokerModal} = useGrid();
 	const {t} = useTranslation("letterScore");
-	const isMobile = window.matchMedia("(max-width: 768px)").matches;
-	const inputRef = useRef<HTMLInputElement | null>(null);
 	const [myTurn, setMyTurn] = useState<boolean>(false);
-
-	const handleClickMobile = () => {
-		if (!isMobile) return;
-		if (inputRef.current) {
-			inputRef.current.focus();
-		}
-	}
 
 	useEffect(() => {
 		if (gameInfo.playing === 0) {
@@ -26,29 +19,30 @@ export default function Rack () {
 		}
 	}, [gameInfo])
 
-	return (
-		<div 
-			className={`rackContainer ${myTurn ? "rackOutline" : ""}`}
-			onClick={handleClickMobile}
-		>
-		{ isMobile && 
-			<>
-			<div className="inputContainer">
-				<input 
-					ref={inputRef}
-					className="mobileInpute" 
-					type="password"
-					onChange={(e) => {
-						handleKeyDownMobile(e.currentTarget.value);
-						e.currentTarget.value = ""
-					}}
-					onKeyDown={(e) => {
-						if (e.code == "Space" || e.key == "Backspace") handleKeyDown(e)
-					}}
-				/> 
-			</div>
-			</>
+	const handleClick = (letter: string, index: number) => {
+		if (letter === ".") return;
+		if (letter === "?") {
+			setJokerModal((prev) => !prev);
+			return ;
 		}
+		const [row, col] = cursor!.cell;
+		const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
+		const gridEmpty = (gridLayers.grid[row][col].value === ".");
+
+		if (!pendingEmpty) {
+			const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
+			updatePlayersIdx(setPlayers, index, retreive);
+			updateTile(gridLayers.pendingGrid, cursor!.cell, setGridLayers, letter, false);
+			updateCursor(setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+		} else if (gridEmpty) {
+			updateTile(gridLayers.pendingGrid, cursor!.cell, setGridLayers, letter, false);
+			updatePlayersIdx(setPlayers, index, ".");
+			updateCursor(setCursor, cursor!.direction === "right" ? Direction.RIGHT : Direction.DOWN);
+		}
+	}
+
+	return (
+		<div className={`rackContainer ${myTurn ? "rackOutline" : ""}`} >
 		{players.get(0)!.rack.split('').map((letter, idx) => {
 			const fClass:string = (letter == '.') ? "empty" : "full";
 			const hasScore: boolean = (letter !== '.');
@@ -58,10 +52,7 @@ export default function Rack () {
 				<div 
 					className="s-grid-cell" 
 					key={idx}
-					onClick={() => {
-						setCursor({ctx: "rack", cell: [0, idx], direction: "right"});
-					}}
-				> 
+					onClick={() => {handleClick(letter, idx);}}> 
 					<p className={`s-grid-tile ${fClass}`}> {letter} </p>
 					{ isSelected && <p className="selected"></p> }
 					{ hasScore && 

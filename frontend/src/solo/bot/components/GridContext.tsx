@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { NewGameOptions } from "../Bot.tsx";
-import { letterFrequencies, emptyGrid, GridLayers, Tile, PlayerInfo, GameInfo, Match, Cursor } from "./GridContext.types.ts"
+import { letterFrequencies, emptyGrid, GridLayers, Direction, Tile, PlayerInfo, GameInfo, Match, Cursor } from "./GridContext.types.ts"
 import callSolver from "./useSolver";
-import { updateTile, updatePlayers, updateCursor, Direction } from "./GridContextUtils.tsx";
+import { updateTile, updatePlayers, updateCursor } from "./GridContextUtils.tsx";
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 interface GridContextType {
@@ -21,7 +21,6 @@ interface GridContextType {
 	lastResults: Array<Match> | null
 	setLastResults: React.Dispatch<React.SetStateAction<Array<Match> | null>>;
 	handleKeyDown: (e: KeyboardEvent) => void;
-	handleKeyDownMobile: (ch: string) => void;
 }
 
 const GridContext = createContext<GridContextType | undefined>(undefined);
@@ -86,9 +85,6 @@ interface GridProviderProps {
 	children: ReactNode,
 	gameOptions: NewGameOptions,
 };
-
-const GRID_SIZE = 15;
-
 
 interface PlaceWordProps {
 	players: Map<number, PlayerInfo>,
@@ -190,11 +186,17 @@ const defaultPlayers: Map<number, PlayerInfo> = new Map([
     [1, { score: 0, rack: "......." }]
 ]);
 
+const defaultCursor: Cursor = {
+	ctx: "grid",
+	direction: "right",
+	cell: [7, 7],
+}
+
 export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 	const [gridLayers, setGridLayers] = useState<GridLayers>(startLayers);
 	const [gameInfo, setGameInfo] = useState<GameInfo>({...startGameInfo, gameOptions: gameOptions});
 	const [players, setPlayers] = useState<Map<number, PlayerInfo>>(defaultPlayers);
-	const [cursor, setCursor] = useState<Cursor | null>(null);
+	const [cursor, setCursor] = useState<Cursor | null>(defaultCursor);
 	const [lastResults, setLastResults] = useState<Array<Match> | null>(null);
 	const [turnChange, setTurnChange] = useState<boolean>(false);
 	const [jokerModal, setJokerModal] = useState<boolean>(false);
@@ -250,6 +252,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 	}, [turnChange]);
 
 	const handleLetters = (char: string) => {
+		if (char.length !== 1 || char === "?") return ;
 		const [row, col] = cursor!.cell;
 		const charUp = char.toUpperCase();
 
@@ -259,38 +262,25 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 		}
 
 		setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
-		setCursor((prev) => {
-			if (!prev) return prev;
-			if (prev.ctx === "grid") {
-				const hasLetter = (players.get(0)!.rack.includes(charUp));
-				const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
-				const gridEmpty = (gridLayers.grid[row][col].value === ".");
-				const fromPlayer = (jokerModal) ? "?" : charUp;
+		const hasLetter = (players.get(0)!.rack.includes(charUp));
+		const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
+		const gridEmpty = (gridLayers.grid[row][col].value === ".");
+		const fromPlayer = (jokerModal) ? "?" : charUp;
 
-				if (!pendingEmpty && (hasLetter || jokerModal)) {
-					updatePlayers(setPlayers, fromPlayer, gridLayers.pendingGrid[row][col].value);
-					updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, jokerModal);
-					updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
-				} else if (gridEmpty && (hasLetter || jokerModal)) {
-					updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, jokerModal);
-					updatePlayers(setPlayers, fromPlayer, ".");
-					updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
-				} else if (gridEmpty && !hasLetter && !jokerModal && players.get(0)!.rack.includes('?')) {
-					updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, true);
-					updatePlayers(setPlayers, "?", ".");
-					updateCursor(setCursor, (prev.direction === "right") ? Direction.RIGHT : Direction.DOWN);
-				}
-				if (jokerModal) setJokerModal(false);
-			}
-			return prev;
-		});
+		if (!pendingEmpty && (hasLetter || jokerModal)) {
+			updatePlayers(setPlayers, fromPlayer, gridLayers.pendingGrid[row][col].value);
+			updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, jokerModal);
+			updateCursor(setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+		} else if (gridEmpty && (hasLetter || jokerModal)) {
+			updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, jokerModal);
+			updatePlayers(setPlayers, fromPlayer, ".");
+			updateCursor(setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+		} else if (gridEmpty && !hasLetter && !jokerModal && players.get(0)!.rack.includes('?')) {
+			updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, true);
+			updatePlayers(setPlayers, "?", ".");
+			updateCursor(setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+		}
 		return;
-	}
-
-	const handleKeyDownMobile = (ch: string) => {
-		if (!cursor) return;
-		if (ch === " ") return; //FIX: Avoid getting into this function
-		handleLetters(ch);
 	}
 
 	const handleKeyDown = (e: KeyboardEvent) => {
@@ -299,6 +289,11 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 
 		if (["Space", "Backspace", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(e.key)) {
 			e.preventDefault();
+		}
+
+		if (letters.includes(e.key) && !jokerModal) {
+			handleLetters(e.key);
+			return ;
 		}
 		
 		if (e.code == "Space") {
@@ -348,7 +343,6 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			jokerModal,
 			setJokerModal,
 			handleKeyDown,
-			handleKeyDownMobile
 		}}>
 			{children}
 		</GridContext.Provider>

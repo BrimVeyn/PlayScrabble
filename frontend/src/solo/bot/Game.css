@@ -34,11 +34,6 @@
 }
 
 .rackOuterContainer {
-	display: flex;
-	flex-direction: row;
-}
-
-.rackOuterContainer {
 	display: grid;
 	width: 100%;
 	grid-template-columns: repeat(10, 1fr);
