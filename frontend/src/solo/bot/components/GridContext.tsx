@@ -265,17 +265,16 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 		const hasLetter = (players.get(0)!.rack.includes(charUp));
 		const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
 		const gridEmpty = (gridLayers.grid[row][col].value === ".");
-		const fromPlayer = (jokerModal) ? "?" : charUp;
 
-		if (!pendingEmpty && (hasLetter || jokerModal)) {
-			updatePlayers(setPlayers, fromPlayer, gridLayers.pendingGrid[row][col].value);
+		if (!pendingEmpty && hasLetter) {
+			updatePlayers(setPlayers, charUp, gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value);
 			updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, jokerModal);
 			updateCursor(setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
-		} else if (gridEmpty && (hasLetter || jokerModal)) {
+		} else if (gridEmpty && hasLetter) {
 			updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, jokerModal);
-			updatePlayers(setPlayers, fromPlayer, ".");
+			updatePlayers(setPlayers, charUp, ".");
 			updateCursor(setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
-		} else if (gridEmpty && !hasLetter && !jokerModal && players.get(0)!.rack.includes('?')) {
+		} else if (gridEmpty && !hasLetter && players.get(0)!.rack.includes('?')) {
 			updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, charUp, true);
 			updatePlayers(setPlayers, "?", ".");
 			updateCursor(setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);

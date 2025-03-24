@@ -3,7 +3,7 @@ import "../styles/Rack.css"
 import "../styles/Grid.css"
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
-import { updateCursor, updatePlayersIdx, updateTile } from "./GridContextUtils";
+import { updateCursorClick, updatePlayersIdx, updateTile } from "./GridContextUtils";
 import { Direction } from "./GridContext.types";
 
 export default function Rack () {
@@ -33,11 +33,11 @@ export default function Rack () {
 			const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
 			updatePlayersIdx(setPlayers, index, retreive);
 			updateTile(gridLayers.pendingGrid, cursor!.cell, setGridLayers, letter, false);
-			updateCursor(setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+			updateCursorClick(gridLayers, setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
 		} else if (gridEmpty) {
 			updateTile(gridLayers.pendingGrid, cursor!.cell, setGridLayers, letter, false);
 			updatePlayersIdx(setPlayers, index, ".");
-			updateCursor(setCursor, cursor!.direction === "right" ? Direction.RIGHT : Direction.DOWN);
+			updateCursorClick(gridLayers, setCursor, cursor!.direction === "right" ? Direction.RIGHT : Direction.DOWN);
 		}
 	}
 

@@ -1,6 +1,6 @@
 import "../styles/JokerModal.css"
 import { useGrid } from "./GridContext";
-import { updateCursor, updatePlayers, updateTile } from "./GridContextUtils";
+import { updateCursorClick, updatePlayers, updateTile } from "./GridContextUtils";
 import { Direction } from "./GridContext.types";
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -19,11 +19,11 @@ export default function JokerModal() {
 			const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
 			updatePlayers(setPlayers, "?", retreive);
 			updateTile(gridLayers.pendingGrid, cursor!.cell, setGridLayers, letter, true);
-			updateCursor(setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+			updateCursorClick(gridLayers, setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
 		} else if (gridEmpty) {
 			updateTile(gridLayers.pendingGrid, cursor!.cell, setGridLayers, letter, true);
 			updatePlayers(setPlayers, "?", ".");
-			updateCursor(setCursor, cursor!.direction === "right" ? Direction.RIGHT : Direction.DOWN);
+			updateCursorClick(gridLayers, setCursor, cursor!.direction === "right" ? Direction.RIGHT : Direction.DOWN);
 		}
 	}
 

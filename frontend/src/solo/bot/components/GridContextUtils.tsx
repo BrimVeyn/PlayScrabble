@@ -50,7 +50,6 @@ export function updatePlayersIdx(
 }
 
 
-
 export function updateCursor(
 	setCursor: React.Dispatch<React.SetStateAction<Cursor | null>>,
 	direction: Direction,
@@ -70,6 +69,43 @@ export function updateCursor(
 			case Direction.DOWN: {
 				if (prev.direction === "right") return {...prev, direction: "down"};
 				if (prev.cell[0] < 14) return {...prev, direction: "down", cell: [prev.cell[0] + 1, prev.cell[1]]};
+				return prev;
+			}
+			case Direction.LEFT: {
+				if (prev.cell[1] > 0) return {...prev, direction: "right", cell: [prev.cell[0], prev.cell[1] - 1]};
+				return prev;
+			}
+		}
+	});
+}
+
+export function updateCursorClick(
+	gridLayers: GridLayers,
+	setCursor: React.Dispatch<React.SetStateAction<Cursor | null>>,
+	direction: Direction,
+) {
+	setCursor((prev) => {
+		if (!prev)  return prev;
+		switch (direction) {
+			case Direction.UP: {
+				if (prev.cell[0] > 0) return {...prev, direction: "down", cell: [prev.cell[0] - 1, prev.cell[1]]};
+				return prev;
+			}
+			case Direction.RIGHT: {
+				let newCell = [prev.cell[0], prev.cell[1] + 1];
+				while (newCell[1] < 14 && gridLayers.grid[newCell[0]][newCell[1]].value !== ".")
+					newCell = [newCell[0], newCell[1] + 1];
+				if (prev.direction === "down") return {...prev, direction: "right"};
+				if (prev.cell[1] < 14) return {...prev, direction: "right", cell: [newCell[0], newCell[1]]};
+				return prev;
+			}
+			case Direction.DOWN: {
+				let newCell = [prev.cell[0] + 1, prev.cell[1]];
+				while (newCell[0] < 14 && gridLayers.grid[newCell[0]][newCell[1]].value !== ".")
+					newCell = [newCell[0] + 1, newCell[1]];
+
+				if (prev.direction === "right") return {...prev, direction: "down"};
+				if (prev.cell[0] < 14) return {...prev, direction: "down", cell: [newCell[0], newCell[1]]};
 				return prev;
 			}
 			case Direction.LEFT: {
