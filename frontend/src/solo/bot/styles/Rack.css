@@ -27,8 +27,10 @@
 	font-size: min(2.5vw, 45px);
 }
 
-.rackOutline {
+.s-grid-cell.undragable {
+	width: calc(100% / 7);
 }
+
 
 @media(max-width: 768px) {
 	.rackContainer {

@@ -46,19 +46,29 @@ export default function Rack () {
 			const hasScore: boolean = (letter !== '.');
 			const greyTile: string = (myTurn) ? "" : "greyTile";
 			return (
-				<Dragable key={idx} idx={idx} char={letter}>
-				<div 
-					className="s-grid-cell" 
-				>
-					{/*onClick={() => {handleClick(letter, idx);}}> */}
-					<p className={`${greyTile} s-grid-tile ${fClass}`}> {letter} </p>
-					{ hasScore && 
-						<p className="score">
-							{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}
-						</p>
-					}
-				</div>
-				</Dragable>
+				hasScore ? (
+					<Dragable key={idx} idx={idx} char={letter}>
+					<div className="s-grid-cell">
+						{/*onClick={() => {handleClick(letter, idx);}}> */}
+						<p className={`${greyTile} s-grid-tile ${fClass}`}> {letter} </p>
+						{ hasScore && 
+							<p className="score">
+								{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}
+							</p>
+						}
+					</div>
+					</Dragable>
+				) : (
+					<div key={idx} id={`drag-${idx}`} className="s-grid-cell undragable">
+						{/*onClick={() => {handleClick(letter, idx);}}> */}
+						<p className={`${greyTile} s-grid-tile ${fClass}`}> {letter} </p>
+						{ hasScore && 
+							<p className="score">
+								{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}
+							</p>
+						}
+					</div>
+				)
 			)
 		})}
 		</div>
