@@ -23,7 +23,7 @@ interface GridContextType {
 	handleKeyDown: (e: KeyboardEvent) => void;
 }
 
-const GridContext = createContext<GridContextType | undefined>(undefined);
+export const GridContext = createContext<GridContextType | undefined>(undefined);
 
 export const useGrid = () => {
 	const context = useContext(GridContext);

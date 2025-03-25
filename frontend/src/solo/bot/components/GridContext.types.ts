@@ -6,7 +6,7 @@ export type Match = {
 	dir: number;
 	range: [number, number];
 	perpCoord: number;
-	placedLetters: number;
+	letterCount: number;
 	jokers: [number, number];
 	jokerPoses: [number, number];
 };

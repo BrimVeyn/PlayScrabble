@@ -190,6 +190,11 @@
 	padding-right: 20%;
 	font-size: min(1.5vw, 14px);
 	color: var(--app-black);
+	user-select: none;
+	-ms-user-select: none;
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
 }
 
 .botMobileInput {

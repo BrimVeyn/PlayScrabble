@@ -38,6 +38,7 @@
 	width: 100%;
 	grid-template-columns: repeat(10, 1fr);
 	aspect-ratio: unset;
+	z-index: 1;
 }
 
 .actionOuterContainer {

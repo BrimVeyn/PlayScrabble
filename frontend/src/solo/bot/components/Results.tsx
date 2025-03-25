@@ -41,7 +41,7 @@ function Results() {
 		const match = lastResults[idx];
 
 		switch (match.dir) {
-			case 1: { //HORIZONTAL
+			case 1: { //NOTE: HORIZONTAL
 				const row = match.perpCoord;
 				const newGrid = [...emptyGrid];
 				let it: number = match.range[0];
@@ -54,7 +54,7 @@ function Results() {
 				setGridLayers((prev) => ({...prev, ghostGrid: newGrid}));
 				break;
 			}
-			case 0: { //VERTICAL
+			case 0: { //NOTE: VERTICAL
 				const newGrid = [...emptyGrid];
 				for (let row = match.range[0]; row <= match.range[1]; row++) {
 					newGrid[row] = newGrid[row].map((col, x) => {
@@ -130,7 +130,7 @@ function Results() {
 									> 
 										<p> {match.word} </p>
 										<p> {match.score} </p>
-										<p className="p20"> {match.placedLetters || 0} </p>
+										<p className="p20"> {match.letterCount || 0} </p>
 										<p className="p10"> {match.dir == 0 ? t("resRowVert") : t("resRowHor")} </p>
 										<p className="p10"> {match.jokers ? match.jokers.filter(n => n != 0).length : 0 } </p>
 									</div>

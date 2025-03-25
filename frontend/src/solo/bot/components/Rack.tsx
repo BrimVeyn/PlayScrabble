@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { updateCursorClick, updatePlayersIdx, updateTile } from "./GridContextUtils";
 import { Direction, emptyGrid } from "./GridContext.types";
+import Dragable from "../../../lib/Dragable";
 
 export default function Rack () {
 	const {players, gameInfo, cursor, gridLayers, setGridLayers, setPlayers, setCursor, setJokerModal} = useGrid();
@@ -45,10 +46,11 @@ export default function Rack () {
 			const hasScore: boolean = (letter !== '.');
 			const greyTile: string = (myTurn) ? "" : "greyTile";
 			return (
+				<Dragable key={idx} idx={idx} char={letter}>
 				<div 
 					className="s-grid-cell" 
-					key={idx}
-					onClick={() => {handleClick(letter, idx);}}> 
+				>
+					{/*onClick={() => {handleClick(letter, idx);}}> */}
 					<p className={`${greyTile} s-grid-tile ${fClass}`}> {letter} </p>
 					{ hasScore && 
 						<p className="score">
@@ -56,6 +58,7 @@ export default function Rack () {
 						</p>
 					}
 				</div>
+				</Dragable>
 			)
 		})}
 		</div>
