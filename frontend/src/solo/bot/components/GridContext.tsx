@@ -174,17 +174,11 @@ const defaultPlayers: Map<number, PlayerInfo> = new Map([
     [1, { score: 0, rack: "......." }]
 ]);
 
-const defaultCursor: Cursor = {
-	ctx: "grid",
-	direction: "right",
-	cell: [7, 7],
-}
-
 export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 	const [gridLayers, setGridLayers] = useState<GridLayers>(startLayers);
 	const [gameInfo, setGameInfo] = useState<GameInfo>({...startGameInfo, gameOptions: gameOptions});
 	const [players, setPlayers] = useState<Map<number, PlayerInfo>>(defaultPlayers);
-	const [cursor, setCursor] = useState<Cursor | null>(defaultCursor);
+	const [cursor, setCursor] = useState<Cursor | null>(null);
 	const [lastResults, setLastResults] = useState<Array<Match> | null>(null);
 	const [turnChange, setTurnChange] = useState<boolean>(false);
 	const [jokerModal, setJokerModal] = useState<boolean>(false);
@@ -296,7 +290,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 				setCursor((prev) => {
 					if (!prev) return prev;
 					setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
-					if (prev.ctx === "grid" && gridLayers.pendingGrid[row][col].value !== '.') {
+					if (gridLayers.pendingGrid[row][col].value !== '.') {
 						const letterBack = (gridLayers.pendingGrid[row][col].joker) ? "?" : gridLayers.pendingGrid[row][col].value;
 						updatePlayers(setPlayers, ".", letterBack);
 						updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, ".", jokerModal);

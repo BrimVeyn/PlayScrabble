@@ -1,0 +1,20 @@
+.draggableContainer {
+	width: calc(100% / 7);
+	height: 100%;
+	z-index: 10;
+}
+
+.gridDraggableContainer {
+	width: calc(100% / 15);
+}
+
+.gridDraggableContainer .s-grid-cell {
+	width: 100%;
+}
+
+.gridDragged {
+	position: absolute;
+	z-index: 20;
+	width: calc(100% / 15);
+	height: calc(100% / 15)
+}

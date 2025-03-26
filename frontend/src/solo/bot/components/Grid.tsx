@@ -1,10 +1,12 @@
-import { Fragment, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
 import { Tile } from './GridContext.types';
 
 import "../styles/Grid.css"
 import JokerModal from './JokerModal.tsx';
+import GridDraggable from '../../../lib/GridDraggable.tsx';
+import { updatePlayers, updateTile } from './GridContextUtils.tsx';
 
 //NOTE: modifier Values: 
 // 0 None
@@ -33,8 +35,8 @@ const gridModifiers: Array<Array<number>> = [
 
 
 function Grid() {
-	const {gridLayers, cursor, jokerModal, setCursor, handleKeyDown } = useGrid();
-	const {t} = useTranslation(["solver", "letterScore"]);
+	const { setGridLayers, setPlayers, gridLayers, cursor, jokerModal, setCursor, handleKeyDown } = useGrid();
+	const { t } = useTranslation(["solver", "letterScore"]);
 
 	useEffect(() => {
 		window.addEventListener('keydown', handleKeyDown);
@@ -43,14 +45,30 @@ function Grid() {
 		}
 	}, [handleKeyDown]);
 
-	const updateCursor = (row: number, col: number) => {
+	const handleLeftClick = (row: number, col: number) => {
 		setCursor((prev) => {
-			if (prev && prev.ctx === "grid" && prev.cell[0] == row && prev.cell[1] == col) {
-				return { ...prev, cell: [row, col], direction: (prev.direction === "right" ? "down" : "right")};
+			if (prev && prev.cell[0] == row && prev.cell[1] == col) {
+				if (prev.clickedTime == 2) 
+					return null;
+				return { 
+					cell: [row, col], 
+					direction: (prev.direction === "right" ? "down" : "right"), 
+					clickedTime: prev.clickedTime + 1
+				};
 			}
-			return { ctx: "grid", cell: [row, col], direction: prev?.direction || "right"};
+			return { cell: [row, col], direction: prev?.direction || "right", clickedTime: 1};
 		});
 	};
+
+	const handleRightClick = (e: React.MouseEvent, row: number, col: number) => {
+		e.preventDefault();
+		const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
+		updatePlayers(setPlayers, ".", retreive);
+		updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, ".", false);
+	}
+
+
+
 	const letterScores = t("letterScore", {ns: "letterScore"}).split(",");
 
 	return (
@@ -59,7 +77,7 @@ function Grid() {
 			{gridLayers.grid.map((item, row) => (
 				<div className="s-grid-row" key={`row-${row}`}>
 					{item.map((tile, col) => {
-						const isSelected:boolean = (cursor && cursor.ctx == "grid" && (cursor.cell[0] == row && cursor.cell[1] == col)) ? true : false;;
+						const isSelected:boolean = (cursor && cursor.cell[0] == row && cursor.cell[1] == col) ? true : false;;
 						const fClass:string = (tile.value !== '.') ? "full" : "empty";
 
 						const gLetter:Tile = gridLayers.ghostGrid[row][col];
@@ -67,10 +85,11 @@ function Grid() {
 
 						const pLetter:Tile = gridLayers.pendingGrid[row][col];
 						const pClass:string = (pLetter.value !== '.' && tile.value === '.') ? "pending" : "";
+						const isDraggable: boolean = (pLetter.value !== '.');
 
 						const isJoker = (tile.joker || gLetter.joker || pLetter.joker);
-
 						const hasScore:boolean = (tile.value !== '.' || gLetter.value !== '.' || pLetter.value !== '.');
+
 						const [modClass, modText]: [string, string] = (() => {
 							switch (gridModifiers[row][col]) {
 								case 1: return ["dword", t("dword")];
@@ -82,26 +101,49 @@ function Grid() {
 						})();
 						const key = `${row}-${col}-${tile.value}`;
 						return (
-							<Fragment key={key}>
+							isDraggable ? (
+								<GridDraggable key={key} row={row} col={col} char="E">
 								<div 
 									className="s-grid-cell" 
-									key={key}
-									onClick={() => updateCursor(row, col)}
+									onClick={() => { 
+										if (!hasScore) handleLeftClick(row, col)
+									}}
+									onContextMenu={(e) => handleRightClick(e, row, col)}
 								> 
 									<span 
 										className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
 										data-score={ (isJoker && "0" ) ||
-											(hasScore && letterScores[tile.value.charCodeAt(0) - 65]
-												|| letterScores[gLetter.value.charCodeAt(0) - 65] || letterScores[pLetter.value.charCodeAt(0) - 65])}
+											(hasScore && 
+												letterScores[tile.value.charCodeAt(0) - 65] ||
+												letterScores[gLetter.value.charCodeAt(0) - 65] || 
+												letterScores[pLetter.value.charCodeAt(0) - 65])}
 									>
 										{(tile.value == '.') ? (gLetter.value == '.') ? (pLetter.value == '.') ? '' : pLetter.value : gLetter.value : tile.value} 
 									</span>
 									<span className={`s-grid-tile-modifier ${modClass}`} data-modifier-text={modText}/>
-									{ isSelected && 
-										<span className={`selected`} data-direction={cursor?.direction}/>
-									}
+									{ isSelected && <span className={`selected`} data-direction={cursor?.direction}/> }
 								</div>
-							</Fragment>
+								</GridDraggable>
+							) : (
+								<div 
+									className="s-grid-cell" 
+									key={key}
+									onClick={() => handleLeftClick(row, col)}
+								> 
+									<span 
+										className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
+										data-score={ (isJoker && "0" ) ||
+											(hasScore && 
+												letterScores[tile.value.charCodeAt(0) - 65] ||
+												letterScores[gLetter.value.charCodeAt(0) - 65] || 
+												letterScores[pLetter.value.charCodeAt(0) - 65])}
+									>
+										{(tile.value == '.') ? (gLetter.value == '.') ? (pLetter.value == '.') ? '' : pLetter.value : gLetter.value : tile.value} 
+									</span>
+									<span className={`s-grid-tile-modifier ${modClass}`} data-modifier-text={modText}/>
+									{ isSelected && <span className={`selected`} data-direction={cursor?.direction}/> }
+								</div>
+							)
 						)
 					})}
 				</div>

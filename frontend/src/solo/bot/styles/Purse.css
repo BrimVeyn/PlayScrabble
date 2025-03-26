@@ -9,7 +9,7 @@
 }
 
 .purseTooltip {
-	z-index: 1;
+	z-index: 999;
 }
 
 .purseTooltipContent {

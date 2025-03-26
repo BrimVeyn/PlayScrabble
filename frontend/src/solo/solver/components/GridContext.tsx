@@ -150,9 +150,8 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 			return;
 		}
 		
-		e.preventDefault();
-
 		if (e.code == "Space") {
+			e.preventDefault();
 			if (cursor.ctx !== "rack") return;
 
 			const jokerCount = rack.split("?").length - 1;
@@ -194,6 +193,7 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 				});
 				break;
 			case "ArrowDown":
+				e.preventDefault();
 				setCursor((prev) => {
 					if (!prev) return prev;
 					if (prev.ctx === "grid") {
@@ -222,6 +222,7 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
 				});
 				break;
 			case "ArrowUp":
+				e.preventDefault();
 				setCursor((prev) => {
 					if (!prev) return prev;
 					if (prev.cell[0] > 0)

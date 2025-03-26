@@ -31,7 +31,6 @@
 	width: calc(100% / 7);
 }
 
-
 @media(max-width: 768px) {
 	.rackContainer {
 		width: calc(90vw / (9/7));

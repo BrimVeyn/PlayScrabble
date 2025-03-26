@@ -19,9 +19,9 @@ export enum Direction {
 };
 
 export type Cursor = {
-	ctx: "grid" | "rack";
 	cell: [number, number];
 	direction: "right" | "down";
+	clickedTime: number;
 };
 
 export type Tile = {

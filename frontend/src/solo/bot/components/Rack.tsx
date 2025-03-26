@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { updateCursorClick, updatePlayersIdx, updateTile } from "./GridContextUtils";
 import { Direction, emptyGrid } from "./GridContext.types";
-import Dragable from "../../../lib/Dragable";
+import RackDraggable from "../../../lib/RackDraggable";
 
 export default function Rack () {
 	const {players, gameInfo, cursor, gridLayers, setGridLayers, setPlayers, setCursor, setJokerModal} = useGrid();
@@ -17,11 +17,11 @@ export default function Rack () {
 	}, [gameInfo])
 
 	const handleClick = (letter: string, index: number) => {
-		if (letter === ".") return;
-		if (letter === "?") {
-			setJokerModal((prev) => !prev);
-			return ;
-		}
+		if (!cursor || letter === ".")
+			return;
+		if (letter === "?")
+			return setJokerModal((prev) => !prev);
+
 		const [row, col] = cursor!.cell;
 		const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
 		const gridEmpty = (gridLayers.grid[row][col].value === ".");
@@ -42,32 +42,21 @@ export default function Rack () {
 	return (
 		<div className={`rackContainer ${myTurn ? "rackOutline" : ""}`} >
 		{players.get(0)!.rack.split('').map((letter, idx) => {
-			const fClass:string = (letter == '.') ? "empty" : "full";
+			const fClass: string = (letter == '.') ? "empty" : "full";
 			const hasScore: boolean = (letter !== '.');
 			const greyTile: string = (myTurn) ? "" : "greyTile";
 			return (
 				hasScore ? (
-					<Dragable key={idx} idx={idx} char={letter}>
-					<div className="s-grid-cell">
-						{/*onClick={() => {handleClick(letter, idx);}}> */}
-						<p className={`${greyTile} s-grid-tile ${fClass}`}> {letter} </p>
+					<RackDraggable key={idx} idx={idx} char={letter}>
+					<div className="s-grid-cell" onClick={() => {handleClick(letter, idx);}} >
+						<p className={`${greyTile} s-grid-tile ${fClass}`}>{letter}</p>
 						{ hasScore && 
-							<p className="score">
-								{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}
-							</p>
+							<p className="score">{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}</p>
 						}
 					</div>
-					</Dragable>
+					</RackDraggable>
 				) : (
-					<div key={idx} id={`drag-${idx}`} className="s-grid-cell undragable">
-						{/*onClick={() => {handleClick(letter, idx);}}> */}
-						<p className={`${greyTile} s-grid-tile ${fClass}`}> {letter} </p>
-						{ hasScore && 
-							<p className="score">
-								{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}
-							</p>
-						}
-					</div>
+					<div key={idx} className="s-grid-cell undragable"/>
 				)
 			)
 		})}

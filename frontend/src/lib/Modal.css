@@ -1,6 +1,6 @@
 .modalBackground {
 	position: absolute;
-	z-index: 1;
+	z-index: 999;
 	top: 0;
 	left: 0;
 	width: 100vw;
@@ -10,7 +10,7 @@
 }
 
 .modalOuterContent {
-	z-index: 2;
+	z-index: 1000;
 	position: absolute;
 	top: 0;
 	left: 0;
