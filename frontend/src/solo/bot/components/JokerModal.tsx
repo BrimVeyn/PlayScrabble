@@ -10,8 +10,20 @@ export default function JokerModal() {
 
 	const handleClick = (letter: string) => {
 		setJokerModal(false);
-		
-		const [row, col] = cursor!.cell;
+
+		let [row, col] = [0, 0];
+		//NOTE: Deduce the position of the cursor by looking at the grid, can only happen if you're dragging a joker onto the grid
+		if (!cursor) {
+			for (let y in gridLayers.pendingGrid) {
+				for (let x in gridLayers.pendingGrid[y]) {
+					if (gridLayers.pendingGrid[y][x].value === "?")
+						[row, col] = [Number(y), Number(x)];
+				}
+			}
+		} else {
+			[row, col] = cursor!.cell;
+		}
+
 		const pendingEmpty = (gridLayers.pendingGrid[row][col].value === ".");
 		const gridEmpty = (gridLayers.grid[row][col].value === ".");
 		setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
@@ -19,12 +31,14 @@ export default function JokerModal() {
 		if (!pendingEmpty) {
 			const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
 			updatePlayers(setPlayers, "?", retreive);
-			updateTile(gridLayers.pendingGrid, cursor!.cell, setGridLayers, letter, true);
-			updateCursorClick(gridLayers, setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+			updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, letter, true);
+			if (cursor)
+				updateCursorClick(gridLayers, setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
 		} else if (gridEmpty) {
-			updateTile(gridLayers.pendingGrid, cursor!.cell, setGridLayers, letter, true);
+			updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, letter, true);
 			updatePlayers(setPlayers, "?", ".");
-			updateCursorClick(gridLayers, setCursor, cursor!.direction === "right" ? Direction.RIGHT : Direction.DOWN);
+			if (cursor)
+				updateCursorClick(gridLayers, setCursor, cursor!.direction === "right" ? Direction.RIGHT : Direction.DOWN);
 		}
 	}
 

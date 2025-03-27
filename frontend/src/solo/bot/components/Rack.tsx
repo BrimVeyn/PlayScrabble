@@ -47,13 +47,19 @@ export default function Rack () {
 			const greyTile: string = (myTurn) ? "" : "greyTile";
 			return (
 				hasScore ? (
-					<RackDraggable key={idx} idx={idx} char={letter}>
-					<div className="s-grid-cell" onClick={() => {handleClick(letter, idx);}} >
-						<p className={`${greyTile} s-grid-tile ${fClass}`}>{letter}</p>
-						{ hasScore && 
-							<p className="score">{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}</p>
-						}
-					</div>
+					<RackDraggable 
+							key={idx} 
+							id={`drag-${idx}`} 
+							col={idx} 
+							char={letter}
+							parentSelector={".rackContainer"}
+					>
+						<div className="s-grid-cell" onClick={() => {handleClick(letter, idx);}} >
+							<p className={`${greyTile} s-grid-tile ${fClass}`}>{letter}</p>
+							{ hasScore && 
+								<p className="score">{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}</p>
+							}
+						</div>
 					</RackDraggable>
 				) : (
 					<div key={idx} className="s-grid-cell undragable"/>

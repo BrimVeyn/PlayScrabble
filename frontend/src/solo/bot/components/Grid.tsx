@@ -102,7 +102,14 @@ function Grid() {
 						const key = `${row}-${col}-${tile.value}`;
 						return (
 							isDraggable ? (
-								<GridDraggable key={key} row={row} col={col} char="E">
+								<GridDraggable 
+									key={key} 
+									row={row} 
+									col={col} 
+									char={pLetter.value}
+									parentSelector={'.s-grid'}
+									id={`grid-drag-${row}-${col}`}
+								>
 								<div 
 									className="s-grid-cell" 
 									onClick={() => { 

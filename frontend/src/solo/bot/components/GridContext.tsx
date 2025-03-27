@@ -5,7 +5,8 @@ import callSolver from "./useSolver";
 import { randInt, updateTile, updatePlayers, updateCursor } from "./GridContextUtils.tsx";
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-interface GridContextType {
+
+export interface GridContextType {
 	gridLayers: GridLayers;
 	setGridLayers: React.Dispatch<React.SetStateAction<GridLayers>>;
 	players: Map<number, PlayerInfo>
