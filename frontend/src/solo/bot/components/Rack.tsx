@@ -1,11 +1,12 @@
 import { useGrid } from "./GridContext";
-import "../styles/Grid.css"
-import "../styles/Rack.css"
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { updateCursorClick, updatePlayersIdx, updateTile } from "./GridContextUtils";
 import { Direction, emptyGrid } from "./GridContext.types";
 import RackDraggable from "../../../lib/RackDraggable";
+
+import "../styles/Grid.css"
+import "../styles/Rack.css"
 
 export default function Rack () {
 	const {players, gameInfo, cursor, gridLayers, setGridLayers, setPlayers, setCursor, setJokerModal} = useGrid();

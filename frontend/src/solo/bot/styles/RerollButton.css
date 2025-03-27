@@ -1,0 +1,6 @@
+.virtRack {
+	display: flex;
+	justify-content: center;
+	width: 400px;
+	height: calc(400px / 7);
+}
