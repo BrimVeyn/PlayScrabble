@@ -128,7 +128,9 @@ pub fn main() !u8 {
     router.get("/api/getUser:name", User.getUser, .{});
     router.get("/api/getUsers", User.getUsers, .{});
     router.get("/api/me", User.me, .{});
+    router.get("/api/refresh", User.refresh, .{});
     router.get("/api/getDefinition/:word", Definition.get, .{});
+    router.get("/api/user/getSoloGames", User.getSoloGames, .{});
     //------------------------------------------------------------------
 
     //-------------------------------POST-------------------------------
@@ -136,6 +138,7 @@ pub fn main() !u8 {
     router.post("/api/login", User.login, .{});
     router.post("/api/loginGoogle", User.loginGoogle, .{});
     router.post("/api/checkEmail", User.checkEmail, .{});
+    router.post("/api/checkUsername", User.checkUsername, .{});
     //------------------------------------------------------------------
     // router.post("/api/validateWordList", Game.validateWordList, .{});
 

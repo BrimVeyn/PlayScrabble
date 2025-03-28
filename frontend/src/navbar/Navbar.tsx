@@ -113,14 +113,16 @@ function Navbar() {
 					<NavButton text="login" location="/login" navigate={navigate}/>
 					</>
 				)}
+				{/*
 				<button
 					className="flag"
 					onClick={() => setIsOpen((prev) => !prev)}
 				>{t("flagEmoji", {ns: "misc"})}
 				</button>
+				*/}
 			</div>
 		</div>
-		{ isOpen && (<LanguageDropdown/>)}
+			{/*{ isOpen && (<LanguageDropdown/>)*/}
 		</>
 	);
 

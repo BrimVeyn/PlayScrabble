@@ -208,6 +208,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 		setTimeout(() => {
 			let match = pickRandomMatch(gameInfo, lastResults);
 			const newRack = placeWord({players, gameInfo, gridLayers, setGridLayers, match});
+
 			const updated = new Map(players);
 
 			updated.set(gameInfo.playing, {...updated.get(gameInfo.playing)!, rack: newRack});

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import "../styles/GoogleLogin.css"
 import { useAuth } from '../../auth/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { createPortal } from 'react-dom';
 
 interface UsernamePromptProps {
 	googleUser: any,
@@ -79,7 +80,7 @@ function UsernamePrompt ({googleUser}: UsernamePromptProps) {
 		}
 	}
 
-	return (
+	return createPortal(
 		<div className="modalContainer">
 			<div className="usernameModalContainer">
 				<h1>{t("modalTitle")}</h1>
@@ -96,8 +97,8 @@ function UsernamePrompt ({googleUser}: UsernamePromptProps) {
 				</button>
 				</div>
 			</div>
-		</div>
-	)
+		</div>, document.body
+	);
 }
 
 const GoogleLogin = () => {

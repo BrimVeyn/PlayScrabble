@@ -9,5 +9,6 @@
 	"modalPrompt": "Please choose a username: ",
 	"modalTitle": "Complete profile",
 	"errorEmptyUsername": "Your username cannot be empty.",
-	"usernameTooLong": "You username must be lass than 16 characters long."
+	"usernameTooLong": "You username must be lass than 16 characters long.",
+	"invalidCredentials": "Invalid credentials"
 }

@@ -1,0 +1,49 @@
+.form {
+	padding: 10px;
+	width: 500px;
+}
+
+.formRow.hidden {
+	display: none;
+	padding: 0;
+}
+
+.formOuterContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+}
+
+.formFieldInput {
+	width: 100%;
+	height: 33px;
+	font-size: 20px;
+	margin-bottom: 20px;
+	background-color: rgba(3, 149, 144, .3);
+	border-radius: 3px;
+	padding-left: 10px;
+}
+
+.formRow {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	padding: 10px;
+}
+
+.formButton {
+	width: 150px;
+	height: 50px;
+	transition: all .3s ease;
+}
+
+.glass.formButton:hover {
+	cursor: pointer;
+	background-color: var(--foreground-color);
+}
+
+.formError {
+	color: var(--rt-color-deny);
+}

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
+import { authFetch } from "../lib/authFetch";
 
 interface AuthContextType {
 	logged: boolean,
@@ -22,7 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	useEffect(() => {
 		if (refresh == false) return ;
 
-		fetch("https://scrabble.brimveyn.dev/api/me", {
+		authFetch("https://scrabble.brimveyn.dev/api/me", {
 			method: 'GET',
 			headers: {'Content-Type': 'application/json' },
 		})

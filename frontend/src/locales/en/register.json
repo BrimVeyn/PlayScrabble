@@ -1,0 +1,14 @@
+{
+	"errorEmail": "Invalid email format",
+	"errorUsername": "Username must be between 6 and 16 characters and contain only letters and numbers and '-' or '_'",
+	"errorPasswordMissmatch": "Passwords do not match",
+	"errorPasswordPolicy": "Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, and one number",
+	"errorMissingField": "All fields are required",
+	"emailAddress": "E-mail address",
+	"username": "Username",
+	"password": "Password",
+	"passwordConfirm": "Confirm password",
+	"sign-up": "Sign up",
+	"emailTaken": "An account with this email already exist",
+	"usernameTaken": "An account with this username already exist"
+}

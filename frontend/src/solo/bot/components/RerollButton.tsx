@@ -1,32 +1,65 @@
 import { useTranslation } from "react-i18next";
-import { useGrid } from "./GridContext";
-import { useEffect, useState } from "react";
+import { refillRack, useGrid } from "./GridContext";
+import { useState } from "react";
 import {Modal, ModalText, ModalTitle, ModalFooter, ModalButton} from "../../../lib/Modal.tsx"
 import { returnLetters } from "./LetterReturnButton.tsx";
 import "../styles/RerollButton.css"
 
-type VirtualRack = {
-	vOne: string,
-	vTwo: string,
-};
+interface VirtualRack {
+	rack: string,
+	selected: boolean[],
+}
 
 function RerollButton() {
 	const {t} = useTranslation("bot");
 	const [modal, setModal] = useState<boolean>(false);
-	const { players, setPlayers, gridLayers, setGridLayers } = useGrid();
+	const { gameInfo, setTurnChange, players, setGameInfo, setPlayers, gridLayers, setGridLayers } = useGrid();
 	const [virtRack, setVirtRack] = useState<VirtualRack | null>(null);
 
-	useEffect(() => {
-		setVirtRack({ vOne: players.get(0)!.rack, vTwo: players.get(0)!.rack })
-	}, [])
-
-	const handleReroll = () => {
-		returnLetters({setPlayers, gridLayers, setGridLayers});
-		console.log("Reroll pressed");
+	const handleRerollClick = () => {
+		const rack = returnLetters({players, setPlayers, gridLayers, setGridLayers});
+		setVirtRack({
+			rack: rack,
+			selected: Array(7).fill(false),
+		});
+		setModal(true);
 	}
 
-	const handleLeftClick = () => {
+	const handleReroll = () => {
+		const updatedPlayers = new Map(players);
 
+		const newRack: string = updatedPlayers.get(0)!.rack.split("").map((letter, idx) =>
+			virtRack?.selected[idx] ? "." : letter).join("");
+		updatedPlayers.set(0, {...updatedPlayers.get(0)!, rack: newRack});
+
+		const newPurse = Array.from(gameInfo.purse);
+		for (let s = 0; s < 7; s++) {
+			if (virtRack!.selected[s]) {
+				newPurse.push(virtRack!.rack[s]);
+			}
+		}
+		
+		
+		const [refilledRack, updatedPurse] = refillRack({key: 0, gameInfo, players: updatedPlayers});
+		updatedPlayers.set(0, {...updatedPlayers.get(0)!, rack: refilledRack});
+
+		setGameInfo((prev) => ({
+			...prev,
+			playing: 1,
+			purse: updatedPurse,
+			turnNo: prev.turnNo + 1,
+		}));
+		setPlayers(updatedPlayers);
+		setTurnChange(true);
+
+		setModal(false);
+
+	}
+
+	const handleCellClick = (idx: number) => {
+		const newSelection = [...virtRack!.selected];
+		newSelection[idx] = !newSelection[idx];
+		setVirtRack((prev) => ({...prev!, selected: newSelection}));
 	}
 
 	const letterScores = t("letterScore", {ns: "letterScore"}).split(",");
@@ -35,7 +68,7 @@ function RerollButton() {
 		<>
 		<button 
 			className="glass actionButton"
-			onClick={() => setModal(true)}
+			onClick={handleRerollClick}
 		>
 			{t("rerollButtonText")}
 		</button>
@@ -44,18 +77,20 @@ function RerollButton() {
 				<ModalTitle text={t("rerollModalConfirmTitle")}/>
 				<ModalText text={t("rerollModalConfirmText")}/>
 					<div className="virtRack">
-						{virtRack && virtRack.vOne.split("").map((letter, idx) => {
+						<div className="virtRackInner">
+						{virtRack && virtRack.rack.split("").map((letter, idx) => {
 							const fClass = letter === "." ? "empty" : "full";
 							const hasScore = fClass === "full";
 							const isJoker = letter === "?";
+							const selectedClass = virtRack.selected[idx] ? "darkened" : "";
 							return (
 								<div 
 									key={idx} 
-									className="s-grid-cell"
-									onClick={() => handleLeftClick()}
+									className={`s-grid-cell`}
+									onClick={() => handleCellClick(idx)}
 								>
 									<span 
-										className={`s-grid-tile ${fClass}`}
+										className={`s-grid-tile ${fClass}  ${selectedClass}`}
 										data-score={ (isJoker && "0" ) || (hasScore && letterScores[letter.charCodeAt(0) - 65])}
 									>
 										{letter}
@@ -63,13 +98,11 @@ function RerollButton() {
 								</div>
 							);
 						})}
+						</div>
 					</div>
 				<ModalFooter>
 					<ModalButton text={t("goBack")} style={"modalButtonDeny"} callback={() => setModal(false)}/>
-					<ModalButton text={t("confirm")} style={"modalButtonAccept"} callback={() => {
-							handleReroll();
-							setModal(false);
-						}}/>
+					<ModalButton text={t("confirm")} style={"modalButtonAccept"} callback={handleReroll}/>
 				</ModalFooter>
 
 			</Modal>

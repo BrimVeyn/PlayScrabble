@@ -55,6 +55,15 @@
 	padding: 10px;
 }
 
+.googleButtonContainer {
+	display: flex;
+	justify-content: center;
+	padding: 10px;
+}
+
+.formButton.glass {
+	margin: 10px;
+}
 
 .loginFooter {
 	width: 100%;

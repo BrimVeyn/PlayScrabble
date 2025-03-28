@@ -6,6 +6,7 @@ import Navbar from "../../navbar/Navbar"
 import "./Bot.css"
 import { useTranslation } from "react-i18next"
 import Game from "./Game"
+import { authFetch } from "../../lib/authFetch"
 
 
 type Game = {
@@ -20,6 +21,7 @@ const testGames = [
 	{difficulty: "Medium", gridState: "", rackState: "DEFG...", purseState: ""},
 ];
 
+
 function BotOngoing () {
 	const { logged } = useAuth();
 	const [games, setGames] = useState<Array<Game> | null>(null);
@@ -28,6 +30,9 @@ function BotOngoing () {
 	useEffect(() => {
 		//TODO: Fetch users's game history
 		if (logged) {
+			authFetch("https://scrabble.brimveyn.dev/api/user/getSoloGames", {
+				method: "GET",
+			})
 			setGames(testGames);
 		}
 	}, [logged])

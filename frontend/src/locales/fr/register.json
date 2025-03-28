@@ -1,0 +1,16 @@
+{
+	"errorEmail": "Format de l'adresse e-mail invalide",
+	"errorUsername": "Votre nom d'utilisateur doit faire entre 6 et 16 caractères et ne peut contenir que des chiffres, des lettres, et '-' ou '_'",
+	"errorPasswordMissmatch": "Les mots de passe ne correspondent pas",
+	"errorPasswordPolicy": "Votre mot de passe doit faire au minimum 8 caractères, contenir une lettre majuscule, une lettre minuscule et un chiffre",
+	"errorMissingField": "Tous les champs sont obligatoires",
+	"emailAddress": "Adresse e-mail",
+	"username": "Nom d'utilisateur",
+	"usernamePlaceholder": "16 caractères maximum",
+	"password": "Mot de passe",
+	"passwordConfirm": "Confirmation du mot de passe",
+	"sign-up": "S'enregistrer",
+	"emailTaken": "Un compte avec cette adresse e-mail existe déjà",
+	"usernameTaken": "Un compte avec ce nom d'utilisateur existe déjà"
+}
+

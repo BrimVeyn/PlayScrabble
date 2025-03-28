@@ -1,6 +1,21 @@
 .virtRack {
 	display: flex;
 	justify-content: center;
-	width: 400px;
-	height: calc(400px / 7);
+	width: 100%;
+	padding-block: 1em;
+}
+
+.virtRackInner {
+	display: flex;
+	width: 90%;
+	aspect-ratio: 7/1;
+}
+
+.virtRack .s-grid-cell {
+	width: 100%;
+	cursor: pointer;
+}
+
+.virtRack .darkened {
+	background-color: grey;
 }

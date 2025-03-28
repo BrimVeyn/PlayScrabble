@@ -9,6 +9,7 @@ import miscEn from "./locales/en/misc.json"
 import landingEn from "./locales/en/landing.json"
 import loginEn from "./locales/en/login.json"
 import botEn from "./locales/en/bot.json"
+import registerEn from "./locales/en/register.json"
 
 import navbarFr from "./locales/fr/navbar.json"
 import solverFr from "./locales/fr/solver.json"
@@ -17,6 +18,7 @@ import miscFr from "./locales/fr/misc.json"
 import landingFr from "./locales/fr/landing.json"
 import loginFr from "./locales/fr/login.json"
 import botFr from "./locales/fr/bot.json"
+import registerFr from "./locales/fr/register.json"
 
 i18n
 	.use(initReactI18next) 
@@ -30,7 +32,8 @@ i18n
 				misc: miscEn,
 				landing: landingEn,
 				login: loginEn,
-				bot: botEn
+				bot: botEn,
+				register: registerEn
 			},
 			fr: {
 				navbar: navbarFr,
@@ -39,7 +42,8 @@ i18n
 				misc: miscFr,
 				landing: landingFr,
 				login: loginFr,
-				bot: botFr
+				bot: botFr,
+				register: registerFr
 			},
 		},
 		detection: {

@@ -1,13 +1,14 @@
 {
 	"login": "Se connecter",
 	"register": "S'inscrire",
-	"usernameInputText": "Nom d'utilisateur / Email",
+	"usernameInputText": "Nom d'utilisateur / E-mail",
 	"passwordInputText": "Mot de passe",
 	"usernameInputPlaceholder": "nom@mail.com",
 	"passwordInputPlaceholder": "motdepasse",
 	"modalConfirm": "Confirmer",
-	"modalPrompt": "Veuillez choisir un pseudo: ",
-	"modalTitle": "Completez votre profile",
-	"errorEmptyUsername": "Le peudo ne peux pas être vide.",
-	"usernameTooLong": "Pseudo trop long. (16 max.)"
+	"modalPrompt": "Veuillez choisir un pseudo :",
+	"modalTitle": "Complétez votre profil",
+	"errorEmptyUsername": "Le pseudo ne peut pas être vide.",
+	"usernameTooLong": "Pseudo trop long (16 caractères max.).",
+	"invalidCredentials": "Mot de passe invalide ou nom d'utilisateur erroné"
 }
