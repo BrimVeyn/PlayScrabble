@@ -3,6 +3,7 @@
 	width: 500px;
 }
 
+
 .formRow.hidden {
 	display: none;
 	padding: 0;
@@ -46,4 +47,14 @@
 
 .formError {
 	color: var(--rt-color-deny);
+}
+
+@media(max-width: 768px) {
+	.form {
+		width: 90%;
+	}
+
+	.formOuterContainer {
+		height: 80%;
+	}
 }

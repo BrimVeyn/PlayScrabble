@@ -11,7 +11,7 @@ const languages: { [id: string] : string; } = {
 	en: "🇬🇧",
 };
 
-function LanguageDropdown() {
+export function LanguageDropdown() {
 	const langKeys = Object.keys(languages);
 	const {i18n} = useTranslation();
 	const [selected, setSelected] = useState<string | null>(i18n.language);
@@ -75,8 +75,9 @@ function LogoutButton({text, location, navigate}: NavButtonProps) {
 		})
 		.catch((e) => console.error(e));
 
-		setRefresh(true);
 		navigate(location);
+		setRefresh(true);
+		window.location.reload();
 	}
 
 	return (
@@ -88,8 +89,6 @@ function LogoutButton({text, location, navigate}: NavButtonProps) {
 
 
 function Navbar() {
-	const {t} = useTranslation("navbar");
-	const [isOpen, setIsOpen] = useState<boolean>(false);
 	const navigate = useNavigate();
 	const { logged } = useAuth();
 

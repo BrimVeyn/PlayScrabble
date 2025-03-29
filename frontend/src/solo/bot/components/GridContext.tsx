@@ -1,10 +1,29 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { NewGameOptions } from "../Bot.tsx";
 import { letterFrequencies, emptyGrid, GridLayers, Direction, Tile, PlayerInfo, GameInfo, Match, Cursor } from "./GridContext.types.ts"
-import callSolver from "./useSolver";
 import { randInt, updateTile, updatePlayers, updateCursor } from "./GridContextUtils.tsx";
+import { NewGameOptions } from "../Bot.tsx";
+import callSolver from "./useSolver";
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+
+export type GameState = {
+	gridLayers: GridLayers;
+	gameInfo: GameInfo;
+	players: Map<number, PlayerInfo>;
+	cursor: Cursor | null;
+	lastResults: Array<Match> | null;
+	turnChange: boolean;
+	jokerModal: boolean;
+};
+
+export type Action =
+	| { type: 'UPDATE_GRID'; payload: GridLayers }
+	| { type: 'UPDATE_GAME_INFO'; payload: Partial<GameInfo> }
+	| { type: 'UPDATE_PLAYERS'; payload: Map<number, PlayerInfo> }
+	| { type: 'SET_CURSOR'; payload: Cursor | null }
+	| { type: 'SET_LAST_RESULTS'; payload: Array<Match> | null }
+	| { type: 'SET_TURN_CHANGE'; payload: boolean }
+	| { type: 'SET_JOKER_MODAL'; payload: boolean };
 
 export interface GridContextType {
 	gridLayers: GridLayers;
