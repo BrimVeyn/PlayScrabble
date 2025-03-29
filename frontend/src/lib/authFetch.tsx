@@ -2,39 +2,40 @@ let isRefreshing = false;
 let refreshPromise: Promise<void> | null = null;
 
 const getAccessToken = async (): Promise<{ok: boolean, data: string, err: string}> => {
-    const response = await fetch("https://scrabble.brimveyn.dev/api/me", {
+	const response = await fetch("https://scrabble.brimveyn.dev/api/me", {
 		method: 'GET',
 		headers: {'Content-Type': 'application/json' },
-    });
+	});
 
-    if (response.ok) {
+	if (response.ok) {
 		console.log("[AuthFetch]: Authentication successfull");
 		return {ok: true, data: "", err: ""}
-    } else if (response.status === 401) {
-        // Token expired — try to refresh it
-        if (!isRefreshing) {
-            isRefreshing = true;
-            refreshPromise = fetch("https://scrabble.brimveyn.dev/api/refresh", {
+	} else if (response.status === 401) {
+		// Token expired — try to refresh it
+		if (!isRefreshing) {
+			isRefreshing = true;
+			refreshPromise = fetch("https://scrabble.brimveyn.dev/api/refresh", {
 				method: 'GET',
 				headers: {'Content-Type': 'application/json' },
-            }).then(async (res) => {
-                if (!res.ok) {
-                    throw new Error("Failed to refresh token");
-                }
-                isRefreshing = false;
-                refreshPromise = null;
-            }).catch((err) => {
-                isRefreshing = false;
-                refreshPromise = null;
-                throw err;
-            });
-        }
+			}).then(async (res) => {
+					if (!res.ok) {
+						return await response.text();
+					}
+					isRefreshing = false;
+					refreshPromise = null;
+			}).then(async body => { throw new Error(body); })
+			.catch((err) => {
+				isRefreshing = false;
+				refreshPromise = null;
+				throw err;
+			});
+		}
 
-        // Wait for the refresh attempt to complete
-        await refreshPromise;
+		// Wait for the refresh attempt to complete
+		await refreshPromise;
 		console.log("[AuthFetch]: Access expired, trying refesh");
-        return getAccessToken(); // Try again after refresh
-    }
+		return getAccessToken(); // Try again after refresh
+	}
 
 	return {ok: false, data: "", err: "Failed to refresh token"};
 };
