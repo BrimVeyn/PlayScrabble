@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
-import { authFetch } from "../lib/authFetch";
+import { authFetch } from "../auth/authFetch"
 
 interface AuthContextType {
 	logged: boolean,

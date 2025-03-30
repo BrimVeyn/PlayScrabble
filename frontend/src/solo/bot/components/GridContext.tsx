@@ -190,7 +190,7 @@ function pickRandomMatch(gameInfo: GameInfo, results: Array<Match>) {
 }
 
 const defaultPlayers: Map<number, PlayerInfo> = new Map([
-    [0, { score: 0, rack: "....?.." }],
+    [0, { score: 0, rack: "......." }],
     [1, { score: 0, rack: "......." }]
 ]);
 

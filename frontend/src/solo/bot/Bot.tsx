@@ -6,7 +6,7 @@ import Navbar from "../../navbar/Navbar"
 import "./Bot.css"
 import { useTranslation } from "react-i18next"
 import Game from "./Game"
-import { authFetch } from "../../lib/authFetch"
+import { authFetch } from "../../auth/authFetch"
 
 
 type Game = {

@@ -309,11 +309,11 @@ pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
             log.info("me: Acces and Refresh ok", .{});
             try res.json(userInfo, .{});
         } else {
-            res.status = 404;
+            res.status = 401;
             res.body = "Not logged in";
         }
     } else {
-        res.status = 404;
+        res.status = 401;
         res.body = "Not logged in";
     }
 }
@@ -550,4 +550,3 @@ pub fn getSoloGames(app: *App, req: *httpz.Request, res: *httpz.Response) !void 
     _ = req;
     _ = res;
 }
-
