@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
-import { Tile } from './GridContext.types';
+import { letterScores, Tile } from './GridContext.types';
 
 import "../styles/Grid.css"
 import JokerModal from './JokerModal.tsx';
@@ -36,7 +36,7 @@ const gridModifiers: Array<Array<number>> = [
 
 function Grid() {
 	const { setGridLayers, setPlayers, gridLayers, cursor, jokerModal, setCursor, handleKeyDown } = useGrid();
-	const { t } = useTranslation(["solver", "letterScore"]);
+	const { t } = useTranslation("solver");
 
 	useEffect(() => {
 		window.addEventListener('keydown', handleKeyDown);
@@ -67,9 +67,8 @@ function Grid() {
 		updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, ".", false);
 	}
 
-
-
-	const letterScores = t("letterScore", {ns: "letterScore"}).split(",");
+	//TODO: Update dynamically from dict selection
+	const letterScore = letterScores.get("FR")!.split(",");
 
 	return (
 		<div className="s-grid">
@@ -121,9 +120,9 @@ function Grid() {
 										className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
 										data-score={ (isJoker && "0" ) ||
 											(hasScore && 
-												letterScores[tile.value.charCodeAt(0) - 65] ||
-												letterScores[gLetter.value.charCodeAt(0) - 65] || 
-												letterScores[pLetter.value.charCodeAt(0) - 65])}
+												letterScore[tile.value.charCodeAt(0) - 65] ||
+												letterScore[gLetter.value.charCodeAt(0) - 65] || 
+												letterScore[pLetter.value.charCodeAt(0) - 65])}
 									>
 										{(tile.value == '.') ? (gLetter.value == '.') ? (pLetter.value == '.') ? '' : pLetter.value : gLetter.value : tile.value} 
 									</span>
@@ -141,9 +140,9 @@ function Grid() {
 										className={`s-grid-tile ${fClass} ${gClass} ${pClass}`}
 										data-score={ (isJoker && "0" ) ||
 											(hasScore && 
-												letterScores[tile.value.charCodeAt(0) - 65] ||
-												letterScores[gLetter.value.charCodeAt(0) - 65] || 
-												letterScores[pLetter.value.charCodeAt(0) - 65])}
+												letterScore[tile.value.charCodeAt(0) - 65] ||
+												letterScore[gLetter.value.charCodeAt(0) - 65] || 
+												letterScore[pLetter.value.charCodeAt(0) - 65])}
 									>
 										{(tile.value == '.') ? (gLetter.value == '.') ? (pLetter.value == '.') ? '' : pLetter.value : gLetter.value : tile.value} 
 									</span>

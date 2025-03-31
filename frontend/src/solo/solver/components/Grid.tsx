@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
+import { letterScores } from '../../bot/components/GridContext.types';
 
 import "../styles/Grid.css"
 
@@ -60,7 +61,8 @@ function Grid() {
 		}
 	}
 
-	const letterScores = t("letterScore", {ns: "letterScore"}).split(",");
+	//TODO: Update dynamically from dict selection
+	const letterScore = letterScores.get("FR")!.split(",");
 
 	return (
 		<div 
@@ -108,8 +110,8 @@ function Grid() {
 							> 
 								<span 
 									className={`s-grid-tile ${fClass} ${gClass}`}
-									data-score={hasScore && letterScores[letter.charCodeAt(0) - 65]
-										|| letterScores[gLetter.charCodeAt(0) - 65]}
+									data-score={hasScore && letterScore[letter.charCodeAt(0) - 65]
+										|| letterScore[gLetter.charCodeAt(0) - 65]}
 								>
 									{(letter == '.') ? (gLetter == '.') ? '' : gLetter : letter} 
 								</span>

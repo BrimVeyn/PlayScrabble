@@ -21,6 +21,12 @@
 	width: 60%;
 }
 
+.dp-flex {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
 .resultContainer {
 	display: flex;
 	flex-direction: column;
@@ -65,6 +71,10 @@
 .scoreContainer {
 	display: flex;
 	align-items: center;
+}
+
+.glass.ngButton:hover {
+	background-color: var(--rt-color-success);
 }
 
 @media(max-width: 768px) {

@@ -4,7 +4,6 @@ import LanguageDetector from "i18next-browser-languagedetector";
 
 import navbarEn from "./locales/en/navbar.json"
 import solverEn from "./locales/en/solver.json"
-import letterEn from "./locales/en/letterScore.json"
 import miscEn from "./locales/en/misc.json"
 import landingEn from "./locales/en/landing.json"
 import loginEn from "./locales/en/login.json"
@@ -13,7 +12,6 @@ import registerEn from "./locales/en/register.json"
 
 import navbarFr from "./locales/fr/navbar.json"
 import solverFr from "./locales/fr/solver.json"
-import letterFr from "./locales/fr/letterScore.json"
 import miscFr from "./locales/fr/misc.json"
 import landingFr from "./locales/fr/landing.json"
 import loginFr from "./locales/fr/login.json"
@@ -28,7 +26,6 @@ i18n
 			en: {
 				navbar: navbarEn,
 				solver: solverEn,
-				letterScore: letterEn,
 				misc: miscEn,
 				landing: landingEn,
 				login: loginEn,
@@ -38,7 +35,6 @@ i18n
 			fr: {
 				navbar: navbarFr,
 				solver: solverFr,
-				letterScore: letterFr,
 				misc: miscFr,
 				landing: landingFr,
 				login: loginFr,

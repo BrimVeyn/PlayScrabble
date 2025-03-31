@@ -111,7 +111,7 @@ function Results() {
 				<div className="resBody" onMouseLeave={() => setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}))}>
 					{lastResults &&
 						<List
-							height={500} 
+							height={200} 
 							itemCount={lastResults.length}
 							itemSize={50}
 							width={"100%"} 

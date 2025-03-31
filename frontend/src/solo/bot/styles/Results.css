@@ -17,8 +17,9 @@
 
 .resBody {
 	display: flex;
-	min-height: 500px;
-	max-height: 500px;
+	height: 200px;
+	min-height: unset;
+	max-height: unset;
 	overflow-y: auto;
 }
 

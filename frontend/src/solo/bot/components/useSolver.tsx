@@ -6,7 +6,6 @@ interface callSolverProps {
 	setLastResults: React.Dispatch<React.SetStateAction<Array<Match> | null>>;
 }
 
-
 async function callSolver ({gridLayers, rack, setLastResults}: callSolverProps) {
 	const grid: Array<Array<Tile>> = gridLayers.grid;
 	const lang = "FR"; //TODO: dynamically get locale
@@ -44,6 +43,7 @@ async function callSolver ({gridLayers, rack, setLastResults}: callSolverProps) 
 		setLastResults(formattedData);
 	} catch (error) {
 		console.error('Error calling solver:', error);
+		setLastResults([]);
 	} 
 };
 

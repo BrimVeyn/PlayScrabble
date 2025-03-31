@@ -1,12 +1,11 @@
 import { useGrid } from "./GridContext";
 import "../styles/Rack.css"
 import "../styles/Grid.css"
-import { useTranslation } from "react-i18next";
 import { useRef } from "react";
+import { letterScores } from "../../bot/components/GridContext.types";
 
 export default function Rack () {
 	const {rack, cursor, setCursor, handleKeyDown, handleKeyDownMobile } = useGrid();
-	const {t} = useTranslation("letterScore");
 	const isMobile = window.matchMedia("(max-width: 768px)").matches;
 	const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -16,6 +15,9 @@ export default function Rack () {
 			inputRef.current.focus();
 		}
 	}
+
+	//TODO: Update dynamically from dict selection
+	const letterScore = letterScores.get("FR")!.split(",");
 
 	return (
 		<div 
@@ -59,7 +61,7 @@ export default function Rack () {
 					{ isSelected && <p className="selected"></p> }
 					{ hasScore && 
 						<p className="score">
-							{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}
+							{letterScore[letter.charCodeAt(0) - 65]}
 						</p>
 					}
 				</div>

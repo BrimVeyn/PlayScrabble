@@ -38,6 +38,8 @@ export interface GridContextType {
 	setCursor: React.Dispatch<React.SetStateAction<Cursor | null>>;
 	jokerModal: boolean;
 	setJokerModal: React.Dispatch<React.SetStateAction<boolean>>; 
+	endOfGame: boolean;
+	setEndOfGame: React.Dispatch<React.SetStateAction<boolean>>; 
 	lastResults: Array<Match> | null
 	setLastResults: React.Dispatch<React.SetStateAction<Array<Match> | null>>;
 	handleKeyDown: (e: KeyboardEvent) => void;
@@ -202,6 +204,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 	const [lastResults, setLastResults] = useState<Array<Match> | null>(null);
 	const [turnChange, setTurnChange] = useState<boolean>(false);
 	const [jokerModal, setJokerModal] = useState<boolean>(false);
+	const [endOfGame, setEndOfGame] = useState<boolean>(false);
 
 	useEffect(() => {
 		const [rackOne, purseOne] = refillRack({key: 0, gameInfo, players});
@@ -219,12 +222,36 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 	useEffect(() => {
 		if (lastResults === null || gameInfo.playing === 0) return ;
 
-		if (lastResults.length === 0) {
-			//TODO: Handle end of game
-			console.log("No words to be found");
-			return ;
-		}
+
 		setTimeout(() => {
+			if (!lastResults || lastResults.length === 0) {
+				//TODO: Handle end of game
+				const isBotRackEmpty = players.get(1)!.rack.split("").reduce<boolean>((acc, value) => {
+					if (acc === false) return acc;
+					if (value !== '.') return false;
+					return true;
+				}, true);
+				const isPlayerRackEmpty = players.get(0)!.rack.split("").reduce<boolean>((acc, value) => {
+					if (acc === false) return acc;
+					if (value !== '.') return false;
+					return true;
+				}, true);
+				const isPurseEmpty = (gameInfo.purse.length === 0);
+
+				if (isBotRackEmpty) {
+					console.log("[EOG] Real end");
+					setEndOfGame(true);
+					//TODO: End of game
+				} else if (isPurseEmpty) {
+					console.log("[EOG] You shall pass");
+					setGameInfo((prev) => ({...prev, playing: prev.playing = 0, turnNo: prev.turnNo + 1}));
+					setTurnChange(true);
+				} else {
+					console.log("[EOG] You shall reroll");
+				}
+				return ;
+			}
+
 			let match = pickRandomMatch(gameInfo, lastResults);
 			const newRack = placeWord({players, gameInfo, gridLayers, setGridLayers, match});
 
@@ -237,7 +264,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			setPlayers(updated);
 			setGameInfo((prev) => ({...prev, playing: prev.playing = 0, purse: updatedPurse, turnNo: prev.turnNo + 1}));
 			setTurnChange(true);
-		}, 1000);
+		}, 2);
 
 	}, [lastResults]);
 
@@ -246,11 +273,11 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			const playing = gameInfo.playing;
 			const rack = players.get(playing)!.rack
 			await callSolver({gridLayers, rack, setLastResults});
+			setTurnChange(false);
 		}
 
 		if (turnChange === true) {
 			fetchSolver();
-			setTurnChange(false);
 		}
 	}, [turnChange]);
 
@@ -343,6 +370,8 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			setPlayers,
 			setLastResults,
 			jokerModal,
+			endOfGame,
+			setEndOfGame,
 			setJokerModal,
 			handleKeyDown,
 		}}>

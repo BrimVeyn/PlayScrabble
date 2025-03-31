@@ -1,8 +1,7 @@
 import { useGrid } from "./GridContext";
-import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { updateCursorClick, updatePlayersIdx, updateTile } from "./GridContextUtils";
-import { Direction, emptyGrid } from "./GridContext.types";
+import { Direction, emptyGrid, letterScores } from "./GridContext.types";
 import RackDraggable from "../../../lib/RackDraggable";
 
 import "../styles/Grid.css"
@@ -10,7 +9,6 @@ import "../styles/Rack.css"
 
 export default function Rack () {
 	const {players, gameInfo, cursor, gridLayers, setGridLayers, setPlayers, setCursor, setJokerModal} = useGrid();
-	const {t} = useTranslation("letterScore");
 	const [myTurn, setMyTurn] = useState<boolean>(false);
 
 	useEffect(() => {
@@ -40,6 +38,9 @@ export default function Rack () {
 		}
 	}
 
+	//TODO: Update dynamically from dict selection
+	const letterScore = letterScores.get("FR")!.split(",");
+
 	return (
 		<div className={`rackContainer ${myTurn ? "rackOutline" : ""}`} >
 		{players.get(0)!.rack.split('').map((letter, idx) => {
@@ -58,7 +59,7 @@ export default function Rack () {
 						<div className="s-grid-cell" onClick={() => {handleClick(letter, idx);}} >
 							<p className={`${greyTile} s-grid-tile ${fClass}`}>{letter}</p>
 							{ hasScore && 
-								<p className="score">{t("letterScore").split(",")[letter.charCodeAt(0) - 65]}</p>
+								<p className="score">{letterScore[letter.charCodeAt(0) - 65]}</p>
 							}
 						</div>
 					</RackDraggable>

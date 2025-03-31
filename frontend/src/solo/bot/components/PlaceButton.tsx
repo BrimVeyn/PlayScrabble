@@ -290,7 +290,11 @@ function PlaceButton() {
 		<button 
 			className="glass actionButton"
 			id ="placeButton"
-			onClick={() => setModal(true)}
+			onClick={() => {
+				//NOTE: Disable the button when its not your turn
+				if (gameInfo.playing === 1) return ;
+				setModal(true)
+			}}
 		>
 			{t("placeButtonText")}
 		</button>

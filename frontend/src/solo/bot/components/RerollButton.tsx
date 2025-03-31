@@ -4,6 +4,7 @@ import { useState } from "react";
 import {Modal, ModalText, ModalTitle, ModalFooter, ModalButton} from "../../../lib/Modal.tsx"
 import { returnLetters } from "./LetterReturnButton.tsx";
 import "../styles/RerollButton.css"
+import { letterScores } from "./GridContext.types.ts";
 
 interface VirtualRack {
 	rack: string,
@@ -17,6 +18,8 @@ function RerollButton() {
 	const [virtRack, setVirtRack] = useState<VirtualRack | null>(null);
 
 	const handleRerollClick = () => {
+		//NOTE: Disable the button when its not your turn
+		if (gameInfo.playing === 1) return ;
 		const rack = returnLetters({players, setPlayers, gridLayers, setGridLayers});
 		setVirtRack({
 			rack: rack,
@@ -38,7 +41,6 @@ function RerollButton() {
 				newPurse.push(virtRack!.rack[s]);
 			}
 		}
-		
 		
 		const [refilledRack, updatedPurse] = refillRack({key: 0, gameInfo, players: updatedPlayers});
 		updatedPlayers.set(0, {...updatedPlayers.get(0)!, rack: refilledRack});
@@ -62,7 +64,8 @@ function RerollButton() {
 		setVirtRack((prev) => ({...prev!, selected: newSelection}));
 	}
 
-	const letterScores = t("letterScore", {ns: "letterScore"}).split(",");
+	//TODO: Update dynamically from dict selection
+	const letterScore = letterScores.get("FR")!.split(",");
 
 	return (
 		<>
@@ -91,7 +94,7 @@ function RerollButton() {
 								>
 									<span 
 										className={`s-grid-tile ${fClass}  ${selectedClass}`}
-										data-score={ (isJoker && "0" ) || (hasScore && letterScores[letter.charCodeAt(0) - 65])}
+										data-score={ (isJoker && "0" ) || (hasScore && letterScore[letter.charCodeAt(0) - 65])}
 									>
 										{letter}
 									</span>

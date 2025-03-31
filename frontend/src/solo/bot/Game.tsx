@@ -1,7 +1,6 @@
-import { useEffect } from "react";
-
-import { GridProvider } from "./components/GridContext.tsx"
+import { GridProvider, useGrid } from "./components/GridContext.tsx"
 import { NewGameOptions } from "./Bot.tsx";
+import { FaRegSadCry } from "react-icons/fa";
 
 import Grid from "./components/Grid.tsx"
 import Results from "./components/Results.tsx";
@@ -15,22 +14,52 @@ import Score from "./components/Score.tsx";
 import LetterReturnButton from "./components/LetterReturnButton.tsx";
 
 import "./Game.css"
+import Modal, { ModalFooter, ModalText, ModalTitle } from "../../lib/Modal.tsx";
+import { useNavigate } from "react-router";
+import { BiHappyBeaming } from "react-icons/bi";
 
 interface GameProps {
 	gameOptions: NewGameOptions,
 };
 
-function Game({gameOptions}: GameProps) {
-	useEffect(() => {
-		console.debug("New game started with:", gameOptions);
-	}, []);
+function EndOfGameModal() {
+	const { endOfGame, players } =  useGrid();
+	const navigate = useNavigate();
 
+	const playerScore = players.get(0)!.score;
+	const botScore = players.get(1)!.score;
+	const youWon = (playerScore > botScore);
+	const endOfGameText = (youWon) ?
+		"Felicitations vous avec remporte" :
+		"Vous avez perdu ";
+
+	const finalScoreText = "Score final: ";
+
+	return (
+		 !endOfGame && 
+			<Modal>
+				<ModalTitle text="Fin de partie !" />
+				<p className="modalText dp-flex">
+					{endOfGameText}{youWon ? <BiHappyBeaming/> : <FaRegSadCry/> }
+				</p>
+				<p className="modalText">
+					{finalScoreText} <b>{playerScore}</b> a <b>{botScore}</b>
+				</p>
+				<ModalFooter>
+					<button onClick={() => navigate("/")} className="glass ngButton"> Retour </button>
+				</ModalFooter>
+			</Modal>
+	)
+}
+
+function Game({gameOptions}: GameProps) {
 	return (
 		<div className="gamePage">
 		<div className="solverContainer">
 		<GridProvider
 			gameOptions={gameOptions}
 		>
+			<EndOfGameModal />
 			<div className="contextContainer">
 				<div className="actionOuterContainer">
 					<div className="scoreContainer">

@@ -1,16 +1,18 @@
 import Navbar from "../navbar/Navbar";
-import { useTranslation } from "react-i18next"
+import { letterScores } from "../solo/bot/components/GridContext.types";
 
 import "../solo/solver/styles/Grid.css"
 import "./styles/NotFound.css"
 
 function Text({index, letter}: any) {
-	const {t} = useTranslation("letterScore");
+	//TODO: Update dynamically from dict selection
+	const letterScore = letterScores.get("FR")!.split(",");
+
 	return (
 		<div className="s-grid-cell">
 			<p className="s-grid-tile full" key={index}> {letter} </p>
 			<p className="score"> 
-				{t("letterScore").split(",")[letter.charCodeAt(0) - 65]} 
+				{letterScore[letter.charCodeAt(0) - 65]} 
 			</p>
 		</div>
 	)

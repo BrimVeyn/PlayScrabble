@@ -6,9 +6,11 @@ import { useState } from "react";
 function PassButton() {
 	const {t} = useTranslation("bot");
 	const [modal, setModal] = useState<boolean>(false);
-	const { setTurnChange, setGameInfo } = useGrid();
+	const { gameInfo, setTurnChange, setGameInfo } = useGrid();
 
 	const handlePass = () => {
+		//NOTE: Disable the button when its not your turn
+		if (gameInfo.playing === 1) return ;
 		console.log("Pass pressed");
 		setTurnChange(true);
 		setGameInfo((prev) => ({...prev, playing: 1}));
