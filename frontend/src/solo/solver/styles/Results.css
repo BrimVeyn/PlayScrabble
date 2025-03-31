@@ -15,7 +15,7 @@
 	box-shadow:	var(--container-shadow)
 }
 
-.resBody {
+.solverPage .resBody {
 	display: flex;
 	min-height: 500px;
 	max-height: 500px;

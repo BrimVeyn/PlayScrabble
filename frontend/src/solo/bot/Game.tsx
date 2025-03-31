@@ -12,11 +12,11 @@ import Purse from "./components/Purse.tsx";
 import ShuffleButton from "./components/ShuffleButton";
 import Score from "./components/Score.tsx";
 import LetterReturnButton from "./components/LetterReturnButton.tsx";
+import Modal, { ModalFooter, ModalTitle } from "../../lib/Modal.tsx";
+import { BiHappyBeaming } from "react-icons/bi";
+import { useNavigate } from "react-router";
 
 import "./Game.css"
-import Modal, { ModalFooter, ModalText, ModalTitle } from "../../lib/Modal.tsx";
-import { useNavigate } from "react-router";
-import { BiHappyBeaming } from "react-icons/bi";
 
 interface GameProps {
 	gameOptions: NewGameOptions,
@@ -36,7 +36,7 @@ function EndOfGameModal() {
 	const finalScoreText = "Score final: ";
 
 	return (
-		 !endOfGame && 
+		endOfGame && 
 			<Modal>
 				<ModalTitle text="Fin de partie !" />
 				<p className="modalText dp-flex">

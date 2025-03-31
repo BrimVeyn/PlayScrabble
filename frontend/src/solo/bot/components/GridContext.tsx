@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { letterFrequencies, emptyGrid, GridLayers, Direction, Tile, PlayerInfo, GameInfo, Match, Cursor } from "./GridContext.types.ts"
+import { letterFrequencies, emptyGrid, GridLayers, Direction, Tile, PlayerInfo, GameInfo, Match, Cursor, letterScores } from "./GridContext.types.ts"
 import { randInt, updateTile, updatePlayers, updateCursor } from "./GridContextUtils.tsx";
 import { NewGameOptions } from "../Bot.tsx";
 import callSolver from "./useSolver";
@@ -239,15 +239,46 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 				const isPurseEmpty = (gameInfo.purse.length === 0);
 
 				if (isBotRackEmpty) {
-					console.log("[EOG] Real end");
+					console.log("[EOG] Bot rack empty");
+					if (!isPlayerRackEmpty) {
+						"[EOG] Adding player's rack score"
+						const letterScore = letterScores.get("FR")!.split(",");
+						const scoreToAdd = players.get(0)!.rack.split("").reduce<number>((acc, value) =>
+							acc + Number(letterScore[value.charCodeAt(0) - 65])
+						, 0);
+						setPlayers((prev) => {
+							const next = new Map(prev);
+							next.set(1, {...next.get(1)!, score: next.get(1)!.score + scoreToAdd});
+							return next;
+						});
+					}
 					setEndOfGame(true);
-					//TODO: End of game
 				} else if (isPurseEmpty) {
-					console.log("[EOG] You shall pass");
+					console.log("[EOG] Bot is passing");
 					setGameInfo((prev) => ({...prev, playing: prev.playing = 0, turnNo: prev.turnNo + 1}));
 					setTurnChange(true);
 				} else {
-					console.log("[EOG] You shall reroll");
+					const updatedPlayers = new Map(players);
+
+					const lettersToGiveBack = updatedPlayers.get(1)!.rack.split("").reduce<string[]>((acc, value) => {
+						if (value !== '.') acc.push(value);
+						return acc;
+					}, []);
+					const emptyRack = ".......";
+					updatedPlayers.set(1, {...updatedPlayers.get(1)!, rack: emptyRack});
+
+					const newPurse = Array.from(gameInfo.purse);
+					for (let letter of lettersToGiveBack) {
+						newPurse.push(letter);
+					}
+
+					const [refilledRack, updatedPurse] = refillRack({key: 1, gameInfo, players: updatedPlayers});
+					updatedPlayers.set(1, {...updatedPlayers.get(1)!, rack: refilledRack});
+
+					setGameInfo((prev) => ({ ...prev, playing: 0, purse: updatedPurse, turnNo: prev.turnNo + 1 }));
+					setPlayers(updatedPlayers);
+					setTurnChange(true);
+					console.log("[EOG] Bot rerolls");
 				}
 				return ;
 			}

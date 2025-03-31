@@ -55,7 +55,6 @@ function RerollButton() {
 		setTurnChange(true);
 
 		setModal(false);
-
 	}
 
 	const handleCellClick = (idx: number) => {
