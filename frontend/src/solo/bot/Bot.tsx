@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import { useAuth } from "../../auth/AuthContext"
 import { Menu } from "../../lib/Menu"
 import Navbar from "../../navbar/Navbar"
+import { GameState } from "./components/GridContext.types"
 
 import "./Bot.css"
 import { useTranslation } from "react-i18next"
@@ -64,7 +65,6 @@ interface NewGameMenuProps {
 	setGameOptions: React.Dispatch<React.SetStateAction<NewGameOptions>>,
 };
 
-const defaultOptions = {dict: "FR", difficulty: "Medium"};
 
 const NewGameMenu = ({setMenuState, gameOptions, setGameOptions}: NewGameMenuProps) => {
 	const { t } = useTranslation("bot");
@@ -137,6 +137,15 @@ enum MenuState {
 export type NewGameOptions = {
 	dict: string,
 	difficulty: string,
+	newGame: boolean,
+	state: GameState[],
+};
+
+const defaultOptions = {
+	dict: "FR",
+	difficulty: "Medium",
+	newGame: true,
+	state: [],
 };
 
 export default function Bot () {

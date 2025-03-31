@@ -1,5 +1,5 @@
 import React from "react";
-import { Direction, GridLayers, Cursor, PlayerInfo, Tile } from "./GridContext.types";
+import { Direction, GameAction, Match, GameState, GameInfo, GridLayers, Cursor, PlayerInfo, Tile } from "./GridContext.types";
 
 export function randInt(max: number) {
 	return Math.floor(Math.random() * max);
@@ -117,5 +117,29 @@ export function updateCursorClick(
 				return prev;
 			}
 		}
+	});
+}
+
+export const updateGameState = (
+	action: GameAction,
+	match: Match | null = null,
+	setGameInfo: React.Dispatch<React.SetStateAction<GameInfo>>,
+	players: Map<number, PlayerInfo>,
+): void => {
+	setGameInfo((prev) => {
+		const oldStates = Array.from(prev.gameOptions.state);
+		const newState: GameState = {
+			action: action,
+			player_id: prev.playing,
+			rack_0: players.get(0)!.rack,
+			rack_1: players.get(1)!.rack,
+			score_0: players.get(0)!.score,
+			score_1: players.get(1)!.score,
+			purse: prev.purse,
+			turnNo: prev.turnNo,
+			match: match,
+		};
+		oldStates.push(newState);
+		return {...prev, gameOptions: {...prev.gameOptions, state: oldStates}}
 	});
 }

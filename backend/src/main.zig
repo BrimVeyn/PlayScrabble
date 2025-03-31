@@ -103,6 +103,7 @@ pub fn main() !u8 {
         \\  refresh TEXT
         \\);
         \\
+        \\INSERT INTO "user" (username, email, password) VALUES ('bot', 'bot@playscrabble.dev', '9q4O6E4NJr91');
         \\INSERT INTO "user" (username, email, password) VALUES ('bryan', 'bryan@gmail.com', 'pass');
         \\INSERT INTO "user" (username, email, password) VALUES ('robin', 'robin@gmail.com', 'pass');
         \\INSERT INTO "user" (username, email, password) VALUES ('nathan', 'nathan@gmail.com', 'pass');

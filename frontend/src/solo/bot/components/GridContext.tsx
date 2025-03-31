@@ -1,29 +1,57 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { letterFrequencies, emptyGrid, GridLayers, Direction, Tile, PlayerInfo, GameInfo, Match, Cursor, letterScores } from "./GridContext.types.ts"
-import { randInt, updateTile, updatePlayers, updateCursor } from "./GridContextUtils.tsx";
+import React, { createContext, useReducer, useContext, useState, ReactNode, useEffect } from "react";
+import { letterFrequencies, emptyGrid, GridLayers, Direction, Tile, PlayerInfo, GameInfo, Match, Cursor, letterScores, GameAction } from "./GridContext.types.ts"
+import { randInt, updateTile, updatePlayers, updateCursor, updateGameState } from "./GridContextUtils.tsx";
 import { NewGameOptions } from "../Bot.tsx";
 import callSolver from "./useSolver";
 
 export const letters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
-export type GameState = {
-	gridLayers: GridLayers;
-	gameInfo: GameInfo;
-	players: Map<number, PlayerInfo>;
-	cursor: Cursor | null;
-	lastResults: Array<Match> | null;
-	turnChange: boolean;
-	jokerModal: boolean;
-};
+interface GameState {
+    gridLayers: GridLayers;
+    players: Map<number, PlayerInfo>;
+    gameInfo: GameInfo;
+    cursor: Cursor | null;
+    lastResults: Array<Match> | null;
+    turnChange: boolean;
+    jokerModal: boolean;
+    endOfGame: boolean;
+}
 
-export type Action =
-	| { type: 'UPDATE_GRID'; payload: GridLayers }
-	| { type: 'UPDATE_GAME_INFO'; payload: Partial<GameInfo> }
-	| { type: 'UPDATE_PLAYERS'; payload: Map<number, PlayerInfo> }
-	| { type: 'SET_CURSOR'; payload: Cursor | null }
-	| { type: 'SET_LAST_RESULTS'; payload: Array<Match> | null }
-	| { type: 'SET_TURN_CHANGE'; payload: boolean }
-	| { type: 'SET_JOKER_MODAL'; payload: boolean };
+type GameStateAction =
+    | { type: "SET_GRID_LAYERS"; payload: GridLayers }
+    | { type: "SET_PLAYERS"; payload: Map<number, PlayerInfo> }
+    | { type: "SET_GAME_INFO"; payload: GameInfo }
+    | { type: "SET_CURSOR"; payload: Cursor | null }
+    | { type: "SET_LAST_RESULTS"; payload: Array<Match> | null }
+    | { type: "SET_TURN_CHANGE"; payload: boolean }
+    | { type: "SET_JOKER_MODAL"; payload: boolean }
+    | { type: "SET_END_OF_GAME"; payload: boolean }
+	| { type: "BATCH_UPDATE"; payload: Partial<GameState> };
+
+export const gameReducer = (state: GameState, action: GameStateAction): GameState => {
+    switch (action.type) {
+        case "SET_GRID_LAYERS":
+            return { ...state, gridLayers: action.payload };
+        case "SET_PLAYERS":
+            return { ...state, players: action.payload };
+        case "SET_GAME_INFO":
+            return { ...state, gameInfo: action.payload };
+        case "SET_CURSOR":
+            return { ...state, cursor: action.payload };
+        case "SET_LAST_RESULTS":
+            return { ...state, lastResults: action.payload };
+        case "SET_TURN_CHANGE":
+            return { ...state, turnChange: action.payload };
+        case "SET_JOKER_MODAL":
+            return { ...state, jokerModal: action.payload };
+        case "SET_END_OF_GAME":
+            return { ...state, endOfGame: action.payload };
+		case "BATCH_UPDATE":
+			return { ...state, ...action.payload };
+        default:
+            return state;
+    }
+};
 
 export interface GridContextType {
 	gridLayers: GridLayers;
@@ -206,6 +234,19 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 	const [jokerModal, setJokerModal] = useState<boolean>(false);
 	const [endOfGame, setEndOfGame] = useState<boolean>(false);
 
+	//const initialState: GameState = {
+	//	gridLayers: startLayers,
+	//	players: defaultPlayers,
+	//	gameInfo: { ...startGameInfo, gameOptions },
+	//	cursor: null,
+	//	lastResults: null,
+	//	turnChange: false,
+	//	jokerModal: false,
+	//	endOfGame: false,
+	//};
+	//
+	//const [state, dispatch] = useReducer(gameReducer, initialState);
+
 	useEffect(() => {
 		const [rackOne, purseOne] = refillRack({key: 0, gameInfo, players});
 		const [rackTwo, purseTwo] = refillRack({key: 1, gameInfo: {...gameInfo, purse: purseOne}, players});
@@ -219,9 +260,24 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 		setTurnChange(true);
 	}, []);
 
+	//useEffect(() => {
+	//	const [rackOne, purseOne] = refillRack({ key: 0, gameInfo, players });
+	//	const [rackTwo, purseTwo] = refillRack({ key: 1, gameInfo: { ...gameInfo, purse: purseOne }, players });
+	//
+	//	dispatch({
+	//		type: "BATCH_UPDATE",
+	//		payload: {
+	//			players: new Map(players)
+	//			.set(0, { ...players.get(0)!, rack: rackOne })
+	//			.set(1, { ...players.get(1)!, rack: rackTwo }),
+	//			gameInfo: { ...gameInfo, purse: purseTwo },
+	//			turnChange: true,
+	//		},
+	//	});
+	//}, []);
+
 	useEffect(() => {
 		if (lastResults === null || gameInfo.playing === 0) return ;
-
 
 		setTimeout(() => {
 			if (!lastResults || lastResults.length === 0) {
@@ -295,7 +351,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			setPlayers(updated);
 			setGameInfo((prev) => ({...prev, playing: prev.playing = 0, purse: updatedPurse, turnNo: prev.turnNo + 1}));
 			setTurnChange(true);
-		}, 2);
+		}, 2000);
 
 	}, [lastResults]);
 
@@ -310,6 +366,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 		if (turnChange === true) {
 			fetchSolver();
 		}
+		//updateGameState()
 	}, [turnChange]);
 
 	const handleLetters = (char: string) => {

@@ -23,7 +23,7 @@ function Purse() {
 			});
 			return acc;
 		}, []);
-		console.log(newContent);
+		//console.log(newContent);
 		setContent(newContent);
 	}, [gameInfo]);
 

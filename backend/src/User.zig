@@ -264,6 +264,11 @@ pub fn checkUsername(app: *App, req: *httpz.Request, res: *httpz.Response) !void
 }
 
 
+const MeFields = struct {
+    id: i32,
+    username: []const u8,
+    email: []const u8,
+};
 
 pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     const maybeRefresh = req.cookies().get("Refresh-Token");
@@ -294,7 +299,7 @@ pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         }
 
         var maybeRow = app.db.rowOpts(
-            \\SELECT *
+            \\SELECT id::integer, username, email
             \\FROM "user"
             \\WHERE refresh = $1
         , .{refreshToken}, .{.column_names = true}) catch |e| {
@@ -305,7 +310,12 @@ pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         };
         if (maybeRow) |*row| {
             defer row.deinit() catch {};
-            const userInfo = try row.to(UserFields, .{});
+            const userInfo = row.to(MeFields, .{}) catch |e| {
+                log.err("/me: PG: {!}", .{e});
+                res.status = 500;
+                res.body = "PG Error";
+                return ;
+            };
             log.info("me: Acces and Refresh ok", .{});
             try res.json(userInfo, .{});
         } else {

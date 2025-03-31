@@ -60,3 +60,24 @@ export const emptyGrid: Array<Array<Tile>> = Array(GRID_SIZE).fill(
 export const letterFrequencies: Array<number> = [ 9, 2, 2, 3, 15, 2, 2, 2, 8, 1, 1, 5, 3, 6, 6, 2, 1, 6, 6, 6, 6, 2, 1, 1, 1, 1, 2 ];
 
 export const alphabet:string = "ABCDEFGHIJKLMOPQRSTUVWXYZ";
+
+export enum GameAction {
+	GameStart = "game_start",
+	GameEnd = "game_end",
+	PlayedWord = "played_word",
+	Passed = "passed",
+	Rerolled = "rerolled",
+	Abandonned = "abandonned",
+}
+
+export type GameState = {
+	turnNo: number,
+	player_id: number,
+	rack_0: string,
+	score_0: number,
+	rack_1: string,
+	score_1: number,
+	purse: string[],
+	action: GameAction,
+	match: Match | null,
+}

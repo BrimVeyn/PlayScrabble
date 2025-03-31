@@ -4,6 +4,7 @@ import { authFetch } from "../auth/authFetch"
 interface AuthContextType {
 	logged: boolean,
 	setRefresh: React.Dispatch<React.SetStateAction<boolean>>,
+	userInfo: UserInfo | null,
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,9 +17,16 @@ export const useAuth = () => {
 	return context;
 }
 
+type UserInfo = {
+	id: number,
+	username: string,
+	email: string,
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const [logged, setLogged] = useState<boolean>(false);
 	const [refresh, setRefresh] = useState<boolean>(true);
+	const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
 	useEffect(() => {
 		if (refresh == false) return ;
@@ -29,9 +37,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		})
 		.then(response => {
 			if (!response.ok) {
+				setUserInfo(null);
 				setLogged(false);
 				throw new Error("[Auth]: Unknown user");
 			}
+			return response.json();
+		})
+		.then((body) =>  {
+			setUserInfo(body)
 			setLogged(true);
 			console.info("[Auth]: Connected")
 		})
@@ -43,6 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		<AuthContext.Provider value={{
 			logged,
 			setRefresh,
+			userInfo,
 		}}>
 			{children}
 		</AuthContext.Provider>

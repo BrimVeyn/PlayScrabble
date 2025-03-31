@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { placeWord, refillRack, useGrid } from "./GridContext";
-import { GameInfo, Match, GridLayers, Tile, emptyGrid } from "./GridContext.types";
+import { GameInfo, Match, GridLayers, Tile, emptyGrid, GameAction } from "./GridContext.types";
 import { Modal, ModalTitle, ModalText, ModalButton, ModalFooter } from "../../../lib/Modal";
 import { useState } from "react";
 
 import "../styles/PlaceButton.css"
+import { updateGameState } from "./GridContextUtils";
 
 function getLettersPoses(grid: Array<Array<Tile>>) {
 	let ret: Array<[number, number]> = [];
@@ -249,7 +250,7 @@ async function validateWords(gridLayers: GridLayers, data: {match: any, wordList
 
 function PlaceButton() {
 	const {t} = useTranslation("bot");
-	const { gridLayers, gameInfo, setGameInfo, setGridLayers, setTurnChange, players, setPlayers } = useGrid();
+	const { players, gridLayers, gameInfo, setGameInfo, setGridLayers, setTurnChange, setPlayers } = useGrid();
 	const [modal, setModal] = useState<boolean>(false);
 
 	const handlePlace = async () => {
@@ -278,6 +279,7 @@ function PlaceButton() {
 				next.set(0, {rack: newRack, score: next.get(0)!.score + data.match.score});
 				return next;
 			})
+			updateGameState(GameAction.PlayedWord, data.match, setGameInfo, players);
 			setGameInfo((prev) => ({...prev, purse: newPurse, turnNo: prev.turnNo + 1, playing: 1}));
 			setTurnChange(true);
 		} else {
