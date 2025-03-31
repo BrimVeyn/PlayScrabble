@@ -23,11 +23,11 @@ interface GameProps {
 };
 
 function EndOfGameModal() {
-	const { endOfGame, players } =  useGrid();
+	const { endOfGame, gameInfo } =  useGrid();
 	const navigate = useNavigate();
 
-	const playerScore = players.get(0)!.score;
-	const botScore = players.get(1)!.score;
+	const playerScore = gameInfo.players.get(0)!.score;
+	const botScore = gameInfo.players.get(1)!.score;
 	const youWon = (playerScore > botScore);
 	const endOfGameText = (youWon) ?
 		"Felicitations vous avec remporte" :

@@ -42,6 +42,7 @@ export type GridLayers = {
 export type GameInfo = {
 	purse: Array<string>,
 	playing: number,
+	players: Map<number, PlayerInfo>,
 	turnNo: number,
 	gameOptions: NewGameOptions,
 };

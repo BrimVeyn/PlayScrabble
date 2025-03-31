@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useGrid } from "./GridContext";
 import { Modal, ModalButton, ModalFooter, ModalText, ModalTitle } from "../../../lib/Modal";
 import { useState } from "react";
+import { GameAction } from "./GridContext.types";
 
 function PassButton() {
 	const {t} = useTranslation("bot");
@@ -9,11 +10,15 @@ function PassButton() {
 	const { gameInfo, setTurnChange, setGameInfo } = useGrid();
 
 	const handlePass = () => {
-		//NOTE: Disable the button when its not your turn
+		//NOTE: Disables the button when its not your turn
 		if (gameInfo.playing === 1) return ;
-		console.log("Pass pressed");
-		setTurnChange(true);
-		setGameInfo((prev) => ({...prev, playing: 1}));
+
+		setGameInfo((prev) => ({
+			...prev,
+			playing: 1,
+			turnNo: prev.turnNo + 1
+		}));
+		setTurnChange({action: GameAction.Passed, match: null});
 	}
 
 	return (

@@ -4,6 +4,7 @@ import { emptyGrid } from "./GridContext.types";
 import { useEffect, useState } from "react";
 import { FaSortAlphaDown, FaSortAlphaUpAlt, FaSortNumericDown, FaSortNumericUpAlt } from "react-icons/fa";
 import { TiSortAlphabetically, TiSortNumerically } from "react-icons/ti";
+import GameLog from "./GameLog";
 import Definitions from "./Definitions";
 
 import "../styles/Results.css"
@@ -147,6 +148,7 @@ function Results() {
 			<Definitions
 				definition={shownDefinition}
 			/>
+			<GameLog/>
 		</>
 	)
 }

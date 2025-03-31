@@ -166,7 +166,7 @@ abstract class Draggable extends Component<DraggableProps, DraggableState> {
 
 		const pointedLetter = this.context!.gridLayers.pendingGrid[this.props.row!][this.props.col];
 		const retreive = (pointedLetter.joker) ? "?" : pointedLetter.value;
-		updatePlayers(this.context!.setPlayers, ".", retreive);
+		updatePlayers(this.context!.setGameInfo, ".", retreive);
 		this.context!.setGridLayers((prev) => {
 			const newPending = prev.pendingGrid.map((row, rowI) => row.map((col, colI) => {
 				if (rowI === this.props.row! && colI === this.props.col) return {value: ".", joker: false};
@@ -177,8 +177,8 @@ abstract class Draggable extends Component<DraggableProps, DraggableState> {
 	}
 
 	rackToRack(pos: number): void {
-		this.context!.setPlayers((prev) => {
-			const next = new Map(prev);
+		this.context!.setGameInfo((prev) => {
+			const next = new Map(prev.players);
 			let newRack: string = next.get(0)!.rack;
 			newRack = newRack.split("").map((l, idx) => {
 				if (idx === this.props.col) return newRack[pos];
@@ -187,7 +187,7 @@ abstract class Draggable extends Component<DraggableProps, DraggableState> {
 			}).join("");
 
 			next.set(0, {...next.get(0)!, rack: newRack});
-			return next;
+			return {...prev, players: next };
 		})
 	}
 
@@ -207,11 +207,11 @@ abstract class Draggable extends Component<DraggableProps, DraggableState> {
 
 		if (!pendingEmpty) {
 			const retreive = this.context!.gridLayers.pendingGrid[row][col].joker ? "?" : this.context!.gridLayers.pendingGrid[row][col].value;
-			updatePlayersIdx(this.context!.setPlayers, this.props.col, retreive);
+			updatePlayersIdx(this.context!.setGameInfo, this.props.col, retreive);
 			updateTile(this.context!.gridLayers.pendingGrid, pos, this.context!.setGridLayers, this.props.char, false);
 		} else if (gridEmpty) {
 			updateTile(this.context!.gridLayers.pendingGrid, pos, this.context!.setGridLayers, this.props.char, false);
-			updatePlayersIdx(this.context!.setPlayers, this.props.col, ".");
+			updatePlayersIdx(this.context!.setGameInfo, this.props.col, ".");
 		}
 	}
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import {Modal, ModalText, ModalTitle, ModalFooter, ModalButton} from "../../../lib/Modal.tsx"
 import { returnLetters } from "./LetterReturnButton.tsx";
 import "../styles/RerollButton.css"
-import { letterScores } from "./GridContext.types.ts";
+import { GameAction, letterScores } from "./GridContext.types.ts";
 
 interface VirtualRack {
 	rack: string,
@@ -14,13 +14,14 @@ interface VirtualRack {
 function RerollButton() {
 	const {t} = useTranslation("bot");
 	const [modal, setModal] = useState<boolean>(false);
-	const { gameInfo, setTurnChange, players, setGameInfo, setPlayers, gridLayers, setGridLayers } = useGrid();
+	const { gameInfo, setTurnChange, setGameInfo, gridLayers, setGridLayers } = useGrid();
 	const [virtRack, setVirtRack] = useState<VirtualRack | null>(null);
 
 	const handleRerollClick = () => {
 		//NOTE: Disable the button when its not your turn
 		if (gameInfo.playing === 1) return ;
-		const rack = returnLetters({players, setPlayers, gridLayers, setGridLayers});
+
+		const rack = returnLetters({gameInfo, setGameInfo, gridLayers, setGridLayers});
 		setVirtRack({
 			rack: rack,
 			selected: Array(7).fill(false),
@@ -29,7 +30,7 @@ function RerollButton() {
 	}
 
 	const handleReroll = () => {
-		const updatedPlayers = new Map(players);
+		const updatedPlayers = new Map(gameInfo.players);
 
 		const newRack: string = updatedPlayers.get(0)!.rack.split("").map((letter, idx) =>
 			virtRack?.selected[idx] ? "." : letter).join("");
@@ -50,11 +51,10 @@ function RerollButton() {
 			playing: 1,
 			purse: updatedPurse,
 			turnNo: prev.turnNo + 1,
+			players: updatedPlayers,
 		}));
-		setPlayers(updatedPlayers);
-		setTurnChange(true);
-
 		setModal(false);
+		setTurnChange({action: GameAction.Rerolled, match: null});
 	}
 
 	const handleCellClick = (idx: number) => {

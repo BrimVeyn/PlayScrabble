@@ -35,7 +35,7 @@ const gridModifiers: Array<Array<number>> = [
 
 
 function Grid() {
-	const { setGridLayers, setPlayers, gridLayers, cursor, jokerModal, setCursor, handleKeyDown } = useGrid();
+	const { gridLayers, cursor, jokerModal, setGameInfo, setGridLayers, setCursor, handleKeyDown } = useGrid();
 	const { t } = useTranslation("solver");
 
 	useEffect(() => {
@@ -63,7 +63,7 @@ function Grid() {
 	const handleRightClick = (e: React.MouseEvent, row: number, col: number) => {
 		e.preventDefault();
 		const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
-		updatePlayers(setPlayers, ".", retreive);
+		updatePlayers(setGameInfo, ".", retreive);
 		updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, ".", false);
 	}
 

@@ -5,12 +5,12 @@ import "../styles/ShuffleButton.css"
 import "../styles/Grid.css"
 
 export default function ShuffleButton() {
-	const { setPlayers } = useGrid();
+	const { setGameInfo } = useGrid();
 
 	const shuffleRack = () => {
-		setPlayers((prev) => {
-			const next = new Map(prev);
-			const shuffled = prev.get(0)!.rack
+		setGameInfo((prev) => {
+			const next = new Map(prev.players);
+			const shuffled = prev.players.get(0)!.rack
 				.split("")
 				.map(value => ({value, key: Math.random() }))
 				.sort((a, b) => a.key - b.key)
@@ -18,7 +18,7 @@ export default function ShuffleButton() {
 				.join("");
 
 			next.set(0, {...next.get(0)!, rack: shuffled});
-			return next;
+			return {...prev, players: next};
 		})
 	}
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Direction, GameAction, Match, GameState, GameInfo, GridLayers, Cursor, PlayerInfo, Tile } from "./GridContext.types";
+import { Direction, GameAction, Match, GameState, GameInfo, GridLayers, Cursor, Tile } from "./GridContext.types";
 
 export function randInt(max: number) {
 	return Math.floor(Math.random() * max);
@@ -25,31 +25,31 @@ export function updateTile(
 }
 
 export function updatePlayers(
-	setPlayers: React.Dispatch<React.SetStateAction<Map<number, PlayerInfo>>>,
+	setGameInfo: React.Dispatch<React.SetStateAction<GameInfo>>,
 	haystack: string,
 	needle: string,
 ) {
-	setPlayers((prevPlayer) => {
-		const next = new Map(prevPlayer);
+	setGameInfo((prev) => {
+		const next = new Map(prev.players);
 		const goal = next.get(0)!.rack.indexOf(haystack);
 		const newRack = next.get(0)!.rack.split("")
 		.map((letter, idx) => idx === goal ? needle : letter).join("");
 		next.set(0, {...next.get(0)!, rack:newRack});
-		return next;
+		return {...prev, players: next};
 	});
 }
 
 export function updatePlayersIdx(
-	setPlayers: React.Dispatch<React.SetStateAction<Map<number, PlayerInfo>>>,
+	setGameInfo: React.Dispatch<React.SetStateAction<GameInfo>>,
 	goal: number,
 	needle: string,
 ) {
-	setPlayers((prevPlayer) => {
-		const next = new Map(prevPlayer);
+	setGameInfo((prev) => {
+		const next = new Map(prev.players);
 		const newRack = next.get(0)!.rack.split("")
 		.map((letter, idx) => idx === goal ? needle : letter).join("");
 		next.set(0, {...next.get(0)!, rack:newRack});
-		return next;
+		return {...prev, players: next};
 	});
 }
 
@@ -124,17 +124,16 @@ export const updateGameState = (
 	action: GameAction,
 	match: Match | null = null,
 	setGameInfo: React.Dispatch<React.SetStateAction<GameInfo>>,
-	players: Map<number, PlayerInfo>,
 ): void => {
 	setGameInfo((prev) => {
 		const oldStates = Array.from(prev.gameOptions.state);
 		const newState: GameState = {
 			action: action,
-			player_id: prev.playing,
-			rack_0: players.get(0)!.rack,
-			rack_1: players.get(1)!.rack,
-			score_0: players.get(0)!.score,
-			score_1: players.get(1)!.score,
+			player_id: prev.playing === 0 ? 1 : 0,
+			rack_0: prev.players.get(0)!.rack,
+			rack_1: prev.players.get(1)!.rack,
+			score_0: prev.players.get(0)!.score,
+			score_1: prev.players.get(1)!.score,
 			purse: prev.purse,
 			turnNo: prev.turnNo,
 			match: match,

@@ -5,7 +5,6 @@ import { Modal, ModalTitle, ModalText, ModalButton, ModalFooter } from "../../..
 import { useState } from "react";
 
 import "../styles/PlaceButton.css"
-import { updateGameState } from "./GridContextUtils";
 
 function getLettersPoses(grid: Array<Array<Tile>>) {
 	let ret: Array<[number, number]> = [];
@@ -250,38 +249,38 @@ async function validateWords(gridLayers: GridLayers, data: {match: any, wordList
 
 function PlaceButton() {
 	const {t} = useTranslation("bot");
-	const { players, gridLayers, gameInfo, setGameInfo, setGridLayers, setTurnChange, setPlayers } = useGrid();
+	const { gridLayers, gameInfo, setGameInfo, setGridLayers, setTurnChange } = useGrid();
 	const [modal, setModal] = useState<boolean>(false);
 
 	const handlePlace = async () => {
-		if (gameInfo.playing !== 0) {
-			console.log("Not your turn");
+		if (gameInfo.playing !== 0)
 			return ;
-		}
+
 		if (getLettersPoses(gridLayers.pendingGrid).length === 0) {
 			console.log("You haven't placed any letter");
 			return ;
 		}
+
 		const data = getWordList(gameInfo, gridLayers);
-		if (data === null) {
+		if (data === null)
 			return ;
-		}
+
 		const ok = await validateWords(gridLayers, data);
 		if (ok.err.length == 0) {
-			console.log("Yes !");
 			data.match.score = ok.score;
-			console.log("Filled match: ", data.match);
-			placeWord({players, gameInfo, gridLayers, setGridLayers, match: data.match});
+			placeWord({gameInfo, gridLayers, setGridLayers, match: data.match});
 			setGridLayers((prev) => ({...prev, pendingGrid: emptyGrid}));
-			const [newRack, newPurse] = refillRack({key: 0, gameInfo, players});
-			setPlayers((prev) => {
-				let next = new Map(prev);
-				next.set(0, {rack: newRack, score: next.get(0)!.score + data.match.score});
-				return next;
-			})
-			updateGameState(GameAction.PlayedWord, data.match, setGameInfo, players);
-			setGameInfo((prev) => ({...prev, purse: newPurse, turnNo: prev.turnNo + 1, playing: 1}));
-			setTurnChange(true);
+			const [newRack, newPurse] = refillRack({key: 0, gameInfo, players: gameInfo.players});
+
+			setGameInfo((prev) => ({
+				...prev,
+				purse: newPurse,
+				turnNo: prev.turnNo + 1,
+				playing: 1,
+				players: new Map(prev.players)
+					.set(0, {rack: newRack, score: prev.players.get(0)!.score + data.match.score})
+			}));
+			setTurnChange({action: GameAction.PlayedWord, match: data.match});
 		} else {
 			console.debug("solver/getScore:", ok.err);
 		}
