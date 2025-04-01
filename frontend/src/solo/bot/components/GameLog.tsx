@@ -1,6 +1,6 @@
 import { useGrid } from "./GridContext";
 import { GameAction, GameState } from "./GridContext.types";
-import { JSX } from "react";
+import { JSX, useEffect, useRef } from "react";
 
 import "../styles/GameLog.css"
 import { useAuth } from "../../../auth/AuthContext";
@@ -51,7 +51,6 @@ function GameLogText({gameState}: {gameState: GameState}) {
 		}
 	}
 
-
 	return (
 		<p>{`[${gameState.turnNo}]: `}{message} </p>
 	)
@@ -60,17 +59,24 @@ function GameLogText({gameState}: {gameState: GameState}) {
 
 function GameLog () {
 	const { gameInfo } = useGrid();
+	const logRef = useRef<HTMLDivElement>(null);
+	const bottomRef = useRef<HTMLDivElement>(null);
+
+	// Scroll to bottom whenever gameStates updates
+	useEffect(() => {
+		bottomRef.current?.scrollTo({behavior: "smooth"});
+	}, [gameInfo]);
 
 	return (
 		<div className="gameLogContainer glass">
-			<div className="gameLogInnerContainer">
+			<div ref={logRef} className="gameLogInnerContainer">
 				{ gameInfo.gameOptions.state.map((value) => (
 					<GameLogText key={value.turnNo} gameState={value} />
 				))}
 			</div>
+			<div ref={bottomRef} />
 		</div>
 	)
 }
-
 
 export default GameLog;

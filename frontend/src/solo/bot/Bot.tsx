@@ -139,6 +139,7 @@ export type NewGameOptions = {
 	difficulty: string,
 	newGame: boolean,
 	state: GameState[],
+	id: number | null,
 };
 
 const defaultOptions = {
@@ -146,6 +147,7 @@ const defaultOptions = {
 	difficulty: "Medium",
 	newGame: true,
 	state: [],
+	id: null,
 };
 
 export default function Bot () {

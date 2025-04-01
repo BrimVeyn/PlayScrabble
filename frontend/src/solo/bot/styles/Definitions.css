@@ -1,9 +1,5 @@
 .defContainer {
-	background-color: var(--row-background);
-	border-radius: 10px;
-	height: 200px;
-	width: inherit;
-	box-shadow:	var(--container-shadow)
+	flex: 1;
 }
 
 .defHeader {
@@ -47,4 +43,10 @@ li {
 
 .defPlaceholder {
 	padding: 10px;
+}
+
+@media(max-width: 768px) {
+	.gamePage .defContainer {
+		height: 200px;
+	}
 }

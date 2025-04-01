@@ -24,7 +24,7 @@ export enum Direction {
 
 export type Cursor = {
 	cell: [number, number];
-	direction: "right" | "down";
+	direction: Direction.RIGHT | Direction.DOWN;
 	clickedTime: number;
 };
 
@@ -68,7 +68,7 @@ export enum GameAction {
 	PlayedWord = "played_word",
 	Passed = "passed",
 	Rerolled = "rerolled",
-	Abandonned = "abandonned",
+	Abandoned = "abandoned",
 }
 
 export type GameState = {

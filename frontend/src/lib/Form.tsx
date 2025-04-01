@@ -30,7 +30,7 @@ export function FormField ({
 }: FormFieldProps ) {
 	return (
 		<>
-			<p className="formFielText"> {text} </p>
+			<p className="formFieldText"> {text} </p>
 			<input 
 				className="formFieldInput" 
 				type={inputType} 

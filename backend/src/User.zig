@@ -11,6 +11,9 @@ const App = mainModule.App;
 const print         = std.debug.print;
 const log           = std.log;
 
+const UserDef = @import("User_utils.zig");
+const JWTUtils = @import("JWT_utils.zig");
+
 pub const User = @This();
 
 pub const UserFields = struct {
@@ -25,10 +28,9 @@ pub const Error = struct {
     err: []const u8,
 };
 
-pub fn getUser(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
-    _ = res;
-    _ = app;
-}
+pub const getUser = UserDef.getUser;
+pub const getSoloGames = UserDef.getSoloGames;
+const getClaimsFromToken = JWTUtils.getClaimsFromToken;
 
 pub const LoginGoogleRequest = struct {
     token: []const u8,   
@@ -79,7 +81,7 @@ pub fn refresh(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
                 error.TokenExpired => { 
                     log.info("/refresh: Token expired", .{});
                     res.status = 401; 
-                    res.body = "Refesh token expired";
+                    res.body = "Refresh token expired";
                     return ; 
                 },
                 else => { 
@@ -98,7 +100,7 @@ pub fn refresh(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
                 .max_age = @intFromEnum(JWTDuration.@"30_seconds"),
             });
 
-            log.info("/refresh: Successfully generated a new refresh token for user: {s}", .{userInfo.username});
+            log.info("/refresh: Successfully generated a new access token for user: {s}", .{userInfo.username});
             res.status = 200;
 
         } else {
@@ -134,7 +136,7 @@ pub fn loginGoogle(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
             return ;
         }
         const responseBody = try std.json.parseFromSliceLeaky(GoogleResponse, res.arena, buffer.items, .{});
-        log.info("✅ Token valide\n", .{});
+        log.info("✅ Token valid\n", .{});
         log.info("Email: {s}\n", .{responseBody.email});
 
         var maybeUser = app.db.rowOpts(
@@ -294,7 +296,7 @@ pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         } else {
             log.info("/me: Token expired", .{});
             res.status = 401;
-            res.body = "Acces token not found or expired";
+            res.body = "Access token not found or expired";
             return ;
         }
 
@@ -316,7 +318,7 @@ pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
                 res.body = "PG Error";
                 return ;
             };
-            log.info("me: Acces and Refresh ok", .{});
+            log.info("me: Access and Refresh ok", .{});
             try res.json(userInfo, .{});
         } else {
             res.status = 401;
@@ -438,8 +440,8 @@ pub fn login(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     if (req.json(LoginRequest)) |body| {
 
         var maybeUser = app.db.rowOpts(
-            \\SELECT id as id FROM "user" WHERE password = $1
-        , .{body.?.password}, .{ .column_names = true }) catch |e| {
+            \\SELECT id as id FROM "user" WHERE username = $1 AND password = $2
+        , .{body.?.username, body.?.password}, .{ .column_names = true }) catch |e| {
             log.err("login: PG: {!}", .{e});
             res.status = 500;
             res.body = "Internal server error";
@@ -448,7 +450,7 @@ pub fn login(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
 
         var id: i32 = undefined;
         if (maybeUser == null) {
-            log.err("login: Password missmatch for {s}", .{body.?.username});
+            log.err("login: Password mismatch for {s}", .{body.?.username});
             res.status = 400;
             try res.json(Error{.err = "Invalid credentials"}, .{});
             return ;
@@ -510,7 +512,7 @@ pub fn logout(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
             \\SET refresh = NULL
             \\WHERE id = $1
         , .{token.claims.sub}) catch |e| {
-            log.err("logout: Unable to retreive Refresh-Token: {!}", .{e});
+            log.err("logout: Unable to retrieve Refresh-Token: {!}", .{e});
             res.status = 500;
             res.body = "Internal server error";
             return ;
@@ -523,28 +525,6 @@ pub fn logout(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     res.status = 200;
 }
 
-pub const JwtClaims = struct {
-    sub: []const u8,
-    exp: i32,
-};
-
-fn getClaimsFromToken(app: *App, res: *httpz.Response, token: []const u8) !JWT(JwtClaims) {
-    const claims = jwt.decode(res.arena, JwtClaims, token,
-    .{ .secret = app.jwt_secret }, 
-    .{}) catch |e| switch (e) {
-        error.TokenExpired => {
-            log.err("Token expired !", .{});
-            res.status = 401;
-            return e;
-        },
-        else => {
-            log.err("Error: {!}", .{e});
-            return error.JWT;
-        },
-    };
-    return claims;
-}
-
 fn deleteCookie(res: *httpz.Response, identifier: []const u8) !void {
     try res.setCookie(identifier, "", .{
         .http_only = true,
@@ -552,11 +532,4 @@ fn deleteCookie(res: *httpz.Response, identifier: []const u8) !void {
         .same_site = .strict,
         .max_age = 0,
     });
-}
-
-
-pub fn getSoloGames(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
-    _ = app;
-    _ = req;
-    _ = res;
 }

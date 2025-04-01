@@ -1,13 +1,21 @@
 .gameLogContainer {
-	height: 200px;
+	flex: 1;
 	color: var(--rt-color-black);
 	overflow: auto;
+	height: 100%;
 }
 
 .gameLogInnerContainer {
 	width: 100%;
+	height: 100%;
 }
 
 .gameLogContainer p {
 	padding-left: 10px;
+}
+
+@media(max-width: 768px) {
+	.gamePage .gameLogContainer {
+		height: 200px;
+	}
 }

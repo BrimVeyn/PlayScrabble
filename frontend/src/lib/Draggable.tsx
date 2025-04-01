@@ -162,7 +162,7 @@ abstract class Draggable extends Component<DraggableProps, DraggableState> {
 
 	gridToRack(): void {
 		if (!this.props.row)
-			throw new Error("row undefinied");
+			throw new Error("row undefined");
 
 		const pointedLetter = this.context!.gridLayers.pendingGrid[this.props.row!][this.props.col];
 		const retreive = (pointedLetter.joker) ? "?" : pointedLetter.value;

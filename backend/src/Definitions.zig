@@ -21,7 +21,7 @@ pub const Error = struct {
 };
 
 pub fn get(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
-    const wordRequested = req.params.get("word").?;
+    const wordRequested = req.params.get("word") orelse return ;
 
     var dbRow = app.dict.rowOpts(
         \\SELECT * FROM fr

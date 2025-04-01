@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useGrid } from './GridContext'
 import { useTranslation } from 'react-i18next';
-import { letterScores, Tile } from './GridContext.types';
+import { letterScores, Tile, Direction } from './GridContext.types';
 
 import "../styles/Grid.css"
 import JokerModal from './JokerModal.tsx';
@@ -11,9 +11,9 @@ import { updatePlayers, updateTile } from './GridContextUtils.tsx';
 //NOTE: modifier Values: 
 // 0 None
 // 1 Double Word
-// 2 Tripple Word
+// 2 Triple Word
 // 3 Double Letter
-// 4 Tripple letter
+// 4 Triple letter
 
 const gridModifiers: Array<Array<number>> = [
     [2, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 2],
@@ -52,18 +52,18 @@ function Grid() {
 					return null;
 				return { 
 					cell: [row, col], 
-					direction: (prev.direction === "right" ? "down" : "right"), 
+					direction: (prev.direction === Direction.RIGHT ? Direction.DOWN : Direction.RIGHT), 
 					clickedTime: prev.clickedTime + 1
 				};
 			}
-			return { cell: [row, col], direction: prev?.direction || "right", clickedTime: 1};
+			return { cell: [row, col], direction: prev?.direction || Direction.RIGHT, clickedTime: 1};
 		});
 	};
 
 	const handleRightClick = (e: React.MouseEvent, row: number, col: number) => {
 		e.preventDefault();
-		const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
-		updatePlayers(setGameInfo, ".", retreive);
+		const retrieve = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
+		updatePlayers(setGameInfo, ".", retrieve);
 		updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, ".", false);
 	}
 
@@ -127,7 +127,7 @@ function Grid() {
 										{(tile.value == '.') ? (gLetter.value == '.') ? (pLetter.value == '.') ? '' : pLetter.value : gLetter.value : tile.value} 
 									</span>
 									<span className={`s-grid-tile-modifier ${modClass}`} data-modifier-text={modText}/>
-									{ isSelected && <span className={`selected`} data-direction={cursor?.direction}/> }
+									{ isSelected && <span className={`selected`} data-direction={cursor?.direction === Direction.RIGHT ? "right" : "down"}/> }
 								</div>
 								</GridDraggable>
 							) : (
@@ -147,7 +147,7 @@ function Grid() {
 										{(tile.value == '.') ? (gLetter.value == '.') ? (pLetter.value == '.') ? '' : pLetter.value : gLetter.value : tile.value} 
 									</span>
 									<span className={`s-grid-tile-modifier ${modClass}`} data-modifier-text={modText}/>
-									{ isSelected && <span className={`selected`} data-direction={cursor?.direction}/> }
+									{ isSelected && <span className={`selected`} data-direction={cursor?.direction === Direction.RIGHT ? "right" : "down"}/> }
 								</div>
 							)
 						)

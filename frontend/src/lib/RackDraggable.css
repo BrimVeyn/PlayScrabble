@@ -1,4 +1,4 @@
-.dragableContainer {
+.draggableContainer {
 	width: calc(100% / 7);
 	height: 100%;
 	z-index: 10;

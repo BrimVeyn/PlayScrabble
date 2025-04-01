@@ -1,5 +1,9 @@
 import React from "react";
 import { Direction, GameAction, Match, GameState, GameInfo, GridLayers, Cursor, Tile } from "./GridContext.types";
+import { authFetch } from "../../../auth/authFetch";
+import timeNow from "../../../lib/Date";
+import { UserInfo } from "../../../auth/AuthContext";
+import dayjs, { locale } from "dayjs";
 
 export function randInt(max: number) {
 	return Math.floor(Math.random() * max);
@@ -62,21 +66,21 @@ export function updateCursor(
 		if (!prev)  return prev;
 		switch (direction) {
 			case Direction.UP: {
-				if (prev.cell[0] > 0) return {...prev, direction: "down", cell: [prev.cell[0] - 1, prev.cell[1]]};
+				if (prev.cell[0] > 0) return {...prev, direction: Direction.DOWN, cell: [prev.cell[0] - 1, prev.cell[1]]};
 				return prev;
 			}
 			case Direction.RIGHT: {
-				if (prev.direction === "down") return {...prev, direction: "right"};
-				if (prev.cell[1] < 14) return {...prev, direction: "right", cell: [prev.cell[0], prev.cell[1] + 1]};
+				if (prev.direction === Direction.DOWN) return {...prev, direction: Direction.RIGHT};
+				if (prev.cell[1] < 14) return {...prev, direction: Direction.RIGHT, cell: [prev.cell[0], prev.cell[1] + 1]};
 				return prev;
 			}
 			case Direction.DOWN: {
-				if (prev.direction === "right") return {...prev, direction: "down"};
-				if (prev.cell[0] < 14) return {...prev, direction: "down", cell: [prev.cell[0] + 1, prev.cell[1]]};
+				if (prev.direction === Direction.RIGHT) return {...prev, direction: Direction.DOWN};
+				if (prev.cell[0] < 14) return {...prev, direction: Direction.DOWN, cell: [prev.cell[0] + 1, prev.cell[1]]};
 				return prev;
 			}
 			case Direction.LEFT: {
-				if (prev.cell[1] > 0) return {...prev, direction: "right", cell: [prev.cell[0], prev.cell[1] - 1]};
+				if (prev.cell[1] > 0) return {...prev, direction: Direction.RIGHT, cell: [prev.cell[0], prev.cell[1] - 1]};
 				return prev;
 			}
 		}
@@ -92,15 +96,15 @@ export function updateCursorClick(
 		if (!prev)  return prev;
 		switch (direction) {
 			case Direction.UP: {
-				if (prev.cell[0] > 0) return {...prev, direction: "down", cell: [prev.cell[0] - 1, prev.cell[1]]};
+				if (prev.cell[0] > 0) return {...prev, direction: Direction.DOWN, cell: [prev.cell[0] - 1, prev.cell[1]]};
 				return prev;
 			}
 			case Direction.RIGHT: {
 				let newCell = [prev.cell[0], prev.cell[1] + 1];
 				while (newCell[1] < 14 && gridLayers.grid[newCell[0]][newCell[1]].value !== ".")
 					newCell = [newCell[0], newCell[1] + 1];
-				if (prev.direction === "down") return {...prev, direction: "right"};
-				if (prev.cell[1] < 14) return {...prev, direction: "right", cell: [newCell[0], newCell[1]]};
+				if (prev.direction === Direction.DOWN) return {...prev, direction: Direction.RIGHT};
+				if (prev.cell[1] < 14) return {...prev, direction: Direction.RIGHT, cell: [newCell[0], newCell[1]]};
 				return prev;
 			}
 			case Direction.DOWN: {
@@ -108,17 +112,91 @@ export function updateCursorClick(
 				while (newCell[0] < 14 && gridLayers.grid[newCell[0]][newCell[1]].value !== ".")
 					newCell = [newCell[0] + 1, newCell[1]];
 
-				if (prev.direction === "right") return {...prev, direction: "down"};
-				if (prev.cell[0] < 14) return {...prev, direction: "down", cell: [newCell[0], newCell[1]]};
+				if (prev.direction === Direction.RIGHT) return {...prev, direction: Direction.DOWN};
+				if (prev.cell[0] < 14) return {...prev, direction: Direction.DOWN, cell: [newCell[0], newCell[1]]};
 				return prev;
 			}
 			case Direction.LEFT: {
-				if (prev.cell[1] > 0) return {...prev, direction: "right", cell: [prev.cell[0], prev.cell[1] - 1]};
+				if (prev.cell[1] > 0) return {...prev, direction: Direction.RIGHT, cell: [prev.cell[0], prev.cell[1] - 1]};
 				return prev;
 			}
 		}
 	});
 }
+
+
+type GameBackendType = {
+	creation_time: number,
+	dict: string,
+	difficulty: string,
+	status: string,
+	states: string,
+	player_one_id: number,
+	player_two_id: number | null,
+	player_one_score: number,
+	player_two_score: number,
+}
+
+
+export function pushGameStateUpdates(
+	gameInfo: GameInfo,
+	setGameInfo: React.Dispatch<React.SetStateAction<GameInfo>>,
+	userInfo: UserInfo,
+): void {
+	const states = gameInfo.gameOptions.state;
+
+	if (states.length === 0) return ;
+	const lastState = states[states.length - 1];
+
+	if (lastState.action === GameAction.GameStart) {
+		const payload: GameBackendType = {
+			creation_time: dayjs().unix(),
+			dict: gameInfo.gameOptions.dict,
+			difficulty: gameInfo.gameOptions.difficulty,
+			status: "pending",
+			states: JSON.stringify(states),
+			player_one_id: userInfo.id,
+			player_two_id: null,
+			player_one_score: lastState.score_0,
+			player_two_score: lastState.score_1,
+		}
+		authFetch("https://scrabble.brimveyn.dev/api/game/solo/createGame", {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json' },
+			body: JSON.stringify(payload),
+		}).then(response => {
+			if (!response.ok) throw new Error("/createGame failed");
+			return response.json();
+		}).then((body: {gameId: number}) => {
+			setGameInfo((prev) => ({...prev, gameOptions: {...prev.gameOptions, id: body.gameId}}))
+		}).catch(e => console.log(e));
+	} else {
+		const gameId = gameInfo.gameOptions.id;
+		let status = "pending";
+
+		if (lastState.action === GameAction.GameEnd) status = "done";
+		if (lastState.action === GameAction.Abandoned) status = "abandoned";
+
+		const payload = {
+			id: gameInfo.gameOptions.id,
+			status: status,
+			states: JSON.stringify(states),
+			player_one_score: lastState.score_0,
+			player_two_score: lastState.score_1,
+		}
+
+
+		console.log(JSON.stringify(payload));
+		authFetch(`https://scrabble.brimveyn.dev/api/game/solo/updateGame/${gameId}`, {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json' },
+			body: JSON.stringify(payload),
+		}).then(response => {
+			if (!response.ok) throw new Error("/updateGame failed");
+		}).catch(e => console.log(e));
+	}
+}
+
 
 export const updateGameState = (
 	action: GameAction,

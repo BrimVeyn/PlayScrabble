@@ -1,5 +1,6 @@
 let isRefreshing = false;
 let refreshPromise: Promise<void> | null = null;
+let tryNo = 0;
 
 const getAccessToken = async (): Promise<{ok: boolean, data: string, err: string}> => {
 	const response = await fetch("https://scrabble.brimveyn.dev/api/me", {
@@ -8,7 +9,7 @@ const getAccessToken = async (): Promise<{ok: boolean, data: string, err: string
 	});
 
 	if (response.ok) {
-		console.log("[AuthFetch]: Authentication successfull");
+		console.log("[AuthFetch]: Authentication successful");
 		return {ok: true, data: "", err: ""}
 	} else if (response.status === 401) {
 		// Token expired — try to refresh it
@@ -23,27 +24,28 @@ const getAccessToken = async (): Promise<{ok: boolean, data: string, err: string
 					}
 					isRefreshing = false;
 					refreshPromise = null;
-			}).then(async body => { throw new Error(body); })
-			.catch((err) => {
+			}).then(body => { throw new Error(body); })
+			.catch(() => {
 				isRefreshing = false;
+				tryNo++;
 				refreshPromise = null;
-				throw err;
+				console.log("[AuthFetch]: Attempt number", tryNo, "failed");
 			});
 		}
 
 		// Wait for the refresh attempt to complete
 		await refreshPromise;
-		console.log("[AuthFetch]: Access expired, trying refesh");
-		return getAccessToken(); // Try again after refresh
+		console.log("[AuthFetch]: Access expired, trying refresh");
+		if (tryNo < 2) return getAccessToken(); // Try again after refresh
 	}
-
 	return {ok: false, data: "", err: "Failed to refresh token"};
 };
 
 export const authFetch = async (url: string, options: RequestInit = {}) => {
     try {
+		tryNo = 0;
         // Try to get a token
-        const {ok, err}= await getAccessToken();
+        const {ok, err} = await getAccessToken();
 
         if (!ok) {
             throw new Error(err);

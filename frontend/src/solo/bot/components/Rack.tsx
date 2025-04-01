@@ -30,11 +30,11 @@ export default function Rack () {
 			const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
 			updatePlayersIdx(setGameInfo, index, retreive);
 			updateTile(gridLayers.pendingGrid, cursor!.cell, setGridLayers, letter, false);
-			updateCursorClick(gridLayers, setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+			updateCursorClick(gridLayers, setCursor, cursor.direction);
 		} else if (gridEmpty) {
 			updateTile(gridLayers.pendingGrid, cursor!.cell, setGridLayers, letter, false);
 			updatePlayersIdx(setGameInfo, index, ".");
-			updateCursorClick(gridLayers, setCursor, cursor!.direction === "right" ? Direction.RIGHT : Direction.DOWN);
+			updateCursorClick(gridLayers, setCursor, cursor.direction);
 		}
 	}
 

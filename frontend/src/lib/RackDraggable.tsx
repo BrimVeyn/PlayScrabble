@@ -26,7 +26,7 @@ class RackDraggable extends Draggable {
 			<>
 				{this.state.isDragging &&  <div id={this.props.id} className="s-grid-cell undragable"/> }
 			<div 
-				className={`dragableContainer ${draggedClass}`}
+				className={`draggableContainer ${draggedClass}`}
 				onMouseDown={this.dragStart}
 				onTouchStart={this.dragStart}
 				id={this.props.id}

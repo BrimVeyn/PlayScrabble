@@ -5,6 +5,7 @@ const jwt           = @import("jwt");
 
 //---------------- Models ----------------//
 const User          = @import("User.zig");
+const Game          = @import("Game.zig");
 const Solver        = @import("Solver.zig");
 const Definition    = @import("Definitions.zig");
 //----------------------------------------//
@@ -110,12 +111,15 @@ pub fn main() !u8 {
         \\
         \\CREATE TABLE "game" (
         \\  id SERIAL PRIMARY KEY,
-        \\  creation_date TIMESTAMP NOT NULL,
-        \\  type VARCHAR(32),
+        \\  creation_time TIMESTAMP NOT NULL,
+        \\  difficulty VARCHAR(32),
+        \\  dict VARCHAR(8),
         \\  status VARCHAR(16),
-        \\  grid TEXT NOT NULL,
+        \\  states JSONB,
         \\  player_one_id INTEGER NOT NULL,
         \\  player_two_id INTEGER,
+        \\  player_one_score INTEGER,
+        \\  player_two_score INTEGER,
         \\  FOREIGN KEY (player_one_id) REFERENCES "user"(id),
         \\  FOREIGN KEY (player_two_id) REFERENCES "user"(id)
         \\);
@@ -126,7 +130,7 @@ pub fn main() !u8 {
 
     var router = server.router(.{.middlewares = &.{cors}});
     //-------------------------------GET--------------------------------
-    router.get("/api/getUser:name", User.getUser, .{});
+    router.get("/api/getUser", User.getUser, .{});
     router.get("/api/getUsers", User.getUsers, .{});
     router.get("/api/me", User.me, .{});
     router.get("/api/refresh", User.refresh, .{});
@@ -140,8 +144,9 @@ pub fn main() !u8 {
     router.post("/api/loginGoogle", User.loginGoogle, .{});
     router.post("/api/checkEmail", User.checkEmail, .{});
     router.post("/api/checkUsername", User.checkUsername, .{});
+    router.post("/api/game/solo/createGame", Game.createGame, .{});
+    router.post("/api/game/solo/updateGame/:gameId", Game.updateGame, .{});
     //------------------------------------------------------------------
-    // router.post("/api/validateWordList", Game.validateWordList, .{});
 
     router.delete("/api/logout", User.logout, .{});
 

@@ -109,7 +109,10 @@ function Results() {
 					<div className="resHeadItem p10"> <p>{t("resTableDir")}</p> </div>
 					<div className="resHeadItem p10"> <p>{t("resTableJoker")}</p> </div>
 				</div>
-				<div className="resBody" onMouseLeave={() => setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}))}>
+				<div 
+					className="resBody" 
+					onMouseLeave={() => setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}))}
+				>
 					{lastResults &&
 						<List
 							height={200} 

@@ -17,7 +17,7 @@ export const useAuth = () => {
 	return context;
 }
 
-type UserInfo = {
+export type UserInfo = {
 	id: number,
 	username: string,
 	email: string,

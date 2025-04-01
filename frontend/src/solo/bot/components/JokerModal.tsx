@@ -6,7 +6,7 @@ import { Direction, emptyGrid } from "./GridContext.types";
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 export default function JokerModal() {
-	const {gridLayers, cursor, setPlayers, setCursor, setGridLayers, setJokerModal } =  useGrid();
+	const {gridLayers, cursor, setCursor, setGameInfo, setGridLayers, setJokerModal } =  useGrid();
 
 	const handleClick = (letter: string) => {
 		setJokerModal(false);
@@ -30,15 +30,15 @@ export default function JokerModal() {
 
 		if (!pendingEmpty) {
 			const retreive = gridLayers.pendingGrid[row][col].joker ? "?" : gridLayers.pendingGrid[row][col].value;
-			updatePlayers(setPlayers, "?", retreive);
+			updatePlayers(setGameInfo, "?", retreive);
 			updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, letter, true);
 			if (cursor)
-				updateCursorClick(gridLayers, setCursor, (cursor!.direction === "right") ? Direction.RIGHT : Direction.DOWN);
+				updateCursorClick(gridLayers, setCursor, cursor.direction);
 		} else if (gridEmpty) {
 			updateTile(gridLayers.pendingGrid, [row, col], setGridLayers, letter, true);
-			updatePlayers(setPlayers, "?", ".");
+			updatePlayers(setGameInfo, "?", ".");
 			if (cursor)
-				updateCursorClick(gridLayers, setCursor, cursor!.direction === "right" ? Direction.RIGHT : Direction.DOWN);
+				updateCursorClick(gridLayers, setCursor, cursor.direction);
 		}
 	}
 
