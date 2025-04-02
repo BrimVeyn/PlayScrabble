@@ -171,7 +171,7 @@ function pickRandomMatch(gameInfo: GameInfo, results: Array<Match>) {
 }
 
 const defaultPlayers: Map<number, PlayerInfo> = new Map([
-    [0, { score: 0, rack: "?......" }],
+    [0, { score: 0, rack: "......." }],
     [1, { score: 0, rack: "......." }]
 ]);
 
@@ -202,16 +202,20 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 	}, [needUpdate])
 
 	useEffect(() => {
-		const [rackOne, purseOne] = refillRack({key: 0, gameInfo, players: gameInfo.players});
-		const [rackTwo, purseTwo] = refillRack({key: 1, gameInfo: {...gameInfo, purse: purseOne}, players: gameInfo.players});
-		setGameInfo((prev) => ({
-			...prev,
-			purse: purseTwo,
-			players: new Map(prev.players)
-			.set(0, {...prev.players.get(0)!, rack: rackOne})
-			.set(1, {...prev.players.get(1)!, rack: rackTwo})
-		}));
-		setTurnChange({action: GameAction.GameStart, match: null});
+		if (gameInfo.gameOptions.newGame === true) {
+			const [rackOne, purseOne] = refillRack({key: 0, gameInfo, players: gameInfo.players});
+			const [rackTwo, purseTwo] = refillRack({key: 1, gameInfo: {...gameInfo, purse: purseOne}, players: gameInfo.players});
+			setGameInfo((prev) => ({
+				...prev,
+				purse: purseTwo,
+				players: new Map(prev.players)
+				.set(0, {...prev.players.get(0)!, rack: rackOne})
+				.set(1, {...prev.players.get(1)!, rack: rackTwo})
+			}));
+			setTurnChange({action: GameAction.GameStart, match: null});
+		} else {
+			console.log("Reprend la game");
+		}
 	}, []);
 
 	useEffect(() => {

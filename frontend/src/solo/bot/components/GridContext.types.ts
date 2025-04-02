@@ -82,3 +82,15 @@ export type GameState = {
 	action: GameAction,
 	match: Match | null,
 }
+
+export type GameBackendType = {
+	creation_time: number,
+	dict: string,
+	difficulty: string,
+	status: string,
+	states: string,
+	player_one_id: number,
+	player_two_id: number | null,
+	player_one_score: number,
+	player_two_score: number,
+}

@@ -1,9 +1,8 @@
 import React from "react";
-import { Direction, GameAction, Match, GameState, GameInfo, GridLayers, Cursor, Tile } from "./GridContext.types";
+import { GameBackendType, Direction, GameAction, Match, GameState, GameInfo, GridLayers, Cursor, Tile } from "./GridContext.types";
 import { authFetch } from "../../../auth/authFetch";
-import timeNow from "../../../lib/Date";
 import { UserInfo } from "../../../auth/AuthContext";
-import dayjs, { locale } from "dayjs";
+import dayjs from "dayjs";
 
 export function randInt(max: number) {
 	return Math.floor(Math.random() * max);
@@ -122,19 +121,6 @@ export function updateCursorClick(
 			}
 		}
 	});
-}
-
-
-type GameBackendType = {
-	creation_time: number,
-	dict: string,
-	difficulty: string,
-	status: string,
-	states: string,
-	player_one_id: number,
-	player_two_id: number | null,
-	player_one_score: number,
-	player_two_score: number,
 }
 
 

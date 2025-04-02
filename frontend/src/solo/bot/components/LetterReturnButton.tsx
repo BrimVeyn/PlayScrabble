@@ -1,6 +1,6 @@
-import { PiArrowBendRightUpFill } from "react-icons/pi";
 import { useGrid } from "./GridContext";
 import { emptyGrid, GameInfo, GridLayers } from "./GridContext.types";
+import { TbArrowsUp } from "react-icons/tb";
 
 interface returnLettersProps {
 	gameInfo: GameInfo
@@ -33,7 +33,7 @@ export default function LetterReturnButton() {
 	return (
 		<div className="resetButton glass" id="rack-return">
 			<button onClick={() => returnLetters({gameInfo, setGameInfo, gridLayers, setGridLayers})}>
-				<PiArrowBendRightUpFill/>
+				<TbArrowsUp/>
 			</button>
 		</div>
 	);

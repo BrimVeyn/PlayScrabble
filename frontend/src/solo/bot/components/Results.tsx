@@ -1,7 +1,7 @@
 import { FixedSizeList as List } from "react-window";
 import { useGrid } from "./GridContext";
 import { emptyGrid } from "./GridContext.types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { FaSortAlphaDown, FaSortAlphaUpAlt, FaSortNumericDown, FaSortNumericUpAlt } from "react-icons/fa";
 import { TiSortAlphabetically, TiSortNumerically } from "react-icons/ti";
 import GameLog from "./GameLog";
@@ -25,6 +25,7 @@ function Results() {
 	const { t } = useTranslation("solver");
 	const [sortWay, setSortWay] = useState<"ascii-asc" |"ascii-des" | "score-asc" | "score-des" | null>(null);
 	const [shownDefinition, setShownDefinition] = useState<{word: string, def: string} | null>(null);
+	const timeoutRef = useRef<number | null>(null);
 
 	useEffect(() => {
 		if (!lastResults || !sortWay) return ;
@@ -107,11 +108,10 @@ function Results() {
 					</div>
 					<div className="resHeadItem p20"> <p>{t("resTableLetter")}</p> </div>
 					<div className="resHeadItem p10"> <p>{t("resTableDir")}</p> </div>
-					<div className="resHeadItem p10"> <p>{t("resTableJoker")}</p> </div>
+					<div className="resHeadItem p10"> <p>?</p> </div>
 				</div>
 				<div 
 					className="resBody" 
-					onMouseLeave={() => setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}))}
 				>
 					{lastResults &&
 						<List
@@ -127,9 +127,14 @@ function Results() {
 										key={index} 
 										style={style} 
 										className="resRow"
-										onMouseEnter={() => {
+										onClick={() => {
 											showGhostWord(index)
 											getDefinition(index)
+											if (timeoutRef !== null) clearTimeout(timeoutRef.current!);
+
+											timeoutRef.current = setTimeout(() => {
+												setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
+											}, 5000);
 										}}
 									> 
 										<p> {match.word} </p>

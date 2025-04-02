@@ -21,55 +21,14 @@ pub fn getUser(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
 const GameType = struct {
     id: i32,
     creation_date: i64,
-    dict: []const u8,
     difficulty: []const u8,
+    dict: []const u8,
     status: []const u8,
     states: []const u8,
     player_one_id: i32,
     player_two_id: ?i32,
     player_one_score: i32,
     player_two_score: i32,
-
-    pub fn jsonStringify(self: @This(), jws: anytype) !void {
-        try jws.beginObject();
-
-        // Serialize each field
-        try jws.objectField("id");
-        try jws.print("{d}", .{self.id});
-
-        try jws.objectField("creation_date");
-        try jws.print("{d}", .{self.creation_date});
-
-        try jws.objectField("dict");
-        try jws.print("\"{s}\"", .{self.dict});
-
-        try jws.objectField("difficulty");
-        try jws.print("\"{s}\"", .{self.difficulty});
-
-        try jws.objectField("status");
-        try jws.print("\"{s}\"", .{self.status});
-
-        try jws.objectField("states");
-        try jws.print("\"{s}\"", .{self.states});
-
-        try jws.objectField("player_one_id");
-        try jws.print("{d}", .{self.player_one_id});
-
-        try jws.objectField("player_two_id");
-        if (self.player_two_id) |id| {
-            try jws.print("{d}", .{id});
-        } else {
-            try jws.print("null", .{});
-        }
-
-        try jws.objectField("player_one_score");
-        try jws.print("{d}", .{self.player_one_score});
-
-        try jws.objectField("player_two_score");
-        try jws.print("{d}", .{self.player_two_score});
-
-        try jws.endObject();
-    }
 
     pub fn format(self: *const @This(), comptime fmt: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
         if (fmt.len != 0) {
@@ -115,17 +74,12 @@ pub fn getSoloGames(app: *App, req: *httpz.Request, res: *httpz.Response) !void 
         var games = std.ArrayList(GameType).init(res.arena);
         while (try queryRes.next()) |row| {
             const game = try row.to(GameType, .{ .allocator = res.arena });
-            log.info("Game converted by rowTo: {}", .{game});
             try games.append(game);
-            log.info("Game in the array: {}", .{games.items[games.items.len - 1]});
         }
-
-        // for (games.items) |game| {
-        // }
 
         log.info("/getSoloGames: OK", .{});
         res.status = 200;
-        try res.json(games.items[0..], .{ .whitespace = .indent_2 });
+        try res.json(games.items[0..], .{});
 
     } else {
         log.err("/getSoloGames: Access-token not found, not logged in", .{});

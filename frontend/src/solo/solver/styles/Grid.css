@@ -28,9 +28,6 @@
 }
 
 .s-grid-tile-modifier {
-	position: absolute;
-	top: 0.80;
-	left: 0.80;
 	user-select: none;
 	-ms-user-select: none;
 	-moz-user-select: none;
@@ -49,34 +46,17 @@
 	font-size: min(2vw, 18px);
 }
 
-
-.tword {
-	background-color: rgba(133, 31, 47, .6);
-	width: 80%;
-	height: 80%;
-	border-radius: 10px;
+.s-grid-tile-modifier:is(.tword, .dletter, .dword, .tletter) {
+	width: 95%;
+	height: 95%;
+	border-radius: 5px;
 }
 
-.dword {
-	background-color: rgba(255, 82, 101, .5);
-	width: 80%;
-	height: 80%;
-	border-radius: 10px;
-}
+.tword { background-color: rgba(133, 31, 47, .6); }
+.dword { background-color: rgba(255, 82, 101, .5); }
+.tletter { background-color: rgba(73, 81, 111, .6); }
+.dletter { background-color: rgba(128, 147, 198, .6); }
 
-.tletter {
-	background-color: rgba(73, 81, 111, .6);
-	width: 80%;
-	height: 80%;
-	border-radius: 10px;
-}
-
-.dletter {
-	background-color: rgba(128, 147, 198, .6);
-	width: 80%;
-	height: 80%;
-	border-radius: 10px;
-}
 
 .s-grid-tile {
 	position: absolute;

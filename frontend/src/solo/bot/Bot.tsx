@@ -1,42 +1,63 @@
 import React, { useEffect, useState } from "react"
 import { useAuth } from "../../auth/AuthContext"
+import { GameState, GameInfo } from "./components/GridContext.types"
+
 import { Menu } from "../../lib/Menu"
 import Navbar from "../../navbar/Navbar"
-import { GameState } from "./components/GridContext.types"
-
-import "./Bot.css"
-import { useTranslation } from "react-i18next"
 import Game from "./Game"
+
+import { useTranslation } from "react-i18next"
 import { authFetch } from "../../auth/authFetch"
 
+import "./Bot.css"
 
-type Game = {
+
+type GetSoloGamesType = {
+	id: number,
+	creation_time: number,
+	dict: string,
 	difficulty: string,
-	gridState: string,
-	rackState: string,
-	purseState: string,
-};
-
-const testGames = [
-	{difficulty: "Hard", gridState: "", rackState: "ABCD...", purseState: ""},
-	{difficulty: "Medium", gridState: "", rackState: "DEFG...", purseState: ""},
-];
+	status: string,
+	states: string,
+	player_one_id: number,
+	player_two_id: number | null,
+	player_one_score: number,
+	player_two_score: number,
+}
 
 
-function BotOngoing () {
+function BotOngoing ({setMenuState, setGameOptions}: BotMenuProps) {
 	const { logged } = useAuth();
-	const [games, setGames] = useState<Array<Game> | null>(null);
+	const [games, setGames] = useState<GetSoloGamesType[] | null>(null);
 	const { t } = useTranslation("bot");
 
 	useEffect(() => {
-		//TODO: Fetch users's game history
 		if (logged) {
 			authFetch("https://scrabble.brimveyn.dev/api/user/getSoloGames", {
 				method: "GET",
+			}).then((response) => {
+				if (!response.ok) throw new Error("Error getting solog games");
+				return response.json();
+			}).then(body => {
+				console.log(body);
+				setGames(body);
 			})
-			setGames(testGames);
+			//setGames(testGames);
 		}
 	}, [logged])
+
+	const handleClick = (idx: number) => {
+		const selectedGame = games![idx];
+		setGameOptions({
+			id: selectedGame.id,
+			difficulty: selectedGame.difficulty,
+			newGame: false,
+			dict: selectedGame.dict,
+			state: JSON.parse(atob(selectedGame.states)),
+		});
+		setMenuState(MenuState.Game);
+	}
+
 
 	return (
 		<div className="glass onGoingTable">
@@ -45,9 +66,11 @@ function BotOngoing () {
 			{ logged ? (
 				games ? (
 					games.map((game, idx) => (
-						<p key={idx} className="onGoingRow">
-							<span> {idx} </span>
-							<span> {t(game.difficulty)} </span>
+						<p key={idx} className="onGoingRow" onClick={() => handleClick(idx)}>
+							<span> {t(game.difficulty)}</span>
+							<span> {game.dict}</span>
+							<span> {game.player_one_score} </span> -
+							<span> {game.player_two_score} </span>
 						</p>
 					))
 				) : ( <p className="onGoingPh">{t("noOnGoingPlaceHoler")}</p> )
@@ -109,9 +132,10 @@ const NewGameMenu = ({setMenuState, gameOptions, setGameOptions}: NewGameMenuPro
 
 interface BotMenuProps {
 	setMenuState: React.Dispatch<React.SetStateAction<MenuState>>,
+	setGameOptions: React.Dispatch<React.SetStateAction<NewGameOptions>>,
 };
 
-const BotMenu = ({setMenuState}: BotMenuProps) => {
+const BotMenu = ({setMenuState, setGameOptions}: BotMenuProps) => {
 	const { t } = useTranslation("bot");
 	return (
 		<div className="botPageContainer">
@@ -122,7 +146,10 @@ const BotMenu = ({setMenuState}: BotMenuProps) => {
 			>
 				<p>{t("newGame")}</p>
 			</div>
-		<BotOngoing/>
+		<BotOngoing
+			setMenuState={setMenuState}
+			setGameOptions={setGameOptions}
+		/>
 		</Menu>
 		</div>
 	)
@@ -156,7 +183,11 @@ export default function Bot () {
 
 	const renderState = () => {
 		switch (menuState) {
-			case MenuState.Main: return <BotMenu setMenuState={setMenuState}/>
+			case MenuState.Main: 
+				return <BotMenu 
+					setMenuState={setMenuState} 
+					setGameOptions={setGameOptions}
+				/>
 			case MenuState.NewGame: {
 				return <NewGameMenu 
 						setMenuState={setMenuState} 

@@ -8,7 +8,7 @@
 	flex-direction: row;
 	justify-content: center;
 	gap: 2rem;
-	padding-inline: clamp(10px, (300 / 920) * (100vw - 1000px), 300px);
+	padding-inline: clamp(10px, (325 / 920) * (100vw - 1000px), 325px);
 	padding-block: 10px;
 	height: 95%;
 }
