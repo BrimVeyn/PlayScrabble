@@ -70,6 +70,13 @@ const GameType = struct {
 
         try jws.endObject();
     }
+
+    pub fn format(self: *const @This(), comptime fmt: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        if (fmt.len != 0) {
+            std.fmt.invalidFmtError(fmt, self);
+        }
+        return std.json.stringify(self, .{.whitespace = .indent_2}, writer);
+    }
 };
 
 
@@ -77,7 +84,7 @@ pub fn getSoloGames(app: *App, req: *httpz.Request, res: *httpz.Response) !void 
     if (req.cookies().get("Access-Token")) |accessToken| { 
         var token = JWTUtils.getClaimsFromToken(app, res, accessToken) catch |e| switch(e) {
             error.TokenExpired => { 
-                log.info("/refresh: Token expired", .{});
+                log.info("/getSoloGames: Token expired", .{});
                 res.status = 401; 
                 res.body = "Refresh token expired";
                 return ; 
@@ -98,7 +105,7 @@ pub fn getSoloGames(app: *App, req: *httpz.Request, res: *httpz.Response) !void 
         ;
 
         var queryRes = app.db.query(query, .{userId}) catch |e| {
-            log.err("/refresh: PG: {!}", .{e});
+            log.err("/getSoloGames: PG: {!}", .{e});
             res.status = 500;
             res.body = "Internal server error";
             return ;
@@ -107,14 +114,18 @@ pub fn getSoloGames(app: *App, req: *httpz.Request, res: *httpz.Response) !void 
 
         var games = std.ArrayList(GameType).init(res.arena);
         while (try queryRes.next()) |row| {
-            const game = try row.to(GameType, .{});
+            const game = try row.to(GameType, .{ .allocator = res.arena });
+            log.info("Game converted by rowTo: {}", .{game});
             try games.append(game);
-            log.info("Appended game: {any}\n\n\n\n", .{game});
+            log.info("Game in the array: {}", .{games.items[games.items.len - 1]});
         }
 
-        try res.json(games.items[0..], .{ .whitespace = .indent_2 });
+        // for (games.items) |game| {
+        // }
+
+        log.info("/getSoloGames: OK", .{});
         res.status = 200;
-        log.info("getUsers: OK", .{});
+        try res.json(games.items[0..], .{ .whitespace = .indent_2 });
 
     } else {
         log.err("/getSoloGames: Access-token not found, not logged in", .{});

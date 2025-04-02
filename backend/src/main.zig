@@ -29,8 +29,16 @@ pub const std_options = std.Options {
     .log_level = .info,
 };
 
+const gpaConfig = std.heap.GeneralPurposeAllocatorConfig{
+    .thread_safe = true,
+    .safety = true,
+    .retain_metadata = true,
+    .stack_trace_frames = 10,
+};
+
+
 pub fn main() !u8 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.GeneralPurposeAllocator(gpaConfig){};
     const allocator = gpa.allocator();
 
     //INFO: Catching SIGINT and SIGTERM
@@ -115,7 +123,7 @@ pub fn main() !u8 {
         \\  difficulty VARCHAR(32),
         \\  dict VARCHAR(8),
         \\  status VARCHAR(16),
-        \\  states JSONB,
+        \\  states TEXT,
         \\  player_one_id INTEGER NOT NULL,
         \\  player_two_id INTEGER,
         \\  player_one_score INTEGER,

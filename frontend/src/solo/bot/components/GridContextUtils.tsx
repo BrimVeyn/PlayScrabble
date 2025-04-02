@@ -154,7 +154,7 @@ export function pushGameStateUpdates(
 			dict: gameInfo.gameOptions.dict,
 			difficulty: gameInfo.gameOptions.difficulty,
 			status: "pending",
-			states: JSON.stringify(states),
+			states: btoa(JSON.stringify(states)),
 			player_one_id: userInfo.id,
 			player_two_id: null,
 			player_one_score: lastState.score_0,
@@ -173,18 +173,16 @@ export function pushGameStateUpdates(
 	} else {
 		const gameId = gameInfo.gameOptions.id;
 		let status = "pending";
-
 		if (lastState.action === GameAction.GameEnd) status = "done";
 		if (lastState.action === GameAction.Abandoned) status = "abandoned";
 
 		const payload = {
 			id: gameInfo.gameOptions.id,
 			status: status,
-			states: JSON.stringify(states),
+			states: btoa(JSON.stringify(states)),
 			player_one_score: lastState.score_0,
 			player_two_score: lastState.score_1,
 		}
-
 
 		console.log(JSON.stringify(payload));
 		authFetch(`https://scrabble.brimveyn.dev/api/game/solo/updateGame/${gameId}`, {
