@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { letterFrequencies, emptyGrid, GridLayers, Direction, Tile, PlayerInfo, GameInfo, Match, Cursor, letterScores, GameAction} from "./GridContext.types.ts"
-import { randInt, updateTile, updatePlayers, updateCursor, updateGameState, pushGameStateUpdates } from "./GridContextUtils.tsx";
+import { randInt, updateTile, updatePlayers, updateCursor, updateGameState, pushGameStateUpdates, purseToNumberArray, numberArrayToPurse } from "./GridContextUtils.tsx";
 import { NewGameOptions } from "../Bot.tsx";
 import callSolver from "./useSolver";
 import { useAuth } from "../../../auth/AuthContext.tsx";
@@ -95,6 +95,48 @@ function removeFromRack(rack: string, col: string) {
 	if (idx == -1) return rack;
 	const newRack = rack.substring(0, idx) + "." + rack.substring(idx + 1);
 	return newRack;
+}
+
+export function fillGridWithMatch(grid: Tile[][], match: Match): Tile[][] {
+	switch (match.dir) {
+		case 1: { //NOTE: Horizontal
+			let it = match.range[0];
+			const newGrid: Array<Array<Tile>> = grid.map((row, rowI) => {
+				if (rowI !== match.perpCoord) return row;
+				return row.map((col, colI) => {
+					if (colI !== it || it > match.range[1]) return col;
+					it++;
+					const idx = it - 1 - match.range[0];
+					if (col.value === ".") {
+					} else {
+						return col;
+					}
+					const isJoker = (idx === match.jokerPoses[0] || idx === match.jokerPoses[1]);
+					return {joker: isJoker , value: match.word[it - 1 - match.range[0]]};
+				});
+			});
+			return newGrid;
+		}
+		case 0: { //NOTE: Vertical
+			let it = match.range[0];
+			const newGrid = grid.map((row, rowI) => {
+				if (rowI !== it) return row;
+				return row.map((col, colI) => {
+					if (colI !== match.perpCoord || it > match.range[1]) return col;
+					it++;
+					const idx = it - 1 - match.range[0];
+					if (col.value === ".") {
+					} else {
+						return col;
+					}
+					const isJoker = (idx === match.jokerPoses[0] || idx === match.jokerPoses[1]);
+					return {joker: isJoker , value: match.word[it - 1 - match.range[0]]};
+				});
+			})
+			return newGrid;
+		}
+	}
+	return grid;
 }
 
 export function placeWord({gameInfo, gridLayers, setGridLayers, match}: PlaceWordProps) {
@@ -203,6 +245,7 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 
 	useEffect(() => {
 		if (gameInfo.gameOptions.newGame === true) {
+			//NOTE: New game
 			const [rackOne, purseOne] = refillRack({key: 0, gameInfo, players: gameInfo.players});
 			const [rackTwo, purseTwo] = refillRack({key: 1, gameInfo: {...gameInfo, purse: purseOne}, players: gameInfo.players});
 			setGameInfo((prev) => ({
@@ -214,7 +257,24 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 			}));
 			setTurnChange({action: GameAction.GameStart, match: null});
 		} else {
-			console.log("Reprend la game");
+			//NOTE: On going game
+			const stateLen = gameInfo.gameOptions.state.length;
+			const lastState = gameInfo.gameOptions.state[stateLen - 1];
+			const purse = numberArrayToPurse(lastState.purse);
+			
+			const players = new Map<number, PlayerInfo>()
+				.set(0, {rack: lastState.rack_0, score: lastState.score_0})
+				.set(1, {rack: lastState.rack_1, score: lastState.score_1})
+
+			setGameInfo((prev) => ({...prev, purse: purse, players: players, turnNo: lastState.turnNo}));
+			const states = gameInfo.gameOptions.state;
+			let filledGrid: Tile[][] = emptyGrid;
+
+			states.forEach(value => {
+				if (value.match !== null)
+					filledGrid = fillGridWithMatch(filledGrid, value.match);
+			});
+			setGridLayers((prev) => ({...prev, grid: filledGrid}));
 		}
 	}, []);
 
@@ -303,7 +363,6 @@ export const GridProvider = ({ children, gameOptions }: GridProviderProps) => {
 
 			let match = pickRandomMatch(gameInfo, lastResults);
 			const newRack = placeWord({gameInfo, gridLayers, setGridLayers, match});
-
 			const updated = new Map(gameInfo.players);
 
 			updated.set(gameInfo.playing, {...updated.get(gameInfo.playing)!, rack: newRack});

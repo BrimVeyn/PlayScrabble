@@ -29,7 +29,8 @@ pub const Error = struct {
 };
 
 pub const getUser = UserDef.getUser;
-pub const getSoloGames = UserDef.getSoloGames;
+pub const getPendingSoloGames = UserDef.getPendingSoloGames;
+pub const getGameHistory = UserDef.getGameHistory;
 const getClaimsFromToken = JWTUtils.getClaimsFromToken;
 
 pub const LoginGoogleRequest = struct {
@@ -270,6 +271,15 @@ const MeFields = struct {
     id: i32,
     username: []const u8,
     email: []const u8,
+    average_score_per_word: f64,
+    average_score_per_game: f64,
+    turns_played: i32,
+    total_score: i32,
+    most_score_word: i32,
+    most_score_game: i32,
+    best_word: ?[]const u8,
+    longest_word: ?[]const u8,
+    games_played: i32,
 };
 
 pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
@@ -301,7 +311,10 @@ pub fn me(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         }
 
         var maybeRow = app.db.rowOpts(
-            \\SELECT id::integer, username, email
+            \\SELECT id::integer, username, email, 
+            \\average_score_per_word, average_score_per_game,
+            \\turns_played, total_score, most_score_word, most_score_game,
+            \\best_word, longest_word, games_played
             \\FROM "user"
             \\WHERE refresh = $1
         , .{refreshToken}, .{.column_names = true}) catch |e| {

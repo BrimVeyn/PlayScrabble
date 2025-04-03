@@ -43,6 +43,7 @@
 
 .onGoingRow:hover {
 	background-color: var(--foreground-color);
+	cursor: pointer;
 }
 
 .onGoingPh {

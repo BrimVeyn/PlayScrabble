@@ -15,6 +15,7 @@ import Register from './register/register.tsx'
 
 import './index.css'
 import './i18n.jsx'
+import Profile from './profile/Profile.tsx'
 
 createRoot(document.getElementById('root')!).render(
   //<StrictMode>
@@ -27,6 +28,7 @@ createRoot(document.getElementById('root')!).render(
 				<Route path="/solo/bot" element={<Bot/>} />
 				<Route path="/login" element={<Login/>} />
 				<Route path="/register" element={<Register/> } />
+				<Route path="/profile/*" element={<Profile/>} />
 				<Route path="*" element={<NotFound />} />
 			</Routes>
 		</BrowserRouter>

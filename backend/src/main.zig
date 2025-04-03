@@ -106,8 +106,18 @@ pub fn main() !u8 {
         \\
         \\CREATE TABLE "user" (
         \\  id SERIAL PRIMARY KEY,
+        \\  creation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         \\  username VARCHAR(32) UNIQUE,
         \\  email VARCHAR(255) NOT NULL UNIQUE,
+        \\  average_score_per_word FLOAT DEFAULT 0,
+        \\  average_score_per_game FLOAT DEFAULT 0,
+        \\  turns_played INT DEFAULT 0,
+        \\  total_score INT DEFAULT 0,
+        \\  most_score_word INT DEFAULT 0,
+        \\  most_score_game INT DEFAULT 0,
+        \\  best_word VARCHAR(32),
+        \\  longest_word VARCHAR(32),
+        \\  games_played INT DEFAULT 0,
         \\  password TEXT NOT NULL,
         \\  refresh TEXT
         \\);
@@ -119,7 +129,7 @@ pub fn main() !u8 {
         \\
         \\CREATE TABLE "game" (
         \\  id SERIAL PRIMARY KEY,
-        \\  creation_time TIMESTAMP NOT NULL,
+        \\  creation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         \\  difficulty VARCHAR(32),
         \\  dict VARCHAR(8),
         \\  status VARCHAR(16),
@@ -143,7 +153,8 @@ pub fn main() !u8 {
     router.get("/api/me", User.me, .{});
     router.get("/api/refresh", User.refresh, .{});
     router.get("/api/getDefinition/:word", Definition.get, .{});
-    router.get("/api/user/getSoloGames", User.getSoloGames, .{});
+    router.get("/api/user/getPendingSoloGames", User.getPendingSoloGames, .{});
+    router.get("/api/user/getGameHistory", User.getGameHistory, .{});
     //------------------------------------------------------------------
 
     //-------------------------------POST-------------------------------

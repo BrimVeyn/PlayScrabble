@@ -78,7 +78,7 @@ export type GameState = {
 	score_0: number,
 	rack_1: string,
 	score_1: number,
-	purse: string[],
+	purse: number[],
 	action: GameAction,
 	match: Match | null,
 }

@@ -33,7 +33,7 @@ function BotOngoing ({setMenuState, setGameOptions}: BotMenuProps) {
 
 	useEffect(() => {
 		if (logged) {
-			authFetch("https://scrabble.brimveyn.dev/api/user/getSoloGames", {
+			authFetch("https://scrabble.brimveyn.dev/api/user/getPendingSoloGames", {
 				method: "GET",
 			}).then((response) => {
 				if (!response.ok) throw new Error("Error getting solog games");
@@ -42,7 +42,6 @@ function BotOngoing ({setMenuState, setGameOptions}: BotMenuProps) {
 				console.log(body);
 				setGames(body);
 			})
-			//setGames(testGames);
 		}
 	}, [logged])
 
@@ -63,8 +62,8 @@ function BotOngoing ({setMenuState, setGameOptions}: BotMenuProps) {
 		<div className="glass onGoingTable">
 			<div className="onGoingHead"><b>{t("onGoingGames")}</b></div>
 			<div className="onGoingBody">
-			{ logged ? (
-				games ? (
+			{ logged && games ? (
+				!!games.length ? (
 					games.map((game, idx) => (
 						<p key={idx} className="onGoingRow" onClick={() => handleClick(idx)}>
 							<span> {t(game.difficulty)}</span>

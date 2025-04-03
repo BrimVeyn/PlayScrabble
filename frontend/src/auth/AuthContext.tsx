@@ -21,6 +21,15 @@ export type UserInfo = {
 	id: number,
 	username: string,
 	email: string,
+	average_score_per_word: number,
+	average_score_per_game: number,
+	turns_played: number,
+	total_score: number,
+	most_score_word: number,
+	most_score_game: number,
+	best_word: number,
+	longest_word: number,
+	games_played: number,
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {

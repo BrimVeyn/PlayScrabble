@@ -123,6 +123,20 @@ export function updateCursorClick(
 	});
 }
 
+export type PlayedWord = {
+	word: string,
+	score: number,
+}
+
+export type GameUpdatePayloadType = {
+	id: number,
+	status: string,
+	states: string,
+	player_one_score: number,
+	player_two_score: number,
+	last_played_word: PlayedWord | null,
+}
+
 
 export function pushGameStateUpdates(
 	gameInfo: GameInfo,
@@ -162,12 +176,17 @@ export function pushGameStateUpdates(
 		if (lastState.action === GameAction.GameEnd) status = "done";
 		if (lastState.action === GameAction.Abandoned) status = "abandoned";
 
-		const payload = {
-			id: gameInfo.gameOptions.id,
+		const last_played_word: PlayedWord | null = (lastState.action === GameAction.PlayedWord && lastState.player_id === 0) ? 
+			{ word: lastState.match!.word, score: lastState.match!.score } :
+			null;
+
+		const payload: GameUpdatePayloadType = {
+			id: gameInfo.gameOptions.id!,
 			status: status,
 			states: btoa(JSON.stringify(states)),
 			player_one_score: lastState.score_0,
 			player_two_score: lastState.score_1,
+			last_played_word: last_played_word,
 		}
 
 		console.log(JSON.stringify(payload));
@@ -196,11 +215,30 @@ export const updateGameState = (
 			rack_1: prev.players.get(1)!.rack,
 			score_0: prev.players.get(0)!.score,
 			score_1: prev.players.get(1)!.score,
-			purse: prev.purse,
+			purse: purseToNumberArray(prev.purse),
 			turnNo: prev.turnNo,
 			match: match,
 		};
 		oldStates.push(newState);
 		return {...prev, gameOptions: {...prev.gameOptions, state: oldStates}}
 	});
+}
+
+
+export const purseToNumberArray = (purse: string[]): number[] => {
+	const result = Array<number>(27).fill(0);
+	purse.forEach(letter => {
+		result[letter.charCodeAt(0) - 65] += 1;
+	});
+	return result;
+}
+
+export const numberArrayToPurse = (purse: number[]): string[] => {
+	const result = purse.reduce<string[]>((acc, number, idx) => {
+		for (let i = 0; i < number; i++) {
+			acc.push(String.fromCharCode(idx + 65));
+		}
+		return acc;
+	}, []);
+	return result;
 }

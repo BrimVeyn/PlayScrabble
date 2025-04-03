@@ -1,50 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
 import { NavigateFunction, useNavigate } from "react-router";
 import { SiApplearcade } from "react-icons/si";
 import { useAuth } from "../auth/AuthContext";
 
 import "./Navbar.css"
+import { useEffect } from "react";
 
-const languages: { [id: string] : string; } = {
-	fr: "🇫🇷",
-	en: "🇬🇧",
-};
-
-export function LanguageDropdown() {
-	const langKeys = Object.keys(languages);
-	const {i18n} = useTranslation();
-	const [selected, setSelected] = useState<string | null>(i18n.language);
-
-	const handleClick = (lang: string) => {
-		if (selected !== lang) {
-			i18n.changeLanguage(lang)
-			setSelected(lang);
-		}
-	}
-
-	return (
-		<div className="langDropContainer">
-			<div className="langDropItems">
-				{ langKeys.map((lang: string) => (
-					<div 
-						className="langDropItem"
-						key={lang}
-						onClick={() => handleClick(lang)}
-					>
-						<input 
-							type="radio" 
-							id={lang}
-							checked={lang === selected}
-						/>
-						<p> {lang.toUpperCase()} </p>
-						<p> {languages[lang]} </p>
-					</div>
-				))}
-			</div>
-		</div>
-	);
-}
 
 interface NavButtonProps {
 	text: string,
@@ -90,10 +51,9 @@ function LogoutButton({text, location, navigate}: NavButtonProps) {
 
 function Navbar() {
 	const navigate = useNavigate();
-	const { logged } = useAuth();
+	const { logged, userInfo } = useAuth();
 
 	return (
-		<>
 		<div className="navbarContainer">
 			<div className="logo">
 				<button onClick={() => navigate("/")}>
@@ -105,6 +65,7 @@ function Navbar() {
 					<>
 					<NavButton text="home" location="/" navigate={navigate}/>
 					<NavButton text="leaderboard" location="/leaderboard" navigate={navigate}/>
+					<NavButton text="Profile" location={`/profile/${userInfo!.username}`} navigate={navigate}/>
 					<LogoutButton text="logout" location="/" navigate={navigate}/>
 					</>
 				) : (
@@ -112,17 +73,8 @@ function Navbar() {
 					<NavButton text="login" location="/login" navigate={navigate}/>
 					</>
 				)}
-				{/*
-				<button
-					className="flag"
-					onClick={() => setIsOpen((prev) => !prev)}
-				>{t("flagEmoji", {ns: "misc"})}
-				</button>
-				*/}
 			</div>
 		</div>
-			{/*{ isOpen && (<LanguageDropdown/>)*/}
-		</>
 	);
 
 }

@@ -38,8 +38,7 @@ const GameType = struct {
     }
 };
 
-
-pub fn getSoloGames(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
+pub fn getPendingSoloGames(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
     if (req.cookies().get("Access-Token")) |accessToken| { 
         var token = JWTUtils.getClaimsFromToken(app, res, accessToken) catch |e| switch(e) {
             error.TokenExpired => { 
@@ -61,6 +60,55 @@ pub fn getSoloGames(app: *App, req: *httpz.Request, res: *httpz.Response) !void 
         const query = 
             \\SELECT * FROM game 
             \\WHERE (player_one_id = $1 OR player_two_id = $1);
+        ;
+
+        var queryRes = app.db.query(query, .{userId}) catch |e| {
+            log.err("/getSoloGames: PG: {!}", .{e});
+            res.status = 500;
+            res.body = "Internal server error";
+            return ;
+        };
+        defer queryRes.deinit();
+
+        var games = std.ArrayList(GameType).init(res.arena);
+        while (try queryRes.next()) |row| {
+            const game = try row.to(GameType, .{ .allocator = res.arena });
+            try games.append(game);
+        }
+
+        log.info("/getSoloGames: OK", .{});
+        res.status = 200;
+        try res.json(games.items[0..], .{});
+
+    } else {
+        log.err("/getSoloGames: Access-token not found, not logged in", .{});
+        res.status = 400;
+        res.body = "Not logged in";
+    }
+}
+
+pub fn getGameHistory(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
+    if (req.cookies().get("Access-Token")) |accessToken| { 
+        var token = JWTUtils.getClaimsFromToken(app, res, accessToken) catch |e| switch(e) {
+            error.TokenExpired => { 
+                log.info("/getSoloGames: Token expired", .{});
+                res.status = 401; 
+                res.body = "Refresh token expired";
+                return ; 
+            },
+            else => { 
+                res.status = 500; 
+                res.body = "Internal server error";
+                return ;
+            }
+        };
+        defer token.deinit();
+        const userId = token.claims.sub;
+        log.info("/getSoloGames: userId: {d}", .{token.claims.sub});
+
+        const query = 
+            \\SELECT * FROM game 
+            \\WHERE (player_one_id = $1 OR player_two_id = $1) AND status = 'done';
         ;
 
         var queryRes = app.db.query(query, .{userId}) catch |e| {
