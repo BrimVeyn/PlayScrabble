@@ -20,7 +20,7 @@ pub fn getUser(app: *App, _: *httpz.Request, res: *httpz.Response) !void {
 
 const GameType = struct {
     id: i32,
-    creation_date: i64,
+    creation_time: i64,
     difficulty: []const u8,
     dict: []const u8,
     status: []const u8,
@@ -59,7 +59,7 @@ pub fn getPendingSoloGames(app: *App, req: *httpz.Request, res: *httpz.Response)
 
         const query = 
             \\SELECT * FROM game 
-            \\WHERE (player_one_id = $1 OR player_two_id = $1);
+            \\WHERE (player_one_id = $1 OR player_two_id = $1) AND status = 'pending';
         ;
 
         var queryRes = app.db.query(query, .{userId}) catch |e| {
@@ -91,7 +91,7 @@ pub fn getGameHistory(app: *App, req: *httpz.Request, res: *httpz.Response) !voi
     if (req.cookies().get("Access-Token")) |accessToken| { 
         var token = JWTUtils.getClaimsFromToken(app, res, accessToken) catch |e| switch(e) {
             error.TokenExpired => { 
-                log.info("/getSoloGames: Token expired", .{});
+                log.info("/getGameHistory: Token expired", .{});
                 res.status = 401; 
                 res.body = "Refresh token expired";
                 return ; 
@@ -104,15 +104,15 @@ pub fn getGameHistory(app: *App, req: *httpz.Request, res: *httpz.Response) !voi
         };
         defer token.deinit();
         const userId = token.claims.sub;
-        log.info("/getSoloGames: userId: {d}", .{token.claims.sub});
+        log.info("/getGameHistory: userId: {d}", .{token.claims.sub});
 
         const query = 
             \\SELECT * FROM game 
-            \\WHERE (player_one_id = $1 OR player_two_id = $1) AND status = 'done';
+            \\WHERE (player_one_id = $1 OR player_two_id = $1) AND status IN ('done', 'abandoned');
         ;
 
         var queryRes = app.db.query(query, .{userId}) catch |e| {
-            log.err("/getSoloGames: PG: {!}", .{e});
+            log.err("/getGameHistory: PG: {!}", .{e});
             res.status = 500;
             res.body = "Internal server error";
             return ;
@@ -125,12 +125,12 @@ pub fn getGameHistory(app: *App, req: *httpz.Request, res: *httpz.Response) !voi
             try games.append(game);
         }
 
-        log.info("/getSoloGames: OK", .{});
+        log.info("/getGameHistory: OK", .{});
         res.status = 200;
         try res.json(games.items[0..], .{});
 
     } else {
-        log.err("/getSoloGames: Access-token not found, not logged in", .{});
+        log.err("/getGameHistory: Access-token not found, not logged in", .{});
         res.status = 400;
         res.body = "Not logged in";
     }

@@ -17,6 +17,7 @@
 }
 
 .glass.menuItem:hover {
+	scale: 110%;
 	background: var(--foreground-color);
 	color: var(--app-black);
 	cursor: pointer;

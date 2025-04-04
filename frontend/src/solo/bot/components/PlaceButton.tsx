@@ -5,8 +5,9 @@ import { Modal, ModalTitle, ModalText, ModalButton, ModalFooter } from "../../..
 import { useState } from "react";
 
 import "../styles/PlaceButton.css"
+import { Button } from "../../../lib/Buttons";
 
-function getLettersPoses(grid: Array<Array<Tile>>) {
+function getLettersPoses(grid: Array<Array<Tile>>): Array<[number, number]> {
 	let ret: Array<[number, number]> = [];
 	for (let i = 0; i < grid.length; i++) {
 		for (let j = 0; j < grid[i].length; j++) {
@@ -256,7 +257,8 @@ function PlaceButton() {
 		if (gameInfo.playing !== 0)
 			return ;
 
-		if (getLettersPoses(gridLayers.pendingGrid).length === 0) {
+		const poses = getLettersPoses(gridLayers.pendingGrid);
+		if (poses.length === 0) {
 			console.log("You haven't placed any letter");
 			return ;
 		}
@@ -266,39 +268,37 @@ function PlaceButton() {
 			return ;
 
 		const ok = await validateWords(gridLayers, data);
-		if (ok.err.length == 0) {
+		if (ok.err.length !== 0) {
+			console.debug("solver/getScore:", ok.err);
+		}
+
+		//setTimeout(() => {
 			data.match.score = ok.score;
 			placeWord({gameInfo, gridLayers, setGridLayers, match: data.match});
 			setGridLayers((prev) => ({...prev, pendingGrid: emptyGrid}));
 			const [newRack, newPurse] = refillRack({key: 0, gameInfo, players: gameInfo.players});
-
 			setGameInfo((prev) => ({
 				...prev,
 				purse: newPurse,
 				turnNo: prev.turnNo + 1,
 				playing: 1,
 				players: new Map(prev.players)
-					.set(0, {rack: newRack, score: prev.players.get(0)!.score + data.match.score})
+				.set(0, {rack: newRack, score: prev.players.get(0)!.score + data.match.score})
 			}));
 			setTurnChange({action: GameAction.PlayedWord, match: data.match});
-		} else {
-			console.debug("solver/getScore:", ok.err);
-		}
+		//}, 1000);
 	}
 
 	return (
 		<>
-		<button 
-			className="glass actionButton"
-			id ="placeButton"
+		<Button
+			text={t("placeButtonText")}
 			onClick={() => {
 				//NOTE: Disable the button when its not your turn
 				if (gameInfo.playing === 1) return ;
 				setModal(true)
 			}}
-		>
-			{t("placeButtonText")}
-		</button>
+		/>
 		{ modal && (
 			<Modal>
 					<ModalTitle text={t("placeModalConfirmTitle")}/>

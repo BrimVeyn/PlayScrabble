@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useAuth } from "../../auth/AuthContext"
-import { GameState, GameInfo } from "./components/GridContext.types"
+import { GameState } from "./components/GridContext.types"
 
 import { Menu } from "../../lib/Menu"
 import Navbar from "../../navbar/Navbar"
@@ -8,27 +8,63 @@ import Game from "./Game"
 
 import { useTranslation } from "react-i18next"
 import { authFetch } from "../../auth/authFetch"
+import dayjs from "dayjs"
 
 import "./Bot.css"
+import { MdDeleteForever } from "react-icons/md"
+import Modal, { ModalButton, ModalFooter, ModalText, ModalTitle } from "../../lib/Modal"
+import { GameUpdatePayloadType, GameFetchType } from "./components/GridContext.types"
+import { IoMdPlay } from "react-icons/io"
 
+interface AbandonModalProps {
+	game: GameFetchType,
+	setModal: React.Dispatch<React.SetStateAction<{active: boolean, game: GameFetchType | null}>>,
+}
 
-type GetSoloGamesType = {
-	id: number,
-	creation_time: number,
-	dict: string,
-	difficulty: string,
-	status: string,
-	states: string,
-	player_one_id: number,
-	player_two_id: number | null,
-	player_one_score: number,
-	player_two_score: number,
+function AbandonModal({game, setModal}: AbandonModalProps) {
+	console.log("GameId:", game);
+
+	const handleDelete = () => {
+		const payload: GameUpdatePayloadType = {
+			id: game.id,
+			status: "abandoned",
+			states: btoa(JSON.stringify(game.states)),
+			player_one_score: game.player_one_score,
+			player_two_score: game.player_two_score,
+			last_played_word: null,
+		}
+
+		console.log(JSON.stringify(payload));
+		authFetch(`https://scrabble.brimveyn.dev/api/game/solo/updateGame/${game.id}`, {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json' },
+			body: JSON.stringify(payload),
+		}).then(response => {
+			if (!response.ok) throw new Error("/updateGame failed");
+			window.location.reload();
+		}).catch(e => console.log(e));
+	}
+
+	return (
+		<Modal>
+			<ModalTitle text={"Abandon"}/>
+			<ModalText text={"Voulez-vous abandonner cette partie ?"}/>
+			<ModalFooter>
+				<ModalButton text={"Non"} style={"modalButtonDeny"} callback={() => setModal({active: false, game: null})}/>
+				<ModalButton text={"Oui"} style={"modalButtonAccept"} callback={handleDelete}/>
+			</ModalFooter>
+		</Modal>
+	)
 }
 
 
 function BotOngoing ({setMenuState, setGameOptions}: BotMenuProps) {
 	const { logged } = useAuth();
-	const [games, setGames] = useState<GetSoloGamesType[] | null>(null);
+	const [games, setGames] = useState<GameFetchType[] | null>(null);
+	const [modal, setModal] = useState<{active: boolean, game: GameFetchType | null}>({
+		active: false,
+		game: null,
+	});
 	const { t } = useTranslation("bot");
 
 	useEffect(() => {
@@ -39,8 +75,9 @@ function BotOngoing ({setMenuState, setGameOptions}: BotMenuProps) {
 				if (!response.ok) throw new Error("Error getting solog games");
 				return response.json();
 			}).then(body => {
-				console.log(body);
-				setGames(body);
+				const games = body as GameFetchType[];
+				games.sort((a, b) => b.creation_time - a.creation_time);
+				setGames(games);
 			})
 		}
 	}, [logged])
@@ -59,24 +96,37 @@ function BotOngoing ({setMenuState, setGameOptions}: BotMenuProps) {
 
 
 	return (
+		<>
+		{ modal.active && <AbandonModal game={modal.game!} setModal={setModal}/> }
 		<div className="glass onGoingTable">
 			<div className="onGoingHead"><b>{t("onGoingGames")}</b></div>
 			<div className="onGoingBody">
 			{ logged && games ? (
 				!!games.length ? (
 					games.map((game, idx) => (
-						<p key={idx} className="onGoingRow" onClick={() => handleClick(idx)}>
+						<div key={idx} className="onGoingRow">
 							<span> {t(game.difficulty)}</span>
 							<span> {game.dict}</span>
-							<span> {game.player_one_score} </span> -
-							<span> {game.player_two_score} </span>
-						</p>
+							<span> {game.player_one_score} - {game.player_two_score} </span>
+							<span> {dayjs.unix(Math.trunc(game.creation_time / 1_000_000)).format("DD/MM HH:mm")} </span>
+							<p id="onGoingDeleteOuter">
+								<span id="onGoingDelete" onClick={() => setModal({active: true, game: games[idx]})}> 
+									<MdDeleteForever/>
+								</span>
+							</p>
+							<p id="onGoingPlayOuter">
+								<span id="onGoingPlay" onClick={() => handleClick(idx)}>
+									<IoMdPlay/>
+								</span>
+							</p>
+						</div>
 					))
 				) : ( <p className="onGoingPh">{t("noOnGoingPlaceHoler")}</p> )
 				) : ( <p className="onGoingPh">{t("unloggedPlaceHolder")}</p> )
 			}
 			</div>
 		</div>
+		</>
 	)
 }
 

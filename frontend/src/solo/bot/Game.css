@@ -49,7 +49,7 @@
 
 .actionOuterContainer {
 	display: flex;
-	justify-content: space-around;
+	justify-content: space-between;
 }
 
 .actionButton {
@@ -62,10 +62,6 @@
 	cursor: pointer;
 	background-color: var(--foreground-color);
 	color: var(--app-black);
-}
-
-.glass#placeButton:hover {
-	background-color: var(--rt-color-success);
 }
 
 .scoreContainer {

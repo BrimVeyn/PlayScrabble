@@ -164,9 +164,8 @@ abstract class Draggable extends Component<DraggableProps, DraggableState> {
 		if (!this.props.row)
 			throw new Error("row undefined");
 
-		const pointedLetter = this.context!.gridLayers.pendingGrid[this.props.row!][this.props.col];
-		const retreive = (pointedLetter.joker) ? "?" : pointedLetter.value;
-		updatePlayers(this.context!.setGameInfo, ".", retreive);
+		const retrieve = this.props.char;
+		updatePlayers(this.context!.setGameInfo, ".", retrieve);
 		this.context!.setGridLayers((prev) => {
 			const newPending = prev.pendingGrid.map((row, rowI) => row.map((col, colI) => {
 				if (rowI === this.props.row! && colI === this.props.col) return {value: ".", joker: false};
@@ -206,8 +205,8 @@ abstract class Draggable extends Component<DraggableProps, DraggableState> {
 		this.context!.setGridLayers((prev) => ({...prev, ghostGrid: emptyGrid}));
 
 		if (!pendingEmpty) {
-			const retreive = this.context!.gridLayers.pendingGrid[row][col].joker ? "?" : this.context!.gridLayers.pendingGrid[row][col].value;
-			updatePlayersIdx(this.context!.setGameInfo, this.props.col, retreive);
+			const retrieve = this.context!.gridLayers.pendingGrid[row][col].joker ? "?" : this.context!.gridLayers.pendingGrid[row][col].value;
+			updatePlayersIdx(this.context!.setGameInfo, this.props.col, retrieve);
 			updateTile(this.context!.gridLayers.pendingGrid, pos, this.context!.setGridLayers, this.props.char, false);
 		} else if (gridEmpty) {
 			updateTile(this.context!.gridLayers.pendingGrid, pos, this.context!.setGridLayers, this.props.char, false);

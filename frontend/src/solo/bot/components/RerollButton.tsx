@@ -5,6 +5,7 @@ import {Modal, ModalText, ModalTitle, ModalFooter, ModalButton} from "../../../l
 import { returnLetters } from "./LetterReturnButton.tsx";
 import "../styles/RerollButton.css"
 import { GameAction, letterScores } from "./GridContext.types.ts";
+import { Button } from "../../../lib/Buttons.tsx";
 
 interface VirtualRack {
 	rack: string,
@@ -68,12 +69,10 @@ function RerollButton() {
 
 	return (
 		<>
-		<button 
-			className="glass actionButton"
+		<Button
+			text={t("rerollButtonText")}
 			onClick={handleRerollClick}
-		>
-			{t("rerollButtonText")}
-		</button>
+		/>
 		{ modal && (
 			<Modal>
 				<ModalTitle text={t("rerollModalConfirmTitle")}/>

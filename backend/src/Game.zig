@@ -14,28 +14,27 @@ const log           = std.log;
 
 pub const Game = @This();
 
-const CreateGameStruct = struct {
-	creation_time: i64,
-        dict: []const u8,
-        difficulty: []const u8,
-	status: []const u8,
-	states: []const u8,
-	player_one_id: i32,
-	player_two_id: ?i32,
-	player_one_score: i32,
-	player_two_score: i32,
+const CreateGameSchema = struct {
+    dict: []const u8,
+    difficulty: []const u8,
+    status: []const u8,
+    states: []const u8,
+    player_one_id: i32,
+    player_two_id: ?i32,
+    player_one_score: i32,
+    player_two_score: i32,
 };
 
 pub fn createGame(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
-    if (req.json(CreateGameStruct)) |reqBody| {
+    if (req.json(CreateGameSchema)) |reqBody| {
         // Prepare SQL query with placeholders
-        const query = \\INSERT INTO "game" (creation_time, dict, difficulty, status, states, player_one_id, player_two_id, player_one_score, player_two_score)
-                      \\VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+        const query = \\INSERT INTO "game" (dict, difficulty, status, states, player_one_id, player_two_id, player_one_score, player_two_score)
+                      \\VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                      \\RETURNING ID;
         ;
 
         // Execute query with the appropriate data from reqBody
-        _ = app.db.exec(query, .{
-            reqBody.?.creation_time,
+        var maybeRow = app.db.rowOpts(query, .{
             reqBody.?.dict,
             reqBody.?.difficulty,
             reqBody.?.status,
@@ -44,7 +43,7 @@ pub fn createGame(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
             reqBody.?.player_two_id,
             reqBody.?.player_one_score,
             reqBody.?.player_two_score
-        }) catch |e| {
+        }, .{.column_names = true}) catch |e| {
             log.err("/createGame: PG: {!}", .{e});
             res.status = 500;
             res.body = "Internal server error";
@@ -52,16 +51,6 @@ pub fn createGame(app: *App, req: *httpz.Request, res: *httpz.Response) !void {
         };
 
         //Retrieve the game that was created and send the gameId back to the client for further updates
-        var maybeRow = app.db.rowOpts(
-            \\SELECT id::integer
-            \\FROM "game"
-            \\WHERE creation_time = $1
-        , .{reqBody.?.creation_time}, .{.column_names = true}) catch |e| {
-            log.err("/createGame: PG: {!}", .{e});
-            res.status = 500;
-            res.body = "Internal server error";
-            return ;
-        };
         if (maybeRow) |*row| {
             defer row.deinit() catch {};
             const gameId = row.getCol(i32, "id");

@@ -22,6 +22,8 @@
 	"passModalConfirmText": "Voulez-vous vraiment passer ?",
 	"rerollModalConfirmTitle": "Changer de lettres",
 	"rerollModalConfirmText": "Choisissez les lettres que vous voulez changer",
+	"abandonModalConfirmTitle": "Abandonner",
+	"abandonModalConfirmText": "Voulez-vous vraiment abandonner ?",
 	"yes": "Oui",
 	"no": "Non"
 }

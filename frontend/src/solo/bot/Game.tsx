@@ -10,7 +10,7 @@ import PassButton from "./components/PassButton.tsx";
 import RerollButton from "./components/RerollButton.tsx";
 import Purse from "./components/Purse.tsx";
 import ShuffleButton from "./components/ShuffleButton";
-import Score from "./components/Score.tsx";
+import AbandonButton from "./components/AbandonButton.tsx";
 import LetterReturnButton from "./components/LetterReturnButton.tsx";
 import Modal, { ModalFooter, ModalTitle } from "../../lib/Modal.tsx";
 import { BiHappyBeaming } from "react-icons/bi";
@@ -61,21 +61,19 @@ function Game({gameOptions}: GameProps) {
 		>
 			<EndOfGameModal />
 			<div className="contextContainer">
-				<div className="actionOuterContainer">
-					<div className="scoreContainer">
-						<Score/>
-					</div>
-					<RerollButton/>
-					<PassButton/>
-					<PlaceButton/>
-					<Purse/>
-				</div>
 				<div className="rackOuterContainer">
 					<Rack/>
 					<LetterReturnButton/>
 					<ShuffleButton/>
 				</div>
 				<Grid/>
+				<div className="actionOuterContainer">
+					<RerollButton/>
+					<PassButton/>
+					<PlaceButton/>
+					<AbandonButton/>
+					<Purse/>
+				</div>
 			</div>
 			<div className="resultContainer">
 				<Results/>

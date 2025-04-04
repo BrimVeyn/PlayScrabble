@@ -83,8 +83,7 @@ export type GameState = {
 	match: Match | null,
 }
 
-export type GameBackendType = {
-	creation_time: number,
+export type GameCreateType = {
 	dict: string,
 	difficulty: string,
 	status: string,
@@ -93,4 +92,23 @@ export type GameBackendType = {
 	player_two_id: number | null,
 	player_one_score: number,
 	player_two_score: number,
+}
+
+export type GameFetchType = GameCreateType & {
+	creation_time: number,
+	id: number,
+}
+
+export type PlayedWord = {
+	word: string,
+	score: number,
+}
+
+export type GameUpdatePayloadType = {
+	id: number,
+	status: string,
+	states: string,
+	player_one_score: number,
+	player_two_score: number,
+	last_played_word: PlayedWord | null,
 }

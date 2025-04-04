@@ -37,18 +37,44 @@
 }
 
 .onGoingRow {
-	transition: all .125 ease;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr) .5fr .5fr;
+	align-items: center;
+	transition: all .3s ease;
 	padding: 10px;
+	margin: 3px;
+	border-radius: 10px;
 }
 
 .onGoingRow:hover {
-	background-color: var(--foreground-color);
+	background-color: rgba(var(--rt-color-white-rgb), .8);
 	cursor: pointer;
 }
 
 .onGoingPh {
 	padding: 10px;
 }
+
+#onGoingDeleteOuter, #onGoingPlayOuter {
+	display: flex;
+	justify-content: center;
+}
+
+#onGoingDelete, #onGoingPlay {
+	padding: 5px;
+	border: 2px solid black;
+	border-radius: 50%;
+	transition: all .125s ease;
+}
+
+#onGoingDelete:hover, #onGoingPlay:hover {
+	scale: 120%;
+	cursor: pointer;
+	background-color: rgba(var(--app-black-rgb), .8);
+	color: var(--rt-color-accept);
+	border-color: var(--rt-color-accept);
+}
+
 
 .newGameItem {
 	display: flex;

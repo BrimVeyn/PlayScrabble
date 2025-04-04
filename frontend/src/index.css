@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 
 :root {
 	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -7,13 +9,11 @@
 
 	color-scheme: light dark;
 	color: rgba(255, 255, 255, 0.87);
-	/*background-color: #2f4858; */
 
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-
 
 	--color-navbar-background: #485a73;
 	--grid-tile-border: 1px solid #e8ddc0;
@@ -23,7 +23,9 @@
 	--result-violet: rgba(236, 152, 70, .5);
 	--grid-border-color: #e8ddc0;
 	--tile-full-bg: #c4bd97;
+
 	--app-black: #070837;
+	--app-black-rgb: 7, 8, 55;
 	--app-grey: #A0A0A0;
 
 	--secondary: rgb(209, 125, 154);
@@ -42,10 +44,16 @@
     --rt-color-white-rgb: 254, 254, 254;
 
     --background-color: #92abd9;
-    --background-color-rgb: 146, 171, 217;
+	--background-color-rgb: 146, 171, 217;
 
-    --foreground-color: #5a78b0;
-    --foreground-color-rgb: 90, 120, 176;
+	--foreground-color: #5a78b0;
+	--foreground-color-rgb: 90, 120, 176;
+
+    --rt-primary: #92abd9;
+    --rt-primary-rgb: 146, 171, 217;
+
+    --rt-secondary: #5a78b0;
+    --rt-secondary-rgb: 90, 120, 176;
 
 	--tile-background: rgb(238 230 188);
 	--tile-border: rgb(130 115 31);
@@ -69,6 +77,13 @@
 	.text-accept { color: var(--rt-color-accept); }
 	.text-deny { color: var(--rt-color-deny); }
 	.bold { font-weight: bold; }
+
+	.font-noto {
+	  font-family: "Noto Sans", sans-serif;
+	  font-optical-sizing: auto;
+	  font-weight: normal;
+	  font-style: normal;
+	}
 }
 
 

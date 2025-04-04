@@ -22,6 +22,11 @@
 	"passModalConfirmText": "Do you really want to pass ?",
 	"rerollModalConfirmTitle": "Reroll",
 	"rerollModalConfirmText": "Pick letters you want to change",
+	"abandonModalConfirmTitle": "Abandon",
+	"abandonModalConfirmText": "Do you really want to abandon ?",
 	"yes": "Yes",
-	"no": "No"
+	"no": "No",
+	"abandoned": "abandoned",
+	"win": "win",
+	"lose": "defaite"
 }

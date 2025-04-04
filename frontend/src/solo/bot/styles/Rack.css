@@ -9,10 +9,12 @@
 
 #rack-shuffle {
 	grid-column: -2;
+	margin: 2px;
 }
 
 #rack-return {
 	grid-column: -3;
+	margin: 2px;
 }
 
 .s-grid-tile.full.greyTile {

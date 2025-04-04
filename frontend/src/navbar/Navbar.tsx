@@ -2,9 +2,9 @@ import { useTranslation } from "react-i18next";
 import { NavigateFunction, useNavigate } from "react-router";
 import { SiApplearcade } from "react-icons/si";
 import { useAuth } from "../auth/AuthContext";
+import { useState } from "react";
 
 import "./Navbar.css"
-import { useEffect } from "react";
 
 
 interface NavButtonProps {
@@ -52,31 +52,38 @@ function LogoutButton({text, location, navigate}: NavButtonProps) {
 function Navbar() {
 	const navigate = useNavigate();
 	const { logged, userInfo } = useAuth();
+	const [menuOpen, setMenuOpen] = useState(false);
 
 	return (
 		<div className="navbarContainer">
 			<div className="logo">
 				<button onClick={() => navigate("/")}>
-				<SiApplearcade />
+					<SiApplearcade />
 				</button>
 			</div>
-			<div className="links">
+
+			<div className="burger" onClick={() => setMenuOpen(!menuOpen)}>
+				<span className={menuOpen ? "open" : ""}></span>
+				<span className={menuOpen ? "open" : ""}></span>
+				<span className={menuOpen ? "open" : ""}></span>
+			</div>
+
+			<div className={`links ${menuOpen ? "active" : ""}`}>
 				{logged ? (
 					<>
-					<NavButton text="home" location="/" navigate={navigate}/>
-					<NavButton text="leaderboard" location="/leaderboard" navigate={navigate}/>
-					<NavButton text="Profile" location={`/profile/${userInfo!.username}`} navigate={navigate}/>
-					<LogoutButton text="logout" location="/" navigate={navigate}/>
+						<NavButton text="home" location="/" navigate={navigate} />
+						<NavButton text="leaderboard" location="/leaderboard" navigate={navigate} />
+						<NavButton text="Profile" location={`/profile/${userInfo!.username}`} navigate={navigate} />
+						<LogoutButton text="logout" location="/" navigate={navigate} />
 					</>
 				) : (
 					<>
-					<NavButton text="login" location="/login" navigate={navigate}/>
+						<NavButton text="login" location="/login" navigate={navigate} />
 					</>
 				)}
 			</div>
 		</div>
 	);
-
 }
 
 export default Navbar;

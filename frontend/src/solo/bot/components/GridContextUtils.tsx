@@ -1,8 +1,12 @@
 import React from "react";
-import { GameBackendType, Direction, GameAction, Match, GameState, GameInfo, GridLayers, Cursor, Tile } from "./GridContext.types";
 import { authFetch } from "../../../auth/authFetch";
 import { UserInfo } from "../../../auth/AuthContext";
 import dayjs from "dayjs";
+import {
+	GameCreateType, GameUpdatePayloadType, PlayedWord,
+	Direction, GameAction, Match, GameState, GameInfo, 
+	GridLayers, Cursor, Tile
+} from "./GridContext.types";
 
 export function randInt(max: number) {
 	return Math.floor(Math.random() * max);
@@ -123,20 +127,6 @@ export function updateCursorClick(
 	});
 }
 
-export type PlayedWord = {
-	word: string,
-	score: number,
-}
-
-export type GameUpdatePayloadType = {
-	id: number,
-	status: string,
-	states: string,
-	player_one_score: number,
-	player_two_score: number,
-	last_played_word: PlayedWord | null,
-}
-
 
 export function pushGameStateUpdates(
 	gameInfo: GameInfo,
@@ -149,8 +139,7 @@ export function pushGameStateUpdates(
 	const lastState = states[states.length - 1];
 
 	if (lastState.action === GameAction.GameStart) {
-		const payload: GameBackendType = {
-			creation_time: dayjs().unix(),
+		const payload: GameCreateType = {
 			dict: gameInfo.gameOptions.dict,
 			difficulty: gameInfo.gameOptions.difficulty,
 			status: "pending",

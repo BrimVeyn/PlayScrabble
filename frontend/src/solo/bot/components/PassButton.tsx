@@ -3,6 +3,7 @@ import { useGrid } from "./GridContext";
 import { Modal, ModalButton, ModalFooter, ModalText, ModalTitle } from "../../../lib/Modal";
 import { useState } from "react";
 import { GameAction } from "./GridContext.types";
+import { Button } from "../../../lib/Buttons";
 
 function PassButton() {
 	const {t} = useTranslation("bot");
@@ -23,12 +24,10 @@ function PassButton() {
 
 	return (
 		<>
-		<button 
-			className="glass actionButton"
+		<Button
+			text={t("passButtonText")}
 			onClick={() => setModal(true)}
-		>
-			{t("passButtonText")}
-		</button>
+		/>
 		{ modal && (
 			<Modal>
 				<ModalTitle text={t("passModalConfirmTitle")}/>

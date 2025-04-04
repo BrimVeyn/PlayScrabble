@@ -40,3 +40,71 @@
 		width: 95%;
 	}
 }
+
+.profileHistoryContainer {
+	max-height: 500px;
+	overflow-y: auto;
+}
+
+.profileHistoryRow {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr) 0.5fr;
+	align-items: center;
+	padding-block: 10px;
+	padding-inline: 5px;
+}
+
+#watchButtonOuter {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#watchButton {
+	border: 2px solid black;
+	border-radius: 50%;
+	padding: 3px;
+}
+
+.profileHistoryRow {
+	margin: 3px;
+}
+
+.profileHistoryRow > span {
+	display: flex;
+	justify-content: center;
+}
+
+.profileHistoryRow > span[data-result] {
+	border: 2px solid black;
+	border-radius: 10px;
+	width: fit-content;
+	padding-inline: 10%;
+	transition: all 1s ease;
+}
+
+.profileHistoryRow:hover {
+	background-color: rgba(var(--rt-color-white-rgb), .5);
+	border-radius: 10px;
+	cursor: pointer;
+}
+
+.profileHistoryRow > span[data-result="abandoned"] {
+	background-color: orange;
+}
+
+.profileHistoryRow > span[data-result="win"] {
+	background-color: lime;
+
+}
+
+.profileHistoryRow > span[data-result="lose"] {
+	background-color: lightsalmon;
+}
+
+
+@media(max-width: 768px) {
+	.profileHistoryRow {
+		font-size: 10px;
+	}
+}

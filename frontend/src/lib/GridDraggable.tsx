@@ -5,13 +5,15 @@ import "./GridDraggable.css"
 class GridDraggable extends Draggable {
 
 	onDragMove(_e: TouchEvent | MouseEvent): void {}
-	onDragStart(_e: TouchEvent | MouseEvent): void {}
+	onDragStart(_e: TouchEvent | MouseEvent): void {
+		const grid = document.querySelector('.s-grid') as HTMLElement;
+		grid.style.zIndex = "10";
+	}
 
 	onDragEnd(e: TouchEvent | MouseEvent): void {
 		const gridCell: [number, number] | null = this.getGridCollidingCell(e);
 		if (gridCell !== null)
 			return this.gridToGrid(gridCell);
-
 		this.gridToRack();
 	}
 
@@ -20,7 +22,7 @@ class GridDraggable extends Draggable {
 		return (
 			<>
 				{this.state.isDragging &&  
-					<div id={this.props.id} className="s-grid-cell undraggable"/>
+					<div className="s-grid-cell undraggable"/>
 				}
 				<div 
 					className={`gridDraggableContainer ${draggedClass}`}

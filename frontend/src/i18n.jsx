@@ -9,6 +9,7 @@ import landingEn from "./locales/en/landing.json"
 import loginEn from "./locales/en/login.json"
 import botEn from "./locales/en/bot.json"
 import registerEn from "./locales/en/register.json"
+import profileEn from "./locales/en/profile.json"
 
 import navbarFr from "./locales/fr/navbar.json"
 import solverFr from "./locales/fr/solver.json"
@@ -17,6 +18,7 @@ import landingFr from "./locales/fr/landing.json"
 import loginFr from "./locales/fr/login.json"
 import botFr from "./locales/fr/bot.json"
 import registerFr from "./locales/fr/register.json"
+import profileFr from "./locales/fr/profile.json"
 
 i18n
 	.use(initReactI18next) 
@@ -30,7 +32,8 @@ i18n
 				landing: landingEn,
 				login: loginEn,
 				bot: botEn,
-				register: registerEn
+				register: registerEn,
+				profile: profileEn,
 			},
 			fr: {
 				navbar: navbarFr,
@@ -39,7 +42,8 @@ i18n
 				landing: landingFr,
 				login: loginFr,
 				bot: botFr,
-				register: registerFr
+				register: registerFr,
+				profile: profileFr,
 			},
 		},
 		detection: {

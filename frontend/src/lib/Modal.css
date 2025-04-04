@@ -22,6 +22,7 @@
 }
 
 .modalInnerContent {
+	color: var(--white-smoke);
 	width: 400px;
 	max-height: max-content;
 	flex-direction: column;

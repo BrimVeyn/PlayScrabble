@@ -4,6 +4,7 @@ import { Tooltip } from "react-tooltip";
 import { useGrid } from "./GridContext";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../../../lib/Buttons";
 
 const alphabet = "ABCDEFGHIJKLMONPQRSTUVWXYZ[";
 
@@ -29,23 +30,21 @@ function Purse() {
 
 	return (
 		<>
-			<button 
-				className="glass purseButton"
-				data-tooltip-id="purseTooltip"
-			>
+			<Button size="sm">
+				<p style={{ 
+					height: "100%", width: "100%",
+					position: "absolute", top: "0", left: "0"
+				}} data-tooltip-id="purseTooltip"> </p>
 				<TbMoneybag/>
-			</button>
+			</Button>
 			<Tooltip id="purseTooltip" className="purseTooltip">
 				{content.length ? (
-
-				<div className="purseTooltipContent">
-					{content.map((o, idx) => (
-						<p key={idx} className="purseItem">
-							<span className="purseKey">{o.key}</span>
-							:
-							<span className="purseValue">{o.value}</span>
-						</p>
-					))}
+					<div className="purseTooltipContent">
+						{content.map((o, idx) => (
+							<p key={idx} className="purseItem">
+								<span className="purseKey">{o.key}</span> : <span className="purseValue">{o.value}</span>
+							</p>
+						))}
 					</div>
 				) : <span>{t("pursePlaceholder")}</span>}
 			</Tooltip>
