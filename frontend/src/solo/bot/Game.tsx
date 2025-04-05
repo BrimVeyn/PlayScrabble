@@ -12,6 +12,7 @@ import Purse from "./components/Purse.tsx";
 import ShuffleButton from "./components/ShuffleButton";
 import AbandonButton from "./components/AbandonButton.tsx";
 import LetterReturnButton from "./components/LetterReturnButton.tsx";
+import Score from "./components/Score";
 import Modal, { ModalFooter, ModalTitle } from "../../lib/Modal.tsx";
 import { BiHappyBeaming } from "react-icons/bi";
 import { useNavigate } from "react-router";
@@ -61,6 +62,7 @@ function Game({gameOptions}: GameProps) {
 		>
 			<EndOfGameModal />
 			<div className="contextContainer">
+				<Score/>
 				<div className="rackOuterContainer">
 					<Rack/>
 					<LetterReturnButton/>

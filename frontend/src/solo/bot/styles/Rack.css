@@ -25,8 +25,9 @@
 	width: 100%;
 }
 
-.rackContainer .s-grid-tile {
-	font-size: min(2.5vw, 45px);
+.gamePage .rackContainer .s-grid-tile {
+	font-size: min(3.5vw, 35px);
+	background-color: var(--pending-color);
 }
 
 .s-grid-cell.undragable {

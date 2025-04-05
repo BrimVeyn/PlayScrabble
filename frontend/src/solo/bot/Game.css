@@ -84,6 +84,7 @@
 		flex-direction: row;
 		flex-wrap: wrap;
 		padding-inline: 0px;
+		gap: 1rem;
 	}
 
 	.contextContainer {
@@ -96,6 +97,18 @@
 
 	.rackOuterContainer {
 		padding: 1rem;
+	}
+	
+	.actionOuterContainer {
+		padding-inline: 1rem;
+		padding-block: 1rem;
+		display: flex;
+		justify-content: center;
+		max-width: 100%;
+	}
+
+	.actionOuterContainer > button {
+		scale: .9;
 	}
 
 	.gamePage .resultContainer {

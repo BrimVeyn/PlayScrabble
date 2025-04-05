@@ -26,7 +26,6 @@
 	"abandonModalConfirmText": "Do you really want to abandon ?",
 	"yes": "Yes",
 	"no": "No",
-	"abandoned": "abandoned",
-	"win": "win",
-	"lose": "defaite"
+	"you": "You",
+	"computer": "computer"
 }

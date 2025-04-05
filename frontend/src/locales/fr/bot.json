@@ -25,5 +25,7 @@
 	"abandonModalConfirmTitle": "Abandonner",
 	"abandonModalConfirmText": "Voulez-vous vraiment abandonner ?",
 	"yes": "Oui",
-	"no": "Non"
+	"no": "Non",
+	"you": "Vous",
+	"computer": "Ordinateur"
 }

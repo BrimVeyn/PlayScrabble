@@ -1,0 +1,19 @@
+.scoreContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	font-size: 0.9rem;
+	height: 2rem;
+	padding: 0 1rem;
+}
+
+.scoreText {
+	white-space: nowrap;
+	color: #333;
+	font-weight: 500;
+}
+
+.scoreDivider {
+	color: #333;
+}

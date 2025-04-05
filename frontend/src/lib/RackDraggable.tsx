@@ -4,11 +4,19 @@ import "./RackDraggable.css"
 
 class RackDraggable extends Draggable {
 
-	onDragMove(_e: TouchEvent | MouseEvent): void {}
+	onDragMove(e: TouchEvent | MouseEvent): void {
+		const gridRect = Draggable.getRect('.s-grid');
+		const draggedElement = document.querySelector('#' + this.props.id) as HTMLElement;
+		if (Draggable.collides(this.getPointer(e), gridRect)) {
+			draggedElement.style.opacity = ".6";
+		} else {
+			draggedElement.style.opacity = "1";
+		}
+	}
 	onDragStart(_e: TouchEvent | MouseEvent): void {
 		console.log("id:", this.props.id);
 		const draggedElement = document.querySelector('#' + this.props.id) as HTMLElement;
-		draggedElement.style.zIndex = "12";
+		draggedElement.style.zIndex = "12"
 	}
 
 	onDragEnd(e: TouchEvent | MouseEvent): void {
@@ -17,6 +25,7 @@ class RackDraggable extends Draggable {
 
 		const draggedElement = document.querySelector('#' + this.props.id) as HTMLElement;
 		draggedElement.style.zIndex = "1";
+		draggedElement.style.opacity = "1";
 
 		const gridCell: [number, number] | null = this.getGridCollidingCell(e);
 		if (gridCell !== null)
