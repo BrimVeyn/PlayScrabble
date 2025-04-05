@@ -299,19 +299,17 @@ function PlaceButton() {
 				setModal(true)
 			}}
 		/>
-		{ modal && (
-			<Modal>
-					<ModalTitle text={t("placeModalConfirmTitle")}/>
-					<ModalText text={t("placeModalConfirmText")}/>
-					<ModalFooter>
-						<ModalButton text={t("no")} style={"modalButtonDeny"} callback={() => setModal(false)}/>
-						<ModalButton text={t("yes")} style={"modalButtonAccept"} callback={() => {
-							handlePlace();
-							setModal(false);
-						}}/>
-					</ModalFooter>
-			</Modal>
-		)}
+		<Modal visible={modal}>
+				<ModalTitle text={t("placeModalConfirmTitle")}/>
+				<ModalText text={t("placeModalConfirmText")}/>
+				<ModalFooter>
+					<ModalButton text={t("no")} style={"modalButtonDeny"} callback={() => setModal(false)}/>
+					<ModalButton text={t("yes")} style={"modalButtonAccept"} callback={() => {
+						handlePlace();
+						setModal(false);
+					}}/>
+				</ModalFooter>
+		</Modal>
 		</>
 	);
 }

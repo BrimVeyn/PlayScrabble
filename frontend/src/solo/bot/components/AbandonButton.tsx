@@ -39,17 +39,15 @@ function AbandonButton () {
 			text="Abandon"
 			onClick={() => setModal(true)}
 		/>
-		{ modal && (
-			<Modal>
-				<ModalTitle text={t("abandonModalConfirmTitle")}/>
-				<ModalText text={t("abandonModalConfirmText")}/>
-				<ModalFooter>
-					<ModalButton text={t("no")} style={"modalButtonDeny"} callback={() => setModal(false)}/>
-					<ModalButton text={t("yes")} style={"modalButtonAccept"} callback={() =>  handleAbandon()}/>
-				</ModalFooter>
+		<Modal visible={modal}>
+			<ModalTitle text={t("abandonModalConfirmTitle")}/>
+			<ModalText text={t("abandonModalConfirmText")}/>
+			<ModalFooter>
+				<ModalButton text={t("no")} style={"modalButtonDeny"} callback={() => setModal(false)}/>
+				<ModalButton text={t("yes")} style={"modalButtonAccept"} callback={() =>  handleAbandon()}/>
+			</ModalFooter>
 
-			</Modal>
-		)}
+		</Modal>
 		</>
 	)
 }

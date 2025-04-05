@@ -73,41 +73,38 @@ function RerollButton() {
 			text={t("rerollButtonText")}
 			onClick={handleRerollClick}
 		/>
-		{ modal && (
-			<Modal>
-				<ModalTitle text={t("rerollModalConfirmTitle")}/>
-				<ModalText text={t("rerollModalConfirmText")}/>
-					<div className="virtRack">
-						<div className="virtRackInner">
-						{virtRack && virtRack.rack.split("").map((letter, idx) => {
-							const fClass = letter === "." ? "empty" : "full";
-							const hasScore = fClass === "full";
-							const isJoker = letter === "?";
-							const selectedClass = virtRack.selected[idx] ? "darkened" : "";
-							return (
-								<div 
-									key={idx} 
-									className={`s-grid-cell`}
-									onClick={() => handleCellClick(idx)}
+		<Modal visible={modal}>
+			<ModalTitle text={t("rerollModalConfirmTitle")}/>
+			<ModalText text={t("rerollModalConfirmText")}/>
+			<div className="virtRack">
+				<div className="virtRackInner">
+					{virtRack && virtRack.rack.split("").map((letter, idx) => {
+						const fClass = letter === "." ? "empty" : "full";
+						const hasScore = fClass === "full";
+						const isJoker = letter === "?";
+						const selectedClass = virtRack.selected[idx] ? "darkened" : "";
+						return (
+							<div 
+								key={idx} 
+								className={`s-grid-cell`}
+								onClick={() => handleCellClick(idx)}
+							>
+								<span 
+									className={`s-grid-tile ${fClass}  ${selectedClass}`}
+									data-score={ (isJoker && "0" ) || (hasScore && letterScore[letter.charCodeAt(0) - 65])}
 								>
-									<span 
-										className={`s-grid-tile ${fClass}  ${selectedClass}`}
-										data-score={ (isJoker && "0" ) || (hasScore && letterScore[letter.charCodeAt(0) - 65])}
-									>
-										{letter}
-									</span>
-								</div>
-							);
-						})}
-						</div>
-					</div>
-				<ModalFooter>
-					<ModalButton text={t("goBack")} style={"modalButtonDeny"} callback={() => setModal(false)}/>
-					<ModalButton text={t("confirm")} style={"modalButtonAccept"} callback={handleReroll}/>
-				</ModalFooter>
-
-			</Modal>
-		)}
+									{letter}
+								</span>
+							</div>
+						);
+					})}
+				</div>
+			</div>
+			<ModalFooter>
+				<ModalButton text={t("goBack")} style={"modalButtonDeny"} callback={() => setModal(false)}/>
+				<ModalButton text={t("confirm")} style={"modalButtonAccept"} callback={handleReroll}/>
+			</ModalFooter>
+		</Modal>
 		</>
 	);
 }

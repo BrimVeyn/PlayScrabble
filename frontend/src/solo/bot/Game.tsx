@@ -62,7 +62,6 @@ function Game({gameOptions}: GameProps) {
 		>
 			<EndOfGameModal />
 			<div className="contextContainer">
-				<Score/>
 				<div className="rackOuterContainer">
 					<Rack/>
 					<LetterReturnButton/>
@@ -78,6 +77,7 @@ function Game({gameOptions}: GameProps) {
 				</div>
 			</div>
 			<div className="resultContainer">
+				<Score/>
 				<Results/>
 			</div>
 		</GridProvider>

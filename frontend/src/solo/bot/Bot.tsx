@@ -18,10 +18,11 @@ import { IoMdPlay } from "react-icons/io"
 
 interface AbandonModalProps {
 	game: GameFetchType,
+	modal: {active: boolean, game: GameFetchType | null};
 	setModal: React.Dispatch<React.SetStateAction<{active: boolean, game: GameFetchType | null}>>,
 }
 
-function AbandonModal({game, setModal}: AbandonModalProps) {
+function AbandonModal({game, modal, setModal}: AbandonModalProps) {
 	console.log("GameId:", game);
 
 	const handleDelete = () => {
@@ -46,7 +47,7 @@ function AbandonModal({game, setModal}: AbandonModalProps) {
 	}
 
 	return (
-		<Modal>
+		<Modal visible={modal.active}>
 			<ModalTitle text={"Abandon"}/>
 			<ModalText text={"Voulez-vous abandonner cette partie ?"}/>
 			<ModalFooter>
@@ -97,7 +98,7 @@ function BotOngoing ({setMenuState, setGameOptions}: BotMenuProps) {
 
 	return (
 		<>
-		{ modal.active && <AbandonModal game={modal.game!} setModal={setModal}/> }
+		<AbandonModal game={modal.game!} modal={modal} setModal={setModal}/>
 		<div className="glass onGoingTable">
 			<div className="onGoingHead"><b>{t("onGoingGames")}</b></div>
 			<div className="onGoingBody">

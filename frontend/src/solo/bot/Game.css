@@ -8,9 +8,8 @@
 	flex-direction: row;
 	justify-content: center;
 	gap: 2rem;
-	padding-inline: clamp(10px, (325 / 920) * (100vw - 1000px), 325px);
+	padding-inline: max(10px, (300 / 920) * (100vw - 1000px));
 	padding-block: 10px;
-	height: 95%;
 }
 
 .contextContainer {
@@ -32,7 +31,7 @@
 	flex-direction: column;
 	gap: 2rem;
 	width: 40%;
-	height: 90vh;
+	align-self: center;
 }
 
 .resultContainer>div {
@@ -49,7 +48,7 @@
 
 .actionOuterContainer {
 	display: flex;
-	justify-content: space-between;
+	justify-content: space-evenly;
 }
 
 .actionButton {

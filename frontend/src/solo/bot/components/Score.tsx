@@ -9,10 +9,12 @@ function Score() {
 	const computerScore = gameInfo.players.get(1)!.score;
 
 	return (
-		<div className="scoreContainer glass">
-			<span className="scoreText">🧑‍💼 {t("you")}: <b>{playerScore}</b></span>
-			<span className="scoreDivider">|</span>
-			<span className="scoreText">🤖 {t("computer")}: <b>{computerScore}</b></span>
+		<div className="scoreOuter">
+			<div className="scoreContainer glass">
+				<span className="scoreText">🧑‍💼 {t("you")}: <b>{playerScore}</b></span>
+				<span className="scoreDivider">|</span>
+				<span className="scoreText">🤖 {t("computer")}: <b>{computerScore}</b></span>
+			</div>
 		</div>
 	);
 }

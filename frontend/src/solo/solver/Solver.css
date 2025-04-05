@@ -1,22 +1,21 @@
-.solverPage {
+#solverPage {
 	width: 100vw;
 	min-height: 100vh;
 }
 
-.solverContainer {
+#solverPage .solverContainer {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
 	gap: 2rem;
-	padding-inline: clamp(10px, (300 / 920) * (100vw - 1000px), 300px);
+	padding-inline: max(10px, (300 / 920) * (100vw - 1000px));
 	padding-block: 10px;
-	height: 95%;
 }
 
-.contextContainer {
+#solverPage .contextContainer {
 	display: flex;
 	flex-direction: column;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	gap: 30px;
 	width: 60%;
 }
@@ -24,7 +23,7 @@
 .resultContainer {
 	display: flex;
 	flex-direction: column;
-	align-items: start;
+	align-self: start;
 	gap: 2rem;
 	width: 40%;
 }
@@ -52,14 +51,14 @@
 		overflow: initial;
 	}
 
-	.solverContainer {
+	#solverPage .solverContainer {
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
 		padding-inline: 0px;
 	}
 
-	.contextContainer {
+	#solverPage .contextContainer {
 		width: 100%;
 		min-height: initial;
 		padding: 0;

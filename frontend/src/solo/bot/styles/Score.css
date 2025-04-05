@@ -2,9 +2,10 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	height: fit-content;
 	gap: 1rem;
-	font-size: 0.9rem;
-	height: 2rem;
+	font-size: 1.5rem;
+	height: 64px;
 	padding: 0 1rem;
 }
 
@@ -16,4 +17,16 @@
 
 .scoreDivider {
 	color: #333;
+}
+
+@media(max-width: 786px) {
+	.scoreOuter {
+		display: flex;
+		justify-content: center;
+	}
+	.scoreContainer {
+		font-size: 1.3rem;
+		height: 2.5rem;
+		width: 95%;
+	}
 }

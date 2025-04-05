@@ -8,9 +8,9 @@ import "../styles/Grid.css"
 //NOTE: modifier Values: 
 // 0 None
 // 1 Double Word
-// 2 Tripple Word
+// 2 Triple Word
 // 3 Double Letter
-// 4 Tripple letter
+// 4 Triple letter
 
 const gridModifiers: Array<Array<number>> = [
     [2, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 2],

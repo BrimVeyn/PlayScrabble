@@ -3,15 +3,13 @@ import { GridProvider } from "./components/GridContext.tsx"
 import Results from "./components/Results.tsx";
 import Rack from "./components/Rack.tsx";
 import ResetButton from "./components/ResetButton.tsx";
-import Navbar from "../../navbar/Navbar.tsx";
 
 import "./Solver.css"
+import Page from "../../lib/Page.tsx";
 
 function Solver() {
 	return (
-		<>
-		<div className="solverPage">
-		<Navbar/>
+		<Page id="solverPage">
 		<div className="solverContainer">
 			<GridProvider>
 				<div className="contextContainer">
@@ -26,8 +24,7 @@ function Solver() {
 				</div>
 			</GridProvider>
 		</div>
-		</div>
-		</>
+		</Page>
 	)
 }
 

@@ -19,7 +19,7 @@ function Page ({children, id}: PageProps) {
 				width: "100vw",
 				height: "95%",
 			}}>
-			{children}
+				{children}
 			</div>
 		</div>
 	)

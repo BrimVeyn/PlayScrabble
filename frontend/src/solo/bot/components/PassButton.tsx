@@ -24,24 +24,22 @@ function PassButton() {
 
 	return (
 		<>
-		<Button
-			text={t("passButtonText")}
-			onClick={() => setModal(true)}
-		/>
-		{ modal && (
-			<Modal>
+			<Button
+				text={t("passButtonText")}
+				onClick={() => setModal(true)}
+			/>
+			<Modal visible={modal}>
 				<ModalTitle text={t("passModalConfirmTitle")}/>
 				<ModalText text={t("passModalConfirmText")}/>
 				<ModalFooter>
 					<ModalButton text={t("no")} style={"modalButtonDeny"} callback={() => setModal(false)}/>
 					<ModalButton text={t("yes")} style={"modalButtonAccept"} callback={() => {
-							handlePass();
-							setModal(false);
-						}}/>
+						handlePass();
+						setModal(false);
+					}}/>
 				</ModalFooter>
 
 			</Modal>
-		)}
 		</>
 	);
 }
