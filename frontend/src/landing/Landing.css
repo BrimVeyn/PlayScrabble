@@ -11,3 +11,19 @@
 	align-items: center;
 }
 
+#landing1, #landing2, #landing3 {
+	opacity: 0;
+	transform: translateY(40px);
+	animation: fadeSlideIn 0.6s forwards;
+}
+
+#landing1 { animation-delay: .1s;}
+#landing2 { animation-delay: .3s;}
+#landing3 { animation-delay: .5s;}
+
+@keyframes fadeSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

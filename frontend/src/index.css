@@ -110,7 +110,7 @@
     left: 0;
     margin: 0;
     padding: 0;
-    background: var(--background-color);
+	background: linear-gradient(to bottom right, var(--rt-primary), var(--rt-secondary));
     overflow: hidden;
 }
 .background li {
@@ -119,8 +119,8 @@
     list-style: none;
     width: 20px;
     height: 20px;
-	filter: blur(4px);
-    background: var(--foreground-color);
+	filter: blur(6px);
+    background: rgba(255, 255, 255, .15);
  
     animation: animate 36s linear infinite;
 }

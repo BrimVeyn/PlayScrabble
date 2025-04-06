@@ -14,13 +14,16 @@
     justify-content: center;
     align-items: center;
     transition: all 0.125s ease;
+	-webkit-text-stroke: 1px var(--app-black);
+    user-select: none;
 }
 
 .glass.menuItem:hover {
-	scale: 110%;
-	background: var(--foreground-color);
-	color: var(--app-black);
-	cursor: pointer;
+	scale: 105%;
+    background: var(--foreground-color);
+    color: var(--app-black);
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 @media(max-width: 758px) {

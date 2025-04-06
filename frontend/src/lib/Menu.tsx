@@ -19,14 +19,16 @@ interface MenuItemProps {
 	text: string,
 	redir?: string | null,
 	style?: string,
+	id?: string,
 };
 
-export function MenuItem({text, redir = null, style = ""}: MenuItemProps) {
+export function MenuItem({text, redir = null, style = "", id}: MenuItemProps) {
 	const navigate = useNavigate();
 
 	return (
 		<div 
 			className={`glass menuItem ${style}`}
+			id={id}
 			onClick={() => {
 				if (redir) navigate(redir);
 			}}

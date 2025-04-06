@@ -5,11 +5,12 @@
 
 .botPageContainer {
 	color: var(--app-black);
-	height: 95vh;
 	width: 100vw;
+	min-height: 100%;
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	padding-block: 2rem;
 }
 
 .botMenu {
@@ -42,12 +43,12 @@
 	align-items: center;
 	transition: all .3s ease;
 	padding: 10px;
-	margin: 3px;
-	border-radius: 10px;
+	margin: 10px;
+	border-radius: 5px;
 }
 
 .onGoingRow:hover {
-	background-color: rgba(var(--rt-color-white-rgb), .8);
+	background-color: rgba(var(--rt-secondary-rgb), .8);
 	cursor: pointer;
 }
 
@@ -64,17 +65,21 @@
 	padding: 5px;
 	border: 2px solid black;
 	border-radius: 50%;
-	transition: all .125s ease;
+	transition: all .3s ease;
 }
 
 #onGoingDelete:hover, #onGoingPlay:hover {
-	scale: 120%;
+	scale: 110%;
 	cursor: pointer;
 	background-color: rgba(var(--app-black-rgb), .8);
 	color: var(--rt-color-accept);
 	border-color: var(--rt-color-accept);
 }
 
+#onGoingDelete:hover {
+	color: var(--rt-color-deny);
+	border-color: var(--rt-color-deny);
+}
 
 .newGameItem {
 	display: flex;
