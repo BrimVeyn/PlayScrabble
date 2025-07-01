@@ -19,13 +19,16 @@ export default function Login() {
 	const navigate = useNavigate();
 	const { setRefresh } = useAuth();
 
+
 	const handleLogin = async () => {
 		if (!credentials || credentials.emailOrUsername.length === 0 || credentials.password.length === 0) 
 			return setError(t("errorMissingField", {ns: "register"}));
+		
 		const payload = {
 			username: credentials?.emailOrUsername,
 			password: credentials?.password,
 		};
+		
 		try  {
 			const response = await fetch("https://scrabble.brimveyn.dev/api/login", {
 				method: 'POST',
@@ -45,12 +48,12 @@ export default function Login() {
 		} 
 	};
 
-
 	return (
 		<div className="loginPage">
 		<Navbar/>
+
 			<div className="formOuterContainer">
-			<Form style="glass">
+			<Form submitFn={(e) => { e.preventDefault(); handleLogin(); } } style="glass">
 				<FormField
 					text={t("usernameInputText")}
 					onChangeCallback={(e: ChangeEvent<HTMLInputElement>) => {

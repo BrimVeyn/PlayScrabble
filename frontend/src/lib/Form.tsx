@@ -1,17 +1,24 @@
-import { ReactNode, ChangeEvent } from "react"
+import { ReactNode, ChangeEvent, FormEventHandler, FormEvent } from "react"
 import "./Form.css"
 
 
 interface FormProps {
 	children: ReactNode,
-	style?: string
+	style?: string,
+	submitFn?: FormEventHandler<HTMLFormElement>,
 }
 
-export function Form({children, style = ""}: FormProps) {
+export function Form(
+	{
+		children,
+		style = "",
+		submitFn = (e: FormEvent) => { e.preventDefault(); },
+	}: FormProps
+) {
 	return (
-		<div className={`form ${style}`}>
+		<form onSubmit={submitFn} className={`form ${style}`}>
 			{children}
-		</div>
+		</form>
 	)
 }
 
@@ -22,12 +29,14 @@ interface FormFieldProps {
 	onChangeCallback?: (e: ChangeEvent<HTMLInputElement>) => void,
 }
 
-export function FormField ({
+export function FormField (
+	{
 		inputType = "text",
 		inputPlaceHolder = "",
 		text,
 		onChangeCallback = (_e: ChangeEvent<HTMLInputElement>) => {}
-}: FormFieldProps ) {
+	}: FormFieldProps
+) {
 	return (
 		<>
 			<p className="formFieldText"> {text} </p>

@@ -18,7 +18,6 @@ import './i18n.jsx'
 import Profile from './profile/Profile.tsx'
 
 createRoot(document.getElementById('root')!).render(
-  //<StrictMode>
 	<AuthProvider>
 		<BrowserRouter>
 			<Routes>
@@ -33,5 +32,4 @@ createRoot(document.getElementById('root')!).render(
 			</Routes>
 		</BrowserRouter>
 	</AuthProvider>
-  //</StrictMode>,
 )
